@@ -26,6 +26,7 @@ npm-debug.log*
 /coverage
 /dist
 /node_modules
+!/node_modules/obd-parser-serial-connection
 /platforms
 /plugins
 /www
