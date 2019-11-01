@@ -7,6 +7,14 @@ import { Component } from '@angular/core';
 })
 export class HomePage {
 
+  vin;
+  data2;
+  data3;
+
   constructor() {}
+
+  callGetVINFromParserService() {}
+  callGet2FromParserService() {}
+  callGet3FromParserService() {}
 
 }
