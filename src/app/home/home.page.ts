@@ -1,4 +1,5 @@
 import { Component } from '@angular/core';
+import { OBDParserService } from '../services/obdparser.service'
 
 @Component({
   selector: 'app-home',
@@ -7,13 +8,15 @@ import { Component } from '@angular/core';
 })
 export class HomePage {
 
-  vin;
-  data2;
-  data3;
+  vin: string = "";
+  data2: string = "";
+  data3: string = "";
 
-  constructor() {}
+  constructor(private obdService: OBDParserService) {}
 
-  callGetVINFromParserService() {}
+  callGetVINFromParserService() {
+    this.vin = "test";
+  }
   callGet2FromParserService() {}
   callGet3FromParserService() {}
 
