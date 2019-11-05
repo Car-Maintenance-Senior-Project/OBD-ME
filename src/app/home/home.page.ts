@@ -17,7 +17,11 @@ export class HomePage {
   callGetVINFromParserService() {
     this.vin = "test";
   }
-  callGet2FromParserService() {}
-  callGet3FromParserService() {}
+  callGet2FromParserService() {
+    this.data2 = "test2";
+  }
+  callGet3FromParserService() {
+    this.data3 = "test3";
+  }
 
 }

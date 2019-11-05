@@ -1,18 +1,34 @@
 <ion-menu side="start">
-  <ion-header>
-    <ion-toolbar translucent>
-      <ion-title>Menu</ion-title>
-    </ion-toolbar>
-  </ion-header>
-  <ion-content>
-    <ion-list>
-      <ion-button expand="full" href="/settings" routerDirection="navigateForward">
+    <ion-header>
+      <ion-toolbar translucent>
+        <ion-title>Menu</ion-title>
+      </ion-toolbar>
+    </ion-header>
+    <ion-content>
+      <ion-list>
+        <ion-button expand="full" href="/home" routerDirection="navigateForward">
+          <ion-icon slot="start" name="home"></ion-icon>
+          Home
+        </ion-button>
+        <ion-button expand="full" href="/vehicle-info" routerDirection="navigateForward">
+          <ion-icon slot="start" name="information-circle"></ion-icon>
+          Vehicle Info
+        </ion-button>
+        <ion-button expand="full" href="/maintenance-schedule" routerDirection="navigateForward">
+          <ion-icon slot="start" name="calendar"></ion-icon>
+          Maintenance Schedule
+        </ion-button>
+        <ion-button expand="full" href="/maps" routerDirection="navigateForward">
+          <ion-icon slot="start" name="map"></ion-icon>
+          Maps
+        </ion-button>
+        <ion-button expand="full" href="/settings" routerDirection="navigateForward">
           <ion-icon slot="start" name="settings"></ion-icon>
           Settings
-      </ion-button>
-    </ion-list>
-  </ion-content>
-</ion-menu>
+        </ion-button>
+      </ion-list>
+    </ion-content>
+  </ion-menu>
 
 <div class="ion-page" main>
     <ion-toolbar>
@@ -34,21 +50,21 @@
               Try
             </ion-button>
             <ion-label>VIN:</ion-label>
-            <ion-label [(ngModel)]="HomePage.vin" class="HomePage"></ion-label>
+            <ion-label>{{vin}}</ion-label>
           </ion-item>
           <ion-item>
-            <ion-button slot="start">
+            <ion-button slot="start" (click)="callGet2FromParserService()">
               Try
             </ion-button>
-            <ion-label>???:</ion-label>
-            <ion-label>Temp</ion-label>
+            <ion-label>Data 2:</ion-label>
+            <ion-label>{{data2}}</ion-label>
           </ion-item>
           <ion-item>
-            <ion-button slot="start">
+            <ion-button slot="start" (click)="callGet3FromParserService()">
               Try
             </ion-button>
-            <ion-label>???:</ion-label>
-            <ion-label>Temp</ion-label>
+            <ion-label>Data 3:</ion-label>
+            <ion-label>{{data3}}</ion-label>
           </ion-item>
         </div>
       </ion-content>
