@@ -1,0 +1,8 @@
+{
+  "appId": "com.seniorproj.app",
+  "appName": "Obd-Error-App",
+  "bundledWebRuntime": false,
+  "npmClient": "npm",
+  "webDir": "www",
+  "cordova": {}
+}

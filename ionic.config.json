@@ -1,5 +1,7 @@
 {
   "name": "ionic-Maintenance",
-  "integrations": {},
+  "integrations": {
+    "capacitor": {}
+  },
   "type": "angular"
 }
