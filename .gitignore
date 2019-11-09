@@ -25,7 +25,8 @@ npm-debug.log*
 /.vscode
 /coverage
 /dist
-/node_modules
+/node_modules/*
+!/node_modules/obd-parser-serial-connection
 /platforms
 /plugins
 /www
