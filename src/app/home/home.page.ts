@@ -1,5 +1,4 @@
 import { Component } from '@angular/core';
-import { OBDParserService } from '../services/obdparser.service'
 
 @Component({
   selector: 'app-home',
@@ -8,20 +7,16 @@ import { OBDParserService } from '../services/obdparser.service'
 })
 export class HomePage {
 
-  vin: string = "";
-  data2: string = "";
-  data3: string = "";
+  //TODO: don't use this array, instead import/inject a service and use data from that
+  public errors = [
+    {
+      name: "test1"
+    },
+    {
+      name: "test2"
+    }
+  ];
 
-  constructor(private obdService: OBDParserService) {}
-
-  callGetVINFromParserService() {
-    this.vin = "test";
-  }
-  callGet2FromParserService() {
-    this.data2 = "test2";
-  }
-  callGet3FromParserService() {
-    this.data3 = "test3";
-  }
+  constructor() {}
 
 }

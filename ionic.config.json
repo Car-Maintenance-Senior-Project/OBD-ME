@@ -1,5 +1,7 @@
 {
-  "name": "ionic-Maintenance",
-  "integrations": {},
+  "name": "OBD&ME",
+  "integrations": {
+    "cordova": {}
+  },
   "type": "angular"
 }

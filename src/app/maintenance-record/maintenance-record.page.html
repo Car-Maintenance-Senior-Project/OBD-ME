@@ -1,0 +1,37 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-menu-button></ion-menu-button>
+    </ion-buttons>
+    <ion-title>
+      Maintenance Record
+    </ion-title>
+    <ion-buttons slot="end">
+      <ion-button routerLink="/add-maintenance-record">
+        <ion-icon slot="icon-only" name="add-circle"></ion-icon>
+      </ion-button>
+      <ion-button routerLink="/settings" routerDirection="forward">
+        <ion-icon slot="icon-only" name="settings"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+  <ion-list>
+    <ion-item-sliding *ngFor="let record of recordStorage.records">
+      <ion-item>
+        <ion-label>{{record.type}} has id: {{record.id}}</ion-label>
+        <span>{{record.date.toDateString()}}</span>
+      </ion-item>
+      <ion-item-options side="end">
+        <ion-item-option color="light" expandable (click)="editRecord(record)">
+          <ion-icon slot="icon-only" name="clipboard"></ion-icon>
+        </ion-item-option>
+        <ion-item-option color="danger" expandable (click)="deleteRecord(record)">
+          <ion-icon slot="icon-only" name="trash"></ion-icon>
+        </ion-item-option>
+      </ion-item-options>
+    </ion-item-sliding>
+  </ion-list>
+</ion-content>

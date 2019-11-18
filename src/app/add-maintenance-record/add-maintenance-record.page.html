@@ -1,0 +1,35 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/maintenance-record"></ion-back-button>
+    </ion-buttons>
+    <ion-title>
+      New Record
+    </ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+  <ion-item>
+    <ion-label>Type</ion-label>
+    <ion-select [(ngModel)]="type" placeholder="Select Type" interface="popover">
+      <ion-select-option value="Oil Change">Oil Change</ion-select-option>
+      <ion-select-option value="Tire Rotation">Tire Rotation</ion-select-option>
+      <ion-select-option value="New Tires">New Tires</ion-select-option>
+      <ion-select-option value="Other">Other</ion-select-option>
+    </ion-select>
+  </ion-item>
+  <ion-item>
+    <ion-label>Date</ion-label>
+    <ion-datetime [(ngModel)]="dateString" placeholder="Select a Date"></ion-datetime>
+  </ion-item>
+  <ion-item>
+    <ion-label>Cost</ion-label>
+    <ion-input [(ngModel)]="cost" placeholder="Enter Cost" inputmode="decimal" type="number"></ion-input> <!-- TODO: get input to other side of page -->
+  </ion-item>
+  <ion-item>
+    <ion-label>Notes</ion-label>
+    <ion-textarea [(ngModel)]="notes"></ion-textarea>
+  </ion-item>
+  <ion-button expand="block" (click)="addRecord()">Add Record</ion-button>
+</ion-content>
