@@ -14,8 +14,10 @@ export class MaintenanceRecordPage implements OnInit {
   @ViewChild(IonList, null) recordList: IonList;
 
   constructor(public recordStorage: MaintenanceRecordStorageService,
-              private alertController: AlertController) { }
-
+              private alertController: AlertController) {
+                this.recordStorage.loadRecords();
+  }
+  
   ngOnInit() {
   }
 
@@ -44,7 +46,7 @@ export class MaintenanceRecordPage implements OnInit {
   }
 
   editRecord(record): void {
-    console.log(record + "is going to be edited");
+    console.log(record + "is going to be edited"); //TODO: figure out how to edit entries, page/modal/popup?
   }
 
 }

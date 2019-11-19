@@ -11,7 +11,7 @@ import { MaintenanceRecordStorageService } from '../services/maintenance-record-
 export class AddMaintenanceRecordPage implements OnInit {
 
   type: string;
-  dateString: string;
+  date: any;
   cost: number;
   notes: string = "";
 
@@ -24,13 +24,13 @@ export class AddMaintenanceRecordPage implements OnInit {
 
   //TODO: explore using forms/formbuilder, ask Norman about it
   addRecord(): void {
-    if (this.type != "" && this.dateString != "" && this.cost != null) {
+    if (this.type != "" && this.date != null && this.cost != null) {
       this.storageService.addRecord({
         type: this.type,
-        date: new Date(this.dateString),
+        date: this.date,
         cost: this.cost,
         notes: this.notes,
-        id: "4"
+        id: ""
       });
       this.navController.navigateRoot("/maintenance-record");
     } else {

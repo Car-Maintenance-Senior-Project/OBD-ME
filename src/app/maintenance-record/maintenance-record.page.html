@@ -21,11 +21,11 @@
   <ion-list>
     <ion-item-sliding *ngFor="let record of recordStorage.records">
       <ion-item>
-        <ion-label>{{record.type}} has id: {{record.id}}</ion-label>
-        <span>{{record.date.toDateString()}}</span>
+        <ion-label>{{record.type}}</ion-label>
+        <span>{{record.date | date:mediumDate}}</span>
       </ion-item>
       <ion-item-options side="end">
-        <ion-item-option color="light" expandable (click)="editRecord(record)">
+        <ion-item-option color="light" expandable (click)="editRecord(record)"> <!-- TODO: decide what to do with this -->
           <ion-icon slot="icon-only" name="clipboard"></ion-icon>
         </ion-item-option>
         <ion-item-option color="danger" expandable (click)="deleteRecord(record)">
