@@ -29,7 +29,7 @@ export class MaintenanceRecordStorageService {
       date: record.date,
       cost: record.cost,
       notes: record.notes,
-      id: this.generateSlug(record.type),  //TODO: figure out how to get better ids for the record entries
+      id: this.generateSlug(record.type)
     });
     this.saveRecords();
   }
@@ -54,6 +54,16 @@ export class MaintenanceRecordStorageService {
         resolve(true);
       });
     });
+  }
+
+  getRecord(id: string): MaintenanceRecord {
+    return this.records.find(record => record.id === id);
+  }
+
+  setRecord(updatedRecord: MaintenanceRecord) {
+    let index = this.records.indexOf(this.records.find(record => record.id === updatedRecord.id));
+    this.records[index] = updatedRecord;
+    this.saveRecords();
   }
 
   generateSlug(title: string): string {

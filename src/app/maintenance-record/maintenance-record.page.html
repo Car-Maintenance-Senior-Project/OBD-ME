@@ -20,12 +20,12 @@
 <ion-content>
   <ion-list>
     <ion-item-sliding *ngFor="let record of recordStorage.records">
-      <ion-item>
-        <ion-label>{{record.type}}</ion-label>
+      <ion-item [routerLink] = "'/maintenance-record/' + record.id" routerDirection="forward">
+        <ion-label>{{record.type}} - ${{record.cost}}</ion-label>
         <span>{{record.date | date:mediumDate}}</span>
       </ion-item>
       <ion-item-options side="end">
-        <ion-item-option color="light" expandable (click)="editRecord(record)"> <!-- TODO: decide what to do with this -->
+        <ion-item-option color="light" expandable (click)="editRecord(record.id)">
           <ion-icon slot="icon-only" name="clipboard"></ion-icon>
         </ion-item-option>
         <ion-item-option color="danger" expandable (click)="deleteRecord(record)">

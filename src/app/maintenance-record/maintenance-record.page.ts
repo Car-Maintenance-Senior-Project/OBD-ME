@@ -1,5 +1,5 @@
 import { Component, OnInit, ViewChild } from '@angular/core';
-import { AlertController } from '@ionic/angular';
+import { AlertController, NavController } from '@ionic/angular';
 
 import { MaintenanceRecordStorageService } from '../services/maintenance-record-storage.service';
 import { IonList } from '@ionic/angular';
@@ -14,11 +14,12 @@ export class MaintenanceRecordPage implements OnInit {
   @ViewChild(IonList, null) recordList: IonList;
 
   constructor(public recordStorage: MaintenanceRecordStorageService,
-              private alertController: AlertController) {
-                this.recordStorage.loadRecords();
+              private alertController: AlertController,
+              private navController: NavController) {
   }
   
   ngOnInit() {
+    this.recordStorage.loadRecords();
   }
 
   deleteRecord(record): void {
@@ -45,8 +46,10 @@ export class MaintenanceRecordPage implements OnInit {
     });    
   }
 
-  editRecord(record): void {
-    console.log(record + "is going to be edited"); //TODO: figure out how to edit entries, page/modal/popup?
+  editRecord(id: string): void {
+    this.recordList.closeSlidingItems().then(() => {
+      this.navController.navigateForward("/maintenance-record/" + id);
+    });
   }
 
 }

@@ -17,6 +17,7 @@ export class SettingsPage implements OnInit {
   constructor(private darkThemeSwitcher: DarkThemeSwitcherService) { }
 
   ngOnInit() {
+    this.darkModeChecked = this.darkThemeSwitcher.enabled;
   }
 
   toggleDarkTheme(): void {
