@@ -13,6 +13,9 @@
   <ion-item>
     <ion-label>Bluetooth Connected</ion-label>
     <ion-chip [color]="bluetoothChipColor"></ion-chip>
+    <ion-select [(ngModel)]="chosenOne">
+      <ion-select-option *ngFor="let device of devices" [value]="device.id">{{device.name}}</ion-select-option>
+  </ion-select>
   </ion-item>
   <ion-item>
     <ion-label>Dark Theme</ion-label>

@@ -40,14 +40,18 @@
             <ion-menu-button></ion-menu-button>
             Bluetooth Testing
         </ion-title>
-        <ion-button (click)="getPaired()" slot="end">
-            <ion-icon name="Bluetooth"></ion-icon>
-            <p>Paired</p>
-        </ion-button>
         <ion-button (click)="BSconnect()" slot="end">
+          <ion-icon name="Bluetooth"></ion-icon>
+          <p>Connect</p>
+      </ion-button>
+        <ion-button (click)="attemptToWriteData()" slot="end">
             <ion-icon name="Bluetooth"></ion-icon>
-            <p>BS</p>
+            <p>Write</p>
         </ion-button>
+        <ion-button (click)="readAgain()" slot="end">
+          <ion-icon name="Bluetooth"></ion-icon>
+          <p>ReadAgain</p>
+      </ion-button>
     </ion-toolbar>
 </ion-header>
 
@@ -63,22 +67,25 @@
 
         <ion-item>
             <ion-label>Users</ion-label>
-            <ion-select [(ngModel)]="chosenOne" (ionChange)="onChoosingOne()">
-                <ion-select-option *ngFor="let device of devices" [value]="device.id">{{device.id}}</ion-select-option>
+            <ion-select [(ngModel)]="chosenOne">
+                <ion-select-option *ngFor="let device of devices" [value]="device.id">{{device.name}}</ion-select-option>
             </ion-select>
         </ion-item>
     </ion-list>
 
-    <ion-list>
+    <!-- <ion-list>
         <ion-card-content ion-item *ngFor="let device of devices">
             <p>{{device.name || 'Unnamed'}}</p>
             <p>{{device.id}}</p>
             <p> RSSI: {{device.rssi}}</p>
         </ion-card-content>
-    </ion-list>
+    </ion-list> -->
 
-    <p>{{chosenOne}}</p>
-    <p>{{displaySub}}</p>
-    <p>{{displayString1}}</p>
-    <p>{{displayString2}}</p>
+    <p>Mac to connect to: {{chosenOne}}</p>
+    <p>Errors: {{displayStatus}}</p>
+    <!-- <p>Update: {{update}}</p> -->
+    <p>Is being processed/loading: {{displayIsWorking}}</p>
+    <p>Is it connected: {{displayConnectionStatus}}</p>
+    <p>Write status: {{displayWriteStatus}}</p>
+    <p>Read Status: {{displayReadStatus}}</p>
 </ion-content>

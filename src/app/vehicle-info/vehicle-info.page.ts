@@ -10,20 +10,15 @@ export class VehicleInfoPage implements OnInit {
 
   // public year: string;
   // public make: string;
-  // public model: string;  
-
-  devices: any[] = [];
-
-  chosenOne:string = 'DC:0D:30:4F:49:FD';
-  displayString1: any = "";
-  displayString2: any = "";
-  displaySub: any = "";
+  // public model: string;
+  private devices: string[];
 
   constructor(private ngZone: NgZone, private bs: BluetoothSerial) {
 
   }
 
   ngOnInit() {
+    // this.getPaired();
   }
 
   //TODO: get this pulling from the OBD service and retrieving real data
@@ -33,52 +28,127 @@ export class VehicleInfoPage implements OnInit {
   //   this.model = "CRV";
   // }
 
-  getPaired(){
-    this.devices = [];
-    this.bs.list().then(
-      device => {this.onDeviceDiscovered(device);}
-    );
-  }
-  onDeviceDiscovered(devices) {
-    // console.log('Discovered' + JSON.stringify(device, null, 2));
-    console.log(devices)
-    devices.forEach(device => {
-      this.devices.push({"name":device.name, "id":device.id, "rssi":device.class});
-    });
-  }
+  // getPaired() {
+  //   this.devices = [];
+  //   this.bs.list().then(
+  //     deviceList => {
+  //       deviceList.forEach(device => {
+  //         this.devices.push({"name" : device.name, "id" : device.id, "rssi" : device.class});
+  //       });
+  //       console.log(this.devices);
+  //     }
+  //   );
+  // }
 
-  BSconnect() {
+  // onDeviceDiscovered(devices) {
+  //   // console.log('Discovered' + JSON.stringify(device, null, 2));
+  //   // console.log(devices);
+  //   devices.forEach(device => {
+  //     this.devices.push({"name":device.name, "id":device.id, "rssi":device.class});
+  //   });
+  // }
 
-    this.bs.connect(this.chosenOne).subscribe(peripheralData => {
-      this.displayString2 += "Can connect\n";
-      this.displaySub = JSON.stringify(peripheralData, null, 2);
-      // this.bs.isConnected().then(
-      //   () => {
-      //     // console.log('connected');
-      //     this.displayString2 += 'connected\n';
-      //   },
-      //   () => {
-      //     // console.log('not connected');
-      //     this.displayString2 += 'not connected\n';
-      //   }
-      // );
-      this.bs.write(0x7DF0209015555555555).then(sucsess => {
-        this.displayString2 += 'write sucsess\n';
-        this.bs.read().then(data => {
-          this.displayString2 += 'read sucsess\n';
-          this.displayString1 = data + ' ||\\|| ' + JSON.stringify(data);
-          this.displaySub = JSON.stringify(peripheralData, null, 2);
-        }, fail => {
-          this.displayString2 += 'read fail\n';
-        });
-      }, failure => {
-        this.displayString2 += 'write fail\n';
-      });
-    },
-      peripheralData => {
-        console.log('disconnected');
-        this.displayString2 += "Cant connect\n";
-      });
-    }
+//   readAgain() {
+//     this.bs.read().then(sucsess2 => {
+//       console.log('read suc: ' + sucsess2);
+//     }, failure2 => {
+//       console.log(failure2);
+//     });
+//   }
 
+//   BSdisconnect() {
+//     this.bs.disconnect().then(sucsess => {
+//       console.log('Disconnected: ' + sucsess);
+//       this.isConnected = false;
+//     }, failure => {
+//       console.log('Still connected: ' + failure);
+//     });
+//   }
+
+//   BSconnect() {
+
+//     this.BSdisconnect();
+
+//     // this.bs.connect(this.chosenOne).subscribe(peripheralData => {
+//     //   this.displayString2 += "Can connect\n";
+//     //   this.displaySub = JSON.stringify(peripheralData, null, 2);
+//     //   // this.bs.isConnected().then(
+//     //   //   () => {
+//     //   //     // console.log('connected');
+//     //   //     this.displayString2 += 'connected\n';
+//     //   //   },
+//     //   //   () => {
+//     //   //     // console.log('not connected');
+//     //   //     this.displayString2 += 'not connected\n';
+//     //   //   }
+//     //   // );
+//     //   this.bs.write(0x7DF0209015555555555).then(sucsess => {
+//     //     this.displayString2 += 'write sucsess\n';
+//     //     this.bs.read().then(data => {
+//     //       this.displayString2 += 'read sucsess\n';
+//     //       this.displayString1 = data + ' ||\\|| ' + JSON.stringify(data);
+//     //       this.displaySub = JSON.stringify(peripheralData, null, 2);
+//     //     }, fail => {
+//     //       this.displayString2 += 'read fail\n';
+//     //     });
+//     //   }, failure => {
+//     //     this.displayString2 += 'write fail\n';
+//     //   });
+//     // },
+//     //   peripheralData => {
+//     //     console.log('disconnected');
+//     //     this.displayString2 += "Cant connect\n";
+//     //   });
+//     // }
+
+//     if (this.chosenOne === '') {
+//       this.displayStatus = 'Please choose a device to connect to';
+//     } else if (this.isConnected === true) {
+//       console.log('All ready connected');
+//     } else {
+//       this.displayStatus = 'Trying to connect!';
+//       this.displayIsWorking = 'True';
+//       this.bs.connect(this.chosenOne).subscribe(connectionSucsess => {
+//         console.log(connectionSucsess);
+//         this.displayConnectionStatus = JSON.stringify(connectionSucsess, null, 2);
+//         this.displayIsWorking = 'False';
+//         this.isConnected = true;
+//         this.bs.subscribeRawData().subscribe(data => {
+//           console.log('Data: ' + JSON.stringify(data, null, 2));
+//           console.log(data);
+//           this.bs.read().then(sucsess2 => {
+//             console.log('read suc: ' + sucsess2);
+//           }, failure2 => {
+//             console.log(failure2);
+//           });
+//         });
+//       },
+//       connectionFailure => {
+//         console.log(connectionFailure);
+//         this.displayConnectionStatus = JSON.stringify(connectionFailure, null, 2);
+//         this.isConnected = false;
+//         this.displayIsWorking = 'False';
+//       });
+//     }
+//   }
+
+//   windowUpdate() {
+//     // console.log("HELP");
+//     this.update = 'UPDATE';
+//   }
+
+//   attemptToWriteData() {
+//     if (this.isConnected) {
+//       this.bs.write('0902\r').then(sucsess => {
+//         console.log('Write sucsess: ' + sucsess);
+//         this.displayWriteStatus = 'Did write';
+//       }, failure => {
+//         console.log('Write failure: ' + failure);
+//         this.displayWriteStatus = 'Write failed';
+//       });
+//     } else {
+//       console.log('Not connected yet');
+//       this.displayStatus = 'Couldnt write';
+//     }
+//   }
 }
