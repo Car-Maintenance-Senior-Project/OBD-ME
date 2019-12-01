@@ -5,6 +5,7 @@ import { LoadingController } from '@ionic/angular';
 import { ToastMasterService } from '../services/toast-master.service';
 
 import { Device } from '../interfaces/device-struct';
+import { promise } from 'protractor';
 
 @Injectable({
   providedIn: 'root'
@@ -117,35 +118,63 @@ export class OBDConnectorService {
     //Given data write it
   }
 
-  writeThenRead(callData: string) {
-    this.isConnected().then(isConnect => {
-      if (isConnect) {
-        this.blueSerial.write(callData).then(sucsess => {
-          this.blueSerial.subscribe('49 01 ').subscribe(event => {
-            this.blueSerial.readUntil('\r\r').then(data => {
-              // this.toast.errorMessage(data);
-              // this.blueSerial.readUntil('01').then(data => {
-              //   // this.toast.errorMessage(data);
-              // });
-              console.log(data);
+  writeThenRead(callData: string): Promise<string> {
+    return new Promise((promSucsess, promReject) => {
+      this.isConnected().then(isConnect => {
+        if (isConnect) {
+          this.blueSerial.write(callData).then(sucsess => {
+            this.blueSerial.subscribe('49 01 ').subscribe(event => {
+              this.blueSerial.readUntil('\r\r').then(data => {
+                // this.toast.errorMessage(data);
+                // this.blueSerial.readUntil('01').then(data => {
+                //   // this.toast.errorMessage(data);
+                // });
+                promSucsess(this.parseDataToString(data));
+              });
             });
-          });
-          this.blueSerial.subscribeRawData().subscribe(event2 => {
-            this.blueSerial.read().then(data2 => {
-              console.log(data2);
+            // this.blueSerial.subscribeRawData().subscribe(event2 => {
+            //   this.blueSerial.read().then(data2 => {
+            //     console.log(data2);
+            //   });
+            // });
+
+            this.blueSerial.subscribe('NO DATA\r\r').subscribe(event => {
+              promReject('NO DATA');
             });
+
+          }, failure => {
+            this.toast.errorMessage('Couldnt write data!');
+            promReject('Couldnt write');
           });
-        }, failure => {
-          this.toast.errorMessage('Couldnt write data!');
-        });
-      } else {
-        this.toast.connectToBluetooth();
-      }
+        } else {
+          this.toast.connectToBluetooth();
+          promReject('Not connected to bluetooth');
+        }
+      });
     });
   }
 
   //Format data group code ammount of messages recieved \r
   //Parse data idk
-
+    //Parse to string
+    //parse to number
+    //parse bitwise
+  parseDataToString(data: string): string {
+    let split = data.split('\r');
+    split.forEach(section => {
+      if (section.indexOf(':') === 1) {
+        split[split.indexOf(section)] = section.slice(3);
+      }
+    });
+    let nextTemp = split.join('').trim().split(' ');
+    let finalArray = [];
+    nextTemp.forEach((data, index) => {
+      finalArray[index] = String.fromCharCode(parseInt(data, 16));
+      if (finalArray[index] === '\u0001') {
+        finalArray[index] = '';
+      }
+    });
+    return finalArray.join('');
+  }
 
 }

@@ -13,7 +13,9 @@ export class VehicleInfoPage implements OnInit {
   public year: string;
   public make: string;
   public model: string;
-  // private devices: string[];
+  private vin: string;
+  // private testVin = 'WBA3N5C55FK484549';
+  // private vinNum: string;
 
   constructor(private ngZone: NgZone, private bs: BluetoothSerial, private obd: OBDConnectorService) {
 
@@ -29,7 +31,10 @@ export class VehicleInfoPage implements OnInit {
     this.year = "2006";
     this.make = "Honda";
     this.model = "CRV";
-    this.obd.writeThenRead('09011\r');
+    this.obd.writeThenRead('09023\r').then(response => {
+      this.vin = response;
+    });
+
   }
 
   // getPaired() {

@@ -27,7 +27,7 @@ export class HomePage {
       }
     }, reject => {
       //Already has been started so do nothing
-    })
+    });
   }
 
 }
