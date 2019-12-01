@@ -1,6 +1,8 @@
 import { Component, OnInit, NgZone } from '@angular/core';
 import { BluetoothSerial } from '@ionic-native/bluetooth-serial/ngx';
 
+import { OBDConnectorService } from '../services/obd-connector.service';
+
 @Component({
   selector: 'app-vehicle-info',
   templateUrl: './vehicle-info.page.html',
@@ -8,25 +10,27 @@ import { BluetoothSerial } from '@ionic-native/bluetooth-serial/ngx';
 })
 export class VehicleInfoPage implements OnInit {
 
-  // public year: string;
-  // public make: string;
-  // public model: string;
-  private devices: string[];
+  public year: string;
+  public make: string;
+  public model: string;
+  // private devices: string[];
 
-  constructor(private ngZone: NgZone, private bs: BluetoothSerial) {
+  constructor(private ngZone: NgZone, private bs: BluetoothSerial, private obd: OBDConnectorService) {
 
   }
 
   ngOnInit() {
     // this.getPaired();
+    // this.obd.onStartUp();
   }
 
-  //TODO: get this pulling from the OBD service and retrieving real data
-  // getVehicleInfo() {
-  //   this.year = "2006";
-  //   this.make = "Honda";
-  //   this.model = "CRV";
-  // }
+  // TODO: get this pulling from the OBD service and retrieving real data
+  getVehicleInfo() {
+    this.year = "2006";
+    this.make = "Honda";
+    this.model = "CRV";
+    this.obd.writeThenRead('09001\r');
+  }
 
   // getPaired() {
   //   this.devices = [];

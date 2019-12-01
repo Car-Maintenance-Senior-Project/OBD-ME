@@ -1,40 +1,40 @@
-<!-- <ion-header>
-  <ion-toolbar>
-    <ion-buttons slot="start">
-      <ion-menu-button></ion-menu-button>
-    </ion-buttons>
-    <ion-title>
-      Vehicle Info
-    </ion-title>
-    <ion-buttons slot="end">
-      <ion-button routerLink="/settings" routerDirection="forward">
-          <ion-icon slot="icon-only" name="settings"></ion-icon>
-      </ion-button>
-    </ion-buttons>
-  </ion-toolbar>
+<ion-header>
+    <ion-toolbar>
+        <ion-buttons slot="start">
+            <ion-menu-button></ion-menu-button>
+        </ion-buttons>
+        <ion-title>
+            Vehicle Info
+        </ion-title>
+        <ion-buttons slot="end">
+            <ion-button routerLink="/settings" routerDirection="forward">
+                <ion-icon slot="icon-only" name="settings"></ion-icon>
+            </ion-button>
+        </ion-buttons>
+    </ion-toolbar>
 </ion-header>
 
 <ion-content>
-  <ion-item>
-    <ion-label>Year:</ion-label>
-    <ion-input [value]="year" readonly></ion-input>
-  </ion-item>
-  <ion-item>
-    <ion-label>Make:</ion-label>
-    <ion-input [value]="make" readonly></ion-input>
-  </ion-item>
-  <ion-item>
-    <ion-label>Model:</ion-label>
-    <ion-input [value]="model" readonly></ion-input>
-  </ion-item>
-  <ion-button expand="block" (click)="getVehicleInfo()">
-    Get Info
-  </ion-button>
-</ion-content> -->
+    <ion-item>
+        <ion-label>Year:</ion-label>
+        <ion-input [value]="year" readonly></ion-input>
+    </ion-item>
+    <ion-item>
+        <ion-label>Make:</ion-label>
+        <ion-input [value]="make" readonly></ion-input>
+    </ion-item>
+    <ion-item>
+        <ion-label>Model:</ion-label>
+        <ion-input [value]="model" readonly></ion-input>
+    </ion-item>
+    <ion-button expand="block" (click)="getVehicleInfo()">
+        Get Info
+    </ion-button>
+</ion-content>
 
 <!-- Temp Test Code -->
 
-<ion-header>
+<!-- <ion-header>
     <ion-toolbar>
         <ion-title>
             <ion-menu-button></ion-menu-button>
@@ -60,7 +60,7 @@
     <ion-list-header>Bluetooth Devices (compareWith)</ion-list-header>
 
 
-  </ion-list> -->
+  </ion-list>
 
     <ion-list>
         <ion-list-header>Bluetooth Stuff</ion-list-header>
@@ -79,13 +79,13 @@
             <p>{{device.id}}</p>
             <p> RSSI: {{device.rssi}}</p>
         </ion-card-content>
-    </ion-list> -->
+    </ion-list
 
     <p>Mac to connect to: {{chosenOne}}</p>
     <p>Errors: {{displayStatus}}</p>
-    <!-- <p>Update: {{update}}</p> -->
+    <!-- <p>Update: {{update}}</p>
     <p>Is being processed/loading: {{displayIsWorking}}</p>
     <p>Is it connected: {{displayConnectionStatus}}</p>
     <p>Write status: {{displayWriteStatus}}</p>
     <p>Read Status: {{displayReadStatus}}</p>
-</ion-content>
+</ion-content> -->
