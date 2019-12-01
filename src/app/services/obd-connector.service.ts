@@ -4,7 +4,7 @@ import { Storage } from '@ionic/storage';
 import { LoadingController } from '@ionic/angular';
 import { ToastMasterService } from '../services/toast-master.service';
 
-import { Device } from '../interfaces/device-struct'; 
+import { Device } from '../interfaces/device-struct';
 
 @Injectable({
   providedIn: 'root'
@@ -52,8 +52,6 @@ export class OBDConnectorService {
       }).then(overlay => {
         this.loading = overlay;
         this.loading.present();
-      });
-
         this.blueSerial.disconnect().then(suc => {
           this.store.set('storedMac', MacAddress);
 
@@ -73,11 +71,12 @@ export class OBDConnectorService {
           this.toast.disconnectFromBluetooth();
           reject('Couldnt disconnect from bluetooth!');
         });
+      });
 
     });
   }
 
-  runATCodes(){
+  runATCodes() {
     //ATZ
   }
 
@@ -85,16 +84,19 @@ export class OBDConnectorService {
     return this.devices;
   }
 
-  getPaired() {
-    this.devices = [];
-    this.blueSerial.list().then(
-      deviceList => {
-        deviceList.forEach(device => {
-          this.devices.push({"name" : device.name, "id" : device.id, "rssi" : device.class});
-        });
-        console.log(this.devices);
-      }
-    );
+  getPaired(): Promise<string> {
+    return new Promise((resolve) => {
+      this.devices = [];
+      this.blueSerial.list().then(
+        deviceList => {
+          deviceList.forEach(device => {
+            this.devices.push({ "name": device.name, "id": device.id, "rssi": device.class });
+          });
+          // console.log(this.devices);
+          resolve('Ok');
+        }
+      );
+    });
   }
 
   //Change to promise
@@ -116,20 +118,26 @@ export class OBDConnectorService {
   }
 
   writeThenRead(callData: string) {
-    this.isConnected().then( isConnect => {
+    this.isConnected().then(isConnect => {
       if (isConnect) {
         this.blueSerial.write(callData).then(sucsess => {
-          this.blueSerial.subscribe('01').subscribe( event => {
-            this.blueSerial.read().then( data => {
-              this.toast.errorMessage(data);
-              this.blueSerial.readUntil('01').then(data => {
-                this.toast.errorMessage(data);
-              });
+          this.blueSerial.subscribe('49 01 ').subscribe(event => {
+            this.blueSerial.readUntil('\r\r').then(data => {
+              // this.toast.errorMessage(data);
+              // this.blueSerial.readUntil('01').then(data => {
+              //   // this.toast.errorMessage(data);
+              // });
+              console.log(data);
+            });
+          });
+          this.blueSerial.subscribeRawData().subscribe(event2 => {
+            this.blueSerial.read().then(data2 => {
+              console.log(data2);
             });
           });
         }, failure => {
           this.toast.errorMessage('Couldnt write data!');
-        })
+        });
       } else {
         this.toast.connectToBluetooth();
       }

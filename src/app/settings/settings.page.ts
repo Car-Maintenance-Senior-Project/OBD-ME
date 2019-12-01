@@ -22,7 +22,9 @@ export class SettingsPage implements OnInit {
               private OBD: OBDConnectorService) { }
 
   ngOnInit() {
-    this.devices = this.OBD.getDeviceList();
+    this.OBD.getPaired().then(resolve => {
+      this.devices = this.OBD.getDeviceList();
+    });
   }
 
   onChangeOfMac() {

@@ -29,7 +29,7 @@ export class VehicleInfoPage implements OnInit {
     this.year = "2006";
     this.make = "Honda";
     this.model = "CRV";
-    this.obd.writeThenRead('09001\r');
+    this.obd.writeThenRead('09011\r');
   }
 
   // getPaired() {
