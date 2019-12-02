@@ -1,4 +1,5 @@
 import { Component } from '@angular/core';
+import { OBDConnectorService } from '../services/obd-connector.service';
 
 @Component({
   selector: 'app-home',
@@ -17,6 +18,16 @@ export class HomePage {
     }
   ];
 
-  constructor() {}
+  constructor(private OBD: OBDConnectorService) {
+    this.OBD.onStartUp().then( resolve => {
+      if (resolve) {
+        //Device is connected
+      } else {
+        //Prompt to connect to bluetooth
+      }
+    }, reject => {
+      //Already has been started so do nothing
+    });
+  }
 
 }

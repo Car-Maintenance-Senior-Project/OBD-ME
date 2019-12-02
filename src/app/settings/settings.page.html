@@ -1,21 +1,24 @@
 <ion-header>
-  <ion-toolbar>
-    <ion-buttons slot="start">
-      <ion-back-button defaultHref="/home"></ion-back-button>
-    </ion-buttons>
-    <ion-title>
-      Settings
-    </ion-title>
-  </ion-toolbar>
+    <ion-toolbar>
+        <ion-buttons slot="start">
+            <ion-back-button defaultHref="/home"></ion-back-button>
+        </ion-buttons>
+        <ion-title>
+            Settings
+        </ion-title>
+    </ion-toolbar>
 </ion-header>
 
 <ion-content>
-  <ion-item>
-    <ion-label>Bluetooth Connected</ion-label>
-    <ion-chip [color]="bluetoothChipColor"></ion-chip>
-  </ion-item>
-  <ion-item>
-    <ion-label>Dark Theme</ion-label>
-    <ion-toggle [(ngModel)]="darkModeChecked" (ionChange)="toggleDarkTheme()"></ion-toggle>
-  </ion-item>
+    <ion-item>
+        <ion-label>Bluetooth Connected</ion-label>
+        <ion-chip [color]="bluetoothChipColor"></ion-chip>
+        <ion-select [(ngModel)]="chosenMac" (ionChange)="onChangeOfMac()">
+            <ion-select-option *ngFor="let device of devices" [value]="device.id">{{device.name}}</ion-select-option>
+        </ion-select>
+    </ion-item>
+    <ion-item>
+        <ion-label>Dark Theme</ion-label>
+        <ion-toggle [(ngModel)]="darkModeChecked" (ionChange)="toggleDarkTheme()"></ion-toggle>
+    </ion-item>
 </ion-content>
