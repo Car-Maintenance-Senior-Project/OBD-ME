@@ -22,6 +22,7 @@ export class SettingsPage implements OnInit {
               private OBD: OBDConnectorService) { }
 
   ngOnInit() {
+    this.darkModeChecked = this.darkThemeSwitcher.enabled;
     this.OBD.getPaired().then(resolve => {
       this.devices = this.OBD.getDeviceList();
     });
