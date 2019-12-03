@@ -1,0 +1,31 @@
+name: Node CI
+
+on: 
+  push:
+    branches: 
+      - dev
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: [12.x]
+
+    steps:
+    - uses: actions/OBD-ME@capChange
+    - name: Use Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v1
+      with:
+        node-version: ${{ matrix.node-version }}
+    - name: ionic cap integration
+      run: |
+        git merge dev
+        npm install -g ionic
+        npm install
+        ionic build
+        npx cap sync
+      env:
+        CI: true
