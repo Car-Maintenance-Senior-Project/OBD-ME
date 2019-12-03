@@ -5,7 +5,6 @@ import { LoadingController } from '@ionic/angular';
 import { ToastMasterService } from '../services/toast-master.service';
 
 import { Device } from '../interfaces/device-struct';
-import { promise } from 'protractor';
 
 @Injectable({
   providedIn: 'root'
@@ -129,7 +128,7 @@ export class OBDConnectorService {
                 // this.blueSerial.readUntil('01').then(data => {
                 //   // this.toast.errorMessage(data);
                 // });
-                promSucsess(this.parseDataToString(data));
+                promSucsess(this.parseHex(data, 'string'));
               });
             });
             // this.blueSerial.subscribeRawData().subscribe(event2 => {
@@ -159,16 +158,22 @@ export class OBDConnectorService {
     //Parse to string
     //parse to number
     //parse bitwise
-  parseDataToString(data: string): string {
+  parseHex(data: string, type: string): string {
     let split = data.split('\r');
-    split.forEach(section => {
+    split.forEach((section, index) => {
       if (section.indexOf(':') === 1) {
-        split[split.indexOf(section)] = section.slice(3);
+        split[index] = section.slice(3);
       }
     });
-    let nextTemp = split.join('').trim().split(' ');
+    let hexArray = split.join('').trim().split(' ');
+    if (type === 'string') {
+      return this.hexToString(hexArray);
+    }
+  }
+
+  hexToString(hexArray: string[]): string {
     let finalArray = [];
-    nextTemp.forEach((data, index) => {
+    hexArray.forEach((data, index) => {
       finalArray[index] = String.fromCharCode(parseInt(data, 16));
       if (finalArray[index] === '\u0001') {
         finalArray[index] = '';
