@@ -30,9 +30,12 @@ export class VehicleInfoPage implements OnInit {
   getVehicleInfo() {
     this.year = "2006";
     this.make = "Honda";
-    this.model = "CRV";
     this.obd.writeThenRead('09023\r').then(response => {
+      this.model = "CRV";
       this.vin = response;
+    }, rejection => {
+      this.model = "CRV";
+      this.vin = rejection;
     });
 
   }
