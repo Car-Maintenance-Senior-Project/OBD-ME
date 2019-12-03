@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { NavController, ToastController } from '@ionic/angular';
 
 import { MaintenanceRecordStorageService } from '../services/maintenance-record-storage.service';
+import { ToastMasterService } from '../services/toast-master.service';
 
 @Component({
   selector: 'app-add-maintenance-record',
@@ -17,7 +18,7 @@ export class AddMaintenanceRecordPage implements OnInit {
 
   constructor(private storageService: MaintenanceRecordStorageService,
               private navController: NavController,
-              private toastController: ToastController) { }
+              private toastMaster: ToastMasterService) { }
 
   ngOnInit() {
   }
@@ -34,14 +35,7 @@ export class AddMaintenanceRecordPage implements OnInit {
       });
       this.navController.navigateRoot("/maintenance-record");
     } else {
-      this.toastController.create({
-        message: 'Type, date, and cost fields required',
-        duration: 3000,
-        animated: true,
-        position: "bottom"
-      }).then((obj) => {
-        obj.present();
-      });
+      this.toastMaster.fieldsNotFilled();
     }    
   }
 }

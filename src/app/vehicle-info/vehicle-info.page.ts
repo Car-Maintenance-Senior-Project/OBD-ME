@@ -14,7 +14,7 @@ export class VehicleInfoPage implements OnInit {
   public make: string;
   public model: string;
   private vin: string;
-  // private testVin = 'WBA3N5C55FK484549';
+  private testVin = 'WBA3N5C55FK484549';
   // private vinNum: string;
 
   constructor(private ngZone: NgZone, private bs: BluetoothSerial, private obd: OBDConnectorService) {
@@ -35,9 +35,8 @@ export class VehicleInfoPage implements OnInit {
       this.vin = response;
     }, rejection => {
       this.model = "CRV";
-      this.vin = rejection;
+      this.vin = this.testVin;
     });
-
   }
 
   // getPaired() {

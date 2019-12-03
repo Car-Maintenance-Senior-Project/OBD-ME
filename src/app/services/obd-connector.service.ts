@@ -63,13 +63,13 @@ export class OBDConnectorService {
           }, rejected => {
             this.loading.dismiss();
             this.toast.connectToBluetooth();
-            reject('Wasnt able to connect!');
+            reject('Wasn\'t able to connect!');
           });
 
         }, rej => {
           this.loading.dismiss();
           this.toast.disconnectFromBluetooth();
-          reject('Couldnt disconnect from bluetooth!');
+          reject('Couldn\'t disconnect from bluetooth!');
         });
       });
 

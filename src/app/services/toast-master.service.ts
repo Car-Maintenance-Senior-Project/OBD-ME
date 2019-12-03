@@ -28,7 +28,7 @@ export class ToastMasterService {
 
   async disconnectFromBluetooth() {
     const toast = await this.toastController.create({
-      message: 'Cant disconnect from bluetooth.',
+      message: 'Can\'t disconnect from bluetooth.',
       duration: this.defaultTime
     });
     toast.present();
@@ -38,6 +38,16 @@ export class ToastMasterService {
     const toast = await this.toastController.create({
       message: msg,
       duration: this.defaultTime
+    });
+    toast.present();
+  }
+
+  async fieldsNotFilled() {
+    const toast = await this.toastController.create({
+      message: 'Type, date, and cost fields required',
+      duration: 3000,
+      animated: true,
+      position: "bottom"
     });
     toast.present();
   }
