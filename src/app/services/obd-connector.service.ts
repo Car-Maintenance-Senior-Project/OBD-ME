@@ -6,6 +6,9 @@ import { ToastMasterService } from '../services/toast-master.service';
 
 import { Device } from '../interfaces/device-struct';
 
+//example of long hex 09023\r014 \r0: 49 02 01 57 42 41 \r1: 33 4E 35 43 35 35 46 \r2: 4B 34 38 34 35 34 39 \r\r
+//example of short hex 09001\r49 00 55 40 00 00 \r\r
+
 @Injectable({
   providedIn: 'root'
 })
@@ -122,13 +125,40 @@ export class OBDConnectorService {
       this.isConnected().then(isConnect => {
         if (isConnect) {
           this.blueSerial.write(callData).then(sucsess => {
-            this.blueSerial.subscribe('49 01 ').subscribe(event => {
+            // this.blueSerial.subscribe('49 02 ').subscribe(event => {
+            this.blueSerial.subscribeRawData().subscribe(event => {
               this.blueSerial.readUntil('\r\r').then(data => {
-                // this.toast.errorMessage(data);
-                // this.blueSerial.readUntil('01').then(data => {
-                //   // this.toast.errorMessage(data);
-                // });
-                promSucsess(this.parseHex(data, 'string'));
+                if (data !== '') {
+                  // console.log('Start of this call');
+                  console.log(data);
+                  if (data === 'NO DATA\r\r') {
+                    promReject('NO DATA');
+                  } else if (data.indexOf(callData) === -1) {
+                    // this.writeThenRead(callData).then(subSucsess => {
+                    //   promSucsess(subSucsess);
+                    // }, subReject => {
+                    //   promReject(subReject);
+                    // });
+                    console.log(data.indexOf(callData));
+                    promReject('RERUN');
+                  } else {
+                    data = data.slice(data.indexOf(callData) + 5);
+                    const hexCall = '4' + callData[1] + ' ' + callData.slice(2, 4) + ' ';
+                    if (data.includes(hexCall)) {
+                      data = data.slice(data.indexOf(hexCall) + 6);
+                      // console.log(data); 
+                      promSucsess(this.parseHex(data, 'string'));
+                    } else {
+                      promReject('Wrong call?');
+                    }
+                  }
+                  // this.toast.errorMessage(data);
+                  // this.blueSerial.readUntil('01').then(data => {
+                  //   // this.toast.errorMessage(data);
+                  // });
+                  // promSucsess(this.parseHex(data, 'string'));
+                  // event.unsubscribe();
+                }
               });
             });
             // this.blueSerial.subscribeRawData().subscribe(event2 => {
@@ -137,9 +167,18 @@ export class OBDConnectorService {
             //   });
             // });
 
-            this.blueSerial.subscribe('NO DATA\r\r').subscribe(event => {
-              promReject('NO DATA');
-            });
+            // this.blueSerial.subscribe('NO DATA\r\r').subscribe(event => {
+            //   console.log('NO DATA here');
+            //   promReject('NO DATA');
+            //   // event.unsubscribe();
+            // });
+
+            // this.blueSerial.subscribeRawData().subscribe(event => {
+            //   this.blueSerial.read().then(data => {
+            //     console.log(data);
+            //     // event.unsubscribe();
+            //   });
+            // });
 
           }, failure => {
             this.toast.errorMessage('Couldnt write data!');
@@ -155,9 +194,9 @@ export class OBDConnectorService {
 
   //Format data group code ammount of messages recieved \r
   //Parse data idk
-    //Parse to string
-    //parse to number
-    //parse bitwise
+  //Parse to string
+  //parse to number
+  //parse bitwise
   parseHex(data: string, type: string): string {
     let split = data.split('\r');
     split.forEach((section, index) => {
