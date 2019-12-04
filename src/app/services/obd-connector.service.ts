@@ -9,9 +9,19 @@ import { Device } from '../interfaces/device-struct';
 @Injectable({
   providedIn: 'root'
 })
+
 export class OBDConnectorService {
 
+  /**
+   * Creates an instance of obdconnector service.
+   * @param ngZone 
+   * @param blueSerial 
+   * @param store 
+   * @param loader 
+   * @param toast 
+   */
   constructor(private ngZone: NgZone, private blueSerial: BluetoothSerial, private store: Storage, private loader: LoadingController, private toast: ToastMasterService) { }
+
 
   private macAddress: string;
   private devices: Device[];
@@ -20,6 +30,13 @@ export class OBDConnectorService {
   private loading: HTMLIonLoadingElement;
 
 
+  /**
+   * To be run when the app is started.
+   * Connects to the bluetooth device if one is connected.
+   * @returns Promise<boolean> when it finishes
+   *    -Resolve if running for the first time and boolean if it connected or not
+   *    -Reject if not running for the first time
+   */
   onStartUp(): Promise<boolean> {
     return new Promise((resolve, reject) => {
       if (!this.started) {
@@ -42,10 +59,14 @@ export class OBDConnectorService {
     });
   }
 
+  /**
+   * Attempts to connect via bluetooth to the OBD
+   * TODO: Run usefull AT codes
+   * TODO: Get the PIDs that are supported
+   * @param MacAddress - Mac address of the OBD to connect to
+   * @returns Promise when it has tried to connect 
+   */
   Connect(MacAddress: string): Promise<string> {
-    //disconnect
-    //Connect and save the new mac
-    //run useful AT codes
     return new Promise((resolve, reject) => {
       this.loader.create({
         message: 'Connecting to bluetooth'
@@ -80,10 +101,20 @@ export class OBDConnectorService {
     //ATZ
   }
 
+
+  /**
+   * Gets device list
+   * @requires getPaired() to be run first
+   * @returns device list - list of devices paired to device
+   */
   getDeviceList(): Device[] {
     return this.devices;
   }
 
+  /**
+   * Gets paired devices on phone
+   * @returns Promise when it has gotten all the devices
+   */
   getPaired(): Promise<string> {
     return new Promise((resolve) => {
       this.devices = [];
@@ -99,7 +130,11 @@ export class OBDConnectorService {
     });
   }
 
-  //Change to promise
+  
+  /**
+   * Returns if phone is connected.  For use outside of class for data hiding
+   * @returns Promise with boolean if the phone is connected
+   */
   isConnected(): Promise<boolean> {
     return new Promise((resolve) => {
       this.blueSerial.isConnected().then(
@@ -117,6 +152,12 @@ export class OBDConnectorService {
     //Given data write it
   }
 
+
+  /**
+   * Writes the given request to the OBD and then subscribes for a response from the OBD
+   * @param callData - Data to be written to the OBD
+   * @returns Promise with the response or rejection 
+   */
   writeThenRead(callData: string): Promise<string> {
     return new Promise((promSucsess, promReject) => {
       this.isConnected().then(isConnect => {
@@ -158,6 +199,14 @@ export class OBDConnectorService {
     //Parse to string
     //parse to number
     //parse bitwise
+
+  
+  /**
+   * Parses OBD data to just the useful hex
+   * @param data - Raw data gotten from OBD
+   * @param type - What were supposed to be parsing it into
+   * @returns The parsed data
+   */
   parseHex(data: string, type: string): string {
     let split = data.split('\r');
     split.forEach((section, index) => {
@@ -171,6 +220,11 @@ export class OBDConnectorService {
     }
   }
 
+  /**
+   * Turns hex to string
+   * @param hexArray - Array of hex codes
+   * @returns Decoded string
+   */
   hexToString(hexArray: string[]): string {
     let finalArray = [];
     hexArray.forEach((data, index) => {
