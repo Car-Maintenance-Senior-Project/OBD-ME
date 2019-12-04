@@ -1,3 +1,8 @@
+/**
+ * OBD connector service is a service that allows an app to connect, read, and write to and OBD scanner that is using
+ * an ELM327 chip device (possibly others but havent tested).  
+ */
+
 import { NgZone, Injectable } from '@angular/core';
 import { BluetoothSerial } from '@ionic-native/bluetooth-serial/ngx';
 import { Storage } from '@ionic/storage';

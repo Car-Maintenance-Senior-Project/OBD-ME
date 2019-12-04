@@ -18,6 +18,10 @@ export class HomePage {
     }
   ];
 
+  /**
+   * Creates an instance of home page. Runs startup from OBD service
+   * @param OBD 
+   */
   constructor(private OBD: OBDConnectorService) {
     this.OBD.onStartUp().then( resolve => {
       if (resolve) {

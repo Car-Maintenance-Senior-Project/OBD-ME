@@ -1,3 +1,7 @@
+/**
+ * Simple toast service to keep these blocks of code from cluttering all the other code.
+ */
+
 import { Injectable } from '@angular/core';
 import { ToastController } from '@ionic/angular';
 
@@ -10,6 +14,9 @@ export class ToastMasterService {
 
   private defaultTime: number = 4000;
 
+  /**
+   * Connected message
+   */
   async connectedMessage() {
     const toast = await this.toastController.create({
       message: 'You have connected to bluetooth.',
@@ -18,6 +25,9 @@ export class ToastMasterService {
     toast.present();
   }
 
+  /**
+   * Connects to bluetooth
+   */
   async connectToBluetooth() {
     const toast = await this.toastController.create({
       message: 'Please connect to bluetooth in settings.',
@@ -26,6 +36,9 @@ export class ToastMasterService {
     toast.present();
   }
 
+  /**
+   * Disconnects from bluetooth
+   */
   async disconnectFromBluetooth() {
     const toast = await this.toastController.create({
       message: 'Can\'t disconnect from bluetooth.',
@@ -34,6 +47,10 @@ export class ToastMasterService {
     toast.present();
   }
 
+  /**
+   * Errors message
+   * @param msg - Message to be displayed
+   */
   async errorMessage(msg: string) {
     const toast = await this.toastController.create({
       message: msg,
@@ -42,6 +59,9 @@ export class ToastMasterService {
     toast.present();
   }
 
+  /**
+   * Fields not filled
+   */
   async fieldsNotFilled() {
     const toast = await this.toastController.create({
       message: 'Type, date, and cost fields required',

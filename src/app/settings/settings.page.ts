@@ -16,18 +16,27 @@ export class SettingsPage implements OnInit {
   public bluetoothChipColor: string = this.bluetoothConnected ? "success" : "danger";
   private devices: Device[];
   private chosenMac: string;
-  //TODO: link bluetoothConnected to the actual bluetooth service when it's working
 
   constructor(private darkThemeSwitcher: DarkThemeSwitcherService, 
               private OBD: OBDConnectorService) { }
 
+  /**
+   * on init - checks dark mode, bluetooth status, and get device list
+   */
   ngOnInit() {
     this.darkModeChecked = this.darkThemeSwitcher.enabled;
     this.OBD.getPaired().then(resolve => {
       this.devices = this.OBD.getDeviceList();
     });
+    this.OBD.isConnected().then(resolve => {
+      this.bluetoothConnected = resolve;
+    });
   }
 
+  /**
+   * Runs everytime a user choses a new mac to connect to.
+   * Tries to connect to that mac.
+   */
   onChangeOfMac() {
     this.OBD.Connect(this.chosenMac).then(sucsess => {
       this.OBD.isConnected().then(resolve => {
