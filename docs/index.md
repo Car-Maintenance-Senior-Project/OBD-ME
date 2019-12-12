@@ -1,5 +1,5 @@
 # OBD & ME
-[Security](https://car-maintenance-senior-project.github.io/OBD-ME/security)   ||   [About](https://car-maintenance-senior-project.github.io/OBD-ME/about)
+### [Security](https://car-maintenance-senior-project.github.io/OBD-ME/security)		||		[About](https://car-maintenance-senior-project.github.io/OBD-ME/about)
 
 ### Our semester status report
 
