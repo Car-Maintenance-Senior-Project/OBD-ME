@@ -1,5 +1,4 @@
 ![Ty Photo](https://car-maintenance-senior-project.github.io/OBD-ME/ty.jpg)
-###### Photo taken from Calvin
 # Ty Vredeveld
 Ty is a senior CS student at Calvin University
   - Email: ty.vredeveld@gmail.com
