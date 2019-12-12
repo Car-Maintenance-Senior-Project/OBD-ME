@@ -1,7 +1,7 @@
 # OBD & ME
 ### [Security](https://car-maintenance-senior-project.github.io/OBD-ME/security)		||		[About](https://car-maintenance-senior-project.github.io/OBD-ME/about)
 
-### Our semester status report
+### Our semester status report (Checking if there is an update)
 
 \t /t This semester, we have made a great deal of progress on our project, but it was a bit of a slow start. In September we had a general idea of what we wanted to do but no specific direction. It took some conversations with Professor Norman and bouncing ideas back and forth, but eventually we found a focus for our work. We decided to create a mobile app to interface with a car’s OBD port and present the data in a meaningful way to the user. We knew going in that OBD-type apps have been created before - the App Store and Google Play probably have dozens of them. However, most of these apps are built with “car-people” in mind and present as much data as possible. This can become overwhelming very quickly for someone that doesn’t know or care much about cars. As such we’re seeking to make this process easier to understand and less of a hassle for people that aren’t as familiar with cars and don’t need every single piece of information.
 	
