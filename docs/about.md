@@ -1,9 +1,9 @@
-![Ty Photo](https://www.calvin.edu/cgi-bin/getpic.pl?userid=tjv37)
+![Ty Photo](https://github.com/Car-Maintenance-Senior-Project/OBD-ME/blob/master/docs/ty.jpg)
 ###### Photo taken from Calvin
 # Ty Vredeveld
 {Ty Update this about you stuff}
 
-![Quentin Photo](https://www.calvin.edu/cgi-bin/getpic.pl?userid=qmb2)
+![Quentin Photo](https://github.com/Car-Maintenance-Senior-Project/OBD-ME/blob/master/docs/Quentin.jpg)
 ###### Photo taken from Calvin
 # Quentin Barnes
   Quentin is a senior CS student at Calvin ~~College~~ University.  
