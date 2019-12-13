@@ -1,4 +1,4 @@
-### [Security](https://car-maintenance-senior-project.github.io/OBD-ME/security)		||		[About](https://car-maintenance-senior-project.github.io/OBD-ME/about)
+### [Home](https://car-maintenance-senior-project.github.io/OBD-ME/index)		||		[Security](https://car-maintenance-senior-project.github.io/OBD-ME/security)		||		[About](https://car-maintenance-senior-project.github.io/OBD-ME/about)
 
 ![Ty Photo](https://car-maintenance-senior-project.github.io/OBD-ME/ty.jpg)
 # Ty Vredeveld
