@@ -1,6 +1,6 @@
 /**
  * OBD connector service is a service that allows an app to connect, read, and write to and OBD scanner that is using
- * an ELM327 chip device (possibly others but havent tested).  
+ * an ELM327 chip device (possibly others but havent tested).
  */
 
 import { NgZone, Injectable } from '@angular/core';
@@ -22,11 +22,11 @@ export class OBDConnectorService {
 
   /**
    * Creates an instance of obdconnector service.
-   * @param ngZone 
-   * @param blueSerial 
-   * @param store 
-   * @param loader 
-   * @param toast 
+   * @param ngZone
+   * @param blueSerial
+   * @param store
+   * @param loader
+   * @param toast
    */
   constructor(private ngZone: NgZone, private blueSerial: BluetoothSerial, private store: Storage, private loader: LoadingController, private toast: ToastMasterService) { }
 
@@ -72,7 +72,7 @@ export class OBDConnectorService {
    * TODO: Run usefull AT codes
    * TODO: Get the PIDs that are supported
    * @param MacAddress - Mac address of the OBD to connect to
-   * @returns Promise when it has tried to connect 
+   * @returns Promise when it has tried to connect
    */
   Connect(MacAddress: string): Promise<string> {
     return new Promise((resolve, reject) => {
@@ -131,14 +131,13 @@ export class OBDConnectorService {
           deviceList.forEach(device => {
             this.devices.push({ "name": device.name, "id": device.id, "rssi": device.class });
           });
-          // console.log(this.devices);
           resolve('Ok');
         }
       );
     });
   }
 
-  
+
   /**
    * Returns if phone is connected.  For use outside of class for data hiding
    * @returns Promise with boolean if the phone is connected
@@ -152,39 +151,23 @@ export class OBDConnectorService {
     });
   }
 
-  read() {
-    //Eh, may be useful later
-  }
-
-  write() {
-    //Given data write it
-  }
-
-
   /**
    * Writes the given request to the OBD and then subscribes for a response from the OBD
    * @param callData - Data to be written to the OBD
-   * @returns Promise with the response or rejection 
+   * @returns Promise with the response or rejection
    */
   writeThenRead(callData: string): Promise<string> {
-    return new Promise((promSucsess, promReject) => {
+    return new Promise((promSuccess, promReject) => {
       this.isConnected().then(isConnect => {
         if (isConnect) {
           this.blueSerial.write(callData).then(sucsess => {
-            // this.blueSerial.subscribe('49 02 ').subscribe(event => {
             this.blueSerial.subscribeRawData().subscribe(event => {
               this.blueSerial.readUntil('\r\r').then(data => {
                 if (data !== '') {
-                  // console.log('Start of this call');
                   console.log(data);
                   if (data === 'NO DATA\r\r') {
                     promReject('NO DATA');
                   } else if (data.indexOf(callData) === -1) {
-                    // this.writeThenRead(callData).then(subSucsess => {
-                    //   promSucsess(subSucsess);
-                    // }, subReject => {
-                    //   promReject(subReject);
-                    // });
                     console.log(data.indexOf(callData));
                     promReject('RERUN');
                   } else {
@@ -192,39 +175,14 @@ export class OBDConnectorService {
                     const hexCall = '4' + callData[1] + ' ' + callData.slice(2, 4) + ' ';
                     if (data.includes(hexCall)) {
                       data = data.slice(data.indexOf(hexCall) + 6);
-                      // console.log(data); 
-                      promSucsess(this.parseHex(data, 'string'));
+                      promSuccess(this.parseHex(data, 'string'));
                     } else {
                       promReject('Wrong call?');
                     }
                   }
-                  // this.toast.errorMessage(data);
-                  // this.blueSerial.readUntil('01').then(data => {
-                  //   // this.toast.errorMessage(data);
-                  // });
-                  // promSucsess(this.parseHex(data, 'string'));
-                  // event.unsubscribe();
                 }
               });
             });
-            // this.blueSerial.subscribeRawData().subscribe(event2 => {
-            //   this.blueSerial.read().then(data2 => {
-            //     console.log(data2);
-            //   });
-            // });
-
-            // this.blueSerial.subscribe('NO DATA\r\r').subscribe(event => {
-            //   console.log('NO DATA here');
-            //   promReject('NO DATA');
-            //   // event.unsubscribe();
-            // });
-
-            // this.blueSerial.subscribeRawData().subscribe(event => {
-            //   this.blueSerial.read().then(data => {
-            //     console.log(data);
-            //     // event.unsubscribe();
-            //   });
-            // });
 
           }, failure => {
             this.toast.errorMessage('Couldnt write data!');
@@ -240,11 +198,11 @@ export class OBDConnectorService {
 
   //Format data group code ammount of messages recieved \r
   //Parse data idk
-    //Parse to string
-    //parse to number
-    //parse bitwise
+  //Parse to string
+  //parse to number
+  //parse bitwise
 
-  
+
   /**
    * Parses OBD data to just the useful hex
    * @param data - Raw data gotten from OBD
@@ -261,6 +219,8 @@ export class OBDConnectorService {
     let hexArray = split.join('').trim().split(' ');
     if (type === 'string') {
       return this.hexToString(hexArray);
+    } else if (type === 'binary') {
+      return this.hexToBinary(hexArray);
     }
   }
 
@@ -276,6 +236,14 @@ export class OBDConnectorService {
       if (finalArray[index] === '\u0001') {
         finalArray[index] = '';
       }
+    });
+    return finalArray.join('');
+  }
+
+  hexToBinary(hexArray: string[]): string {
+    const finalArray = [];
+    hexArray.forEach((data, index) => {
+      finalArray[index] = (parseInt(data, 16).toString(2)).padStart(8, '0');
     });
     return finalArray.join('');
   }
