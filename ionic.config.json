@@ -1,7 +1,8 @@
 {
   "name": "OBD&ME",
   "integrations": {
-    "cordova": {}
+    "cordova": {},
+    "capacitor": {}
   },
   "type": "angular"
 }
