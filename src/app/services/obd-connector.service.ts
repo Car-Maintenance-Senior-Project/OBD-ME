@@ -11,8 +11,8 @@ import { ToastMasterService } from '../services/toast-master.service';
 
 import { Device } from '../interfaces/device-struct';
 
-//example of long hex 09023\r014 \r0: 49 02 01 57 42 41 \r1: 33 4E 35 43 35 35 46 \r2: 4B 34 38 34 35 34 39 \r\r
-//example of short hex 09001\r49 00 55 40 00 00 \r\r
+// example of long hex 09023\r014 \r0: 49 02 01 57 42 41 \r1: 33 4E 35 43 35 35 46 \r2: 4B 34 38 34 35 34 39 \r\r
+// example of short hex 09001\r49 00 55 40 00 00 \r\r
 
 @Injectable({
   providedIn: 'root'
@@ -22,19 +22,25 @@ export class OBDConnectorService {
 
   /**
    * Creates an instance of obdconnector service.
-   * @param ngZone
-   * @param blueSerial
-   * @param store
-   * @param loader
-   * @param toast
+   * @param ngZone - Imports NGZone
+   * @param blueSerial - Imports the bluetooth serial class
+   * @param store - Imports storage controller
+   * @param loader - Imports loading screen controller
+   * @param toast - Imports toast class
    */
-  constructor(private ngZone: NgZone, private blueSerial: BluetoothSerial, private store: Storage, private loader: LoadingController, private toast: ToastMasterService) { }
+  constructor(
+    private ngZone: NgZone,
+    private blueSerial: BluetoothSerial,
+    private store: Storage,
+    private loader: LoadingController,
+    private toast: ToastMasterService
+  ) { }
 
 
   private macAddress: string;
   private devices: Device[];
   public processing: boolean;
-  private started: boolean = false;
+  private started = false;
   private loading: HTMLIonLoadingElement;
 
 
@@ -52,7 +58,7 @@ export class OBDConnectorService {
         this.getPaired();
         this.store.get('storedMac').then(data => {
           if (data != null) {
-            this.Connect(data).then(sucsess => {
+            this.Connect(data).then(success => {
               resolve(true);
             }, fail => {
               resolve(false);
@@ -84,7 +90,7 @@ export class OBDConnectorService {
         this.blueSerial.disconnect().then(suc => {
           this.store.set('storedMac', MacAddress);
 
-          this.blueSerial.connect(MacAddress).subscribe(sucsess => {
+          this.blueSerial.connect(MacAddress).subscribe(success => {
             this.runATCodes();
             this.loading.dismiss();
             this.toast.connectedMessage();
@@ -106,13 +112,13 @@ export class OBDConnectorService {
   }
 
   runATCodes() {
-    //ATZ
+    // ATZ
   }
 
 
   /**
    * Gets device list
-   * @requires getPaired() to be run first
+   * getPaired() to be run first
    * @returns device list - list of devices paired to device
    */
   getDeviceList(): Device[] {
@@ -129,6 +135,7 @@ export class OBDConnectorService {
       this.blueSerial.list().then(
         deviceList => {
           deviceList.forEach(device => {
+            // tslint:disable-next-line: object-literal-key-quotes tslint:disable-next-line: quotemark
             this.devices.push({ "name": device.name, "id": device.id, "rssi": device.class });
           });
           resolve('Ok');
@@ -160,7 +167,12 @@ export class OBDConnectorService {
     return new Promise((promSuccess, promReject) => {
       this.isConnected().then(isConnect => {
         if (isConnect) {
-          this.blueSerial.write(callData).then(sucsess => {
+          // if (callData is supported) {
+          //   continue
+          // } else {
+          //   promReject('BAD CALL');
+          // }
+          this.blueSerial.write(callData).then(success => {
             this.blueSerial.subscribeRawData().subscribe(event => {
               this.blueSerial.readUntil('\r\r').then(data => {
                 if (data !== '') {
@@ -196,11 +208,11 @@ export class OBDConnectorService {
     });
   }
 
-  //Format data group code ammount of messages recieved \r
-  //Parse data idk
-  //Parse to string
-  //parse to number
-  //parse bitwise
+  // Format data group code ammount of messages recieved \r
+  // Parse data idk
+  // Parse to string
+  // parse to number
+  // parse bitwise
 
 
   /**
@@ -210,13 +222,13 @@ export class OBDConnectorService {
    * @returns The parsed data
    */
   parseHex(data: string, type: string): string {
-    let split = data.split('\r');
+    const split = data.split('\r');
     split.forEach((section, index) => {
       if (section.indexOf(':') === 1) {
         split[index] = section.slice(3);
       }
     });
-    let hexArray = split.join('').trim().split(' ');
+    const hexArray = split.join('').trim().split(' ');
     if (type === 'string') {
       return this.hexToString(hexArray);
     } else if (type === 'binary') {
@@ -230,7 +242,7 @@ export class OBDConnectorService {
    * @returns Decoded string
    */
   hexToString(hexArray: string[]): string {
-    let finalArray = [];
+    const finalArray = [];
     hexArray.forEach((data, index) => {
       finalArray[index] = String.fromCharCode(parseInt(data, 16));
       if (finalArray[index] === '\u0001') {

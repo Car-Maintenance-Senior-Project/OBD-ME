@@ -29,7 +29,7 @@ export class PidsServiceService {
   }
 
   getSupportedPIDs(): void {
-    let array = ['0', '2', '4', '6', '8', 'A', 'C'];
+    const array = ['0', '2', '4', '6', '8', 'A', 'C'];
     let PIDs1String: string;
     let PIDs2String: string;
 
