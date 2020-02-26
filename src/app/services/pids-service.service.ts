@@ -34,14 +34,14 @@ export class PidsServiceService {
     let PIDs2String: string;
 
     array.forEach(element => {
-      this.OBDConnector.writeThenRead('01' + element + '0').then(promSuccess => {
+      this.OBDConnector.writeThenRead('01' + element + '0', 'binary').then(promSuccess => {
         PIDs1String += promSuccess;
       }, promReject => {
         // TODO: figure out what to do when it fails
         console.log(promReject);
       });
 
-      this.OBDConnector.writeThenRead('02' + element + '0').then(promSuccess => {
+      this.OBDConnector.writeThenRead('02' + element + '0', 'binary').then(promSuccess => {
         PIDs2String += promSuccess;
       }, promReject => {
         // TODO: figure out what to do when it fails
@@ -54,13 +54,39 @@ export class PidsServiceService {
       this.service2SupportedPIDs[c] = (PIDs2String[c] === '1');
     }
 
-    this.OBDConnector.writeThenRead('0900').then(promSuccess => {
+    this.OBDConnector.writeThenRead('0900', 'binary').then(promSuccess => {
       for (let c = 0; c < promSuccess.length; c++) {
         this.service9SupportedPIDs[c] = (promSuccess[c] === '1');
       }
     }, promReject => {
       // TODO: figure out what to do when it fails
       console.log(promReject);
+    });
+  }
+
+  pidSupported(group: number, call: number): boolean {
+    if (group === 1) {
+      return this.service1SupportedPIDs[call];
+    } else if (group === 2) {
+      return this.service2SupportedPIDs[call];
+    } else if (group === 9) {
+      return this.service9SupportedPIDs[call];
+    } else {
+      return false;
+    }
+  }
+
+  callOBDPid(call: string, type: string): Promise<string> {
+    return new Promise((promSuccess, promReject) => {
+      if (this.pidSupported(parseInt(call.charAt(1), 10), parseInt(call.slice(2, 4), 10))) {
+        this.OBDConnector.writeThenRead(call, type).then(sucsess => {
+          promSuccess(sucsess);
+        }, reject => {
+          promReject(reject);
+        });
+      } else {
+        promReject('Pid not supported');
+      }
     });
   }
 }

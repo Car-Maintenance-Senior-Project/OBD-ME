@@ -161,9 +161,10 @@ export class OBDConnectorService {
   /**
    * Writes the given request to the OBD and then subscribes for a response from the OBD
    * @param callData - Data to be written to the OBD
+   * @param type - What it should be parsed as
    * @returns Promise with the response or rejection
    */
-  writeThenRead(callData: string): Promise<string> {
+  writeThenRead(callData: string, type: string): Promise<string> {
     return new Promise((promSuccess, promReject) => {
       this.isConnected().then(isConnect => {
         if (isConnect) {
@@ -187,7 +188,7 @@ export class OBDConnectorService {
                     const hexCall = '4' + callData[1] + ' ' + callData.slice(2, 4) + ' ';
                     if (data.includes(hexCall)) {
                       data = data.slice(data.indexOf(hexCall) + 6);
-                      promSuccess(this.parseHex(data, 'string'));
+                      promSuccess(this.parseHex(data, type));
                     } else {
                       promReject('Wrong call?');
                     }
@@ -233,6 +234,8 @@ export class OBDConnectorService {
       return this.hexToString(hexArray);
     } else if (type === 'binary') {
       return this.hexToBinary(hexArray);
+    } else if (type === 'number') {
+      return this.hexToDecimal(hexArray);
     }
   }
 
@@ -256,6 +259,14 @@ export class OBDConnectorService {
     const finalArray = [];
     hexArray.forEach((data, index) => {
       finalArray[index] = (parseInt(data, 16).toString(2)).padStart(8, '0');
+    });
+    return finalArray.join('');
+  }
+
+  hexToDecimal(hexArray: string[]): string {
+    const finalArray = [];
+    hexArray.forEach((data, index) => {
+      finalArray[index] = parseInt(data, 16).toString();
     });
     return finalArray.join('');
   }
