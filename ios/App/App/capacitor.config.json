@@ -1,6 +1,6 @@
 {
-  "appId": "io.ionic.obdme",
-  "appName": "OBDandMe",
+  "appId": "io.ionic.starter",
+  "appName": "OBD&ME",
   "bundledWebRuntime": false,
   "npmClient": "npm",
   "webDir": "www",
