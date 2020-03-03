@@ -1,7 +1,7 @@
 import { Component, OnInit, NgZone } from '@angular/core';
 import { BluetoothSerial } from '@ionic-native/bluetooth-serial/ngx';
 
-import { OBDConnectorService } from '../services/obd-connector.service';
+import { PidsServiceService } from '../services/pids-service.service';
 
 @Component({
   selector: 'app-vehicle-info',
@@ -17,7 +17,7 @@ export class VehicleInfoPage implements OnInit {
   // private testVin = 'WBA3N5C55FK484549';
   // private vinNum: string;
 
-  constructor(private ngZone: NgZone, private bs: BluetoothSerial, private obd: OBDConnectorService) {
+  constructor(private ngZone: NgZone, private bs: BluetoothSerial, private obd: PidsServiceService) {
   }
 
   ngOnInit() {
@@ -27,7 +27,9 @@ export class VehicleInfoPage implements OnInit {
    * Gets vehicle info
    */
   getVehicleInfo() {
-    this.obd.writeThenRead('09023\r').then(response => {
+    // const supportedArray = this.obd.getAllPidsSupported();
+    // this.year = supportedArray[0];
+    this.obd.callOBDPid('09023\r', 'string').then(response => {
       this.vin = response;
       this.model = "CRV";
       this.year = "2006";

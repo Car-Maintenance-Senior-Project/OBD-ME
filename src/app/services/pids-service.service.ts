@@ -36,32 +36,55 @@ export class PidsServiceService {
     array.forEach(element => {
       this.OBDConnector.writeThenRead('01' + element + '0', 'binary').then(promSuccess => {
         PIDs1String += promSuccess;
-      }, promReject => {
-        // TODO: figure out what to do when it fails
-        console.log(promReject);
+        this.OBDConnector.writeThenRead('02' + element + '0', 'binary').then(promSuccess => {
+          PIDs2String += promSuccess;
+
+          for (let c = 0; c < PIDs1String.length; c++) {
+            this.service1SupportedPIDs[c] = (PIDs1String[c] === '1');
+            this.service2SupportedPIDs[c] = (PIDs2String[c] === '1');
+          }
+
+          this.OBDConnector.writeThenRead('0900', 'binary').then(promSuccess => {
+            for (let c = 0; c < promSuccess.length; c++) {
+              this.service9SupportedPIDs[c] = (promSuccess[c] === '1');
+            }
+          }, promReject => {
+            // TODO: figure out what to do when it fails
+            console.log(promReject);
+          });
+        }, promReject => {
+          // TODO: figure out what to do when it fails
+          console.log(promReject);
+        });
       });
-
-      this.OBDConnector.writeThenRead('02' + element + '0', 'binary').then(promSuccess => {
-        PIDs2String += promSuccess;
-      }, promReject => {
-        // TODO: figure out what to do when it fails
-        console.log(promReject);
-      });
-    });
-
-    for (let c = 0; c < PIDs1String.length; c++) {
-      this.service1SupportedPIDs[c] = (PIDs1String[c] === '1');
-      this.service2SupportedPIDs[c] = (PIDs2String[c] === '1');
-    }
-
-    this.OBDConnector.writeThenRead('0900', 'binary').then(promSuccess => {
-      for (let c = 0; c < promSuccess.length; c++) {
-        this.service9SupportedPIDs[c] = (promSuccess[c] === '1');
-      }
     }, promReject => {
       // TODO: figure out what to do when it fails
       console.log(promReject);
     });
+  }
+
+  getAllPidsSupported(): string[] {
+    let pids1, pids2, pids9: string;
+    for (let i = 0; i < this.service1SupportedPIDs.length; i++) {
+      if (this.service1SupportedPIDs[i]) {
+        pids1 += '1, ';
+      } else {
+        pids1 += '0, ';
+      }
+      if (this.service2SupportedPIDs[i]) {
+        pids2 += '1, ';
+      } else {
+        pids2 += '0, ';
+      }
+    }
+    for (let i = 0; i < this.service9SupportedPIDs.length; i++) {
+      if (this.service9SupportedPIDs[i]) {
+        pids9 += '1, ';
+      } else {
+        pids9 += '0, ';
+      }
+    }
+    return [pids1, pids2, pids9];
   }
 
   pidSupported(group: number, call: number): boolean {

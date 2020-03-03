@@ -4,7 +4,8 @@
             <ion-menu-button></ion-menu-button>
         </ion-buttons>
         <ion-title>
-            Vehicle Info
+            <!-- Vehicle Info -->
+            Test Page
         </ion-title>
         <ion-buttons slot="end">
             <ion-button routerLink="/settings" routerDirection="forward">
@@ -14,7 +15,7 @@
     </ion-toolbar>
 </ion-header>
 
-<ion-content>
+<!-- <ion-content>
     <ion-item>
         <ion-label>Vin:</ion-label>
         <ion-input [value]="vin" readonly></ion-input>
@@ -29,6 +30,28 @@
     </ion-item>
     <ion-item>
         <ion-label>Model:</ion-label>
+        <ion-input [value]="model" readonly></ion-input>
+    </ion-item>
+    <ion-button expand="block" (click)="getVehicleInfo()">
+        Get Info
+    </ion-button>
+</ion-content> -->
+
+<ion-content>
+    <ion-item>
+        <ion-label>Vin:</ion-label>
+        <ion-input [value]="vin" readonly></ion-input>
+    </ion-item>
+    <ion-item>
+        <ion-label>Supported Pids1:</ion-label>
+        <ion-input [value]="year" readonly></ion-input>
+    </ion-item>
+    <ion-item>
+        <ion-label>Supported Pids2:</ion-label>
+        <ion-input [value]="make" readonly></ion-input>
+    </ion-item>
+    <ion-item>
+        <ion-label>Supported Pids9:</ion-label>
         <ion-input [value]="model" readonly></ion-input>
     </ion-item>
     <ion-button expand="block" (click)="getVehicleInfo()">
