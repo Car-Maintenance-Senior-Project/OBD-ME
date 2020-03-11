@@ -8,6 +8,7 @@ import { BluetoothSerial } from '@ionic-native/bluetooth-serial/ngx';
 import { Storage } from '@ionic/storage';
 import { LoadingController } from '@ionic/angular';
 import { ToastMasterService } from '../services/toast-master.service';
+// import { PidsServiceService } from '../services/pids-service.service';
 
 import { Device } from '../interfaces/device-struct';
 
@@ -33,7 +34,8 @@ export class OBDConnectorService {
     private blueSerial: BluetoothSerial,
     private store: Storage,
     private loader: LoadingController,
-    private toast: ToastMasterService
+    private toast: ToastMasterService,
+    // private pids: PidsServiceService
   ) { }
 
 
@@ -94,6 +96,7 @@ export class OBDConnectorService {
             this.runATCodes();
             this.loading.dismiss();
             this.toast.connectedMessage();
+            // this.pids.getSupportedPIDs();
             resolve('Was able to connect!');
           }, rejected => {
             this.loading.dismiss();
@@ -165,36 +168,37 @@ export class OBDConnectorService {
    * @returns Promise with the response or rejection
    */
   writeThenRead(callData: string, type: string): Promise<string> {
+    console.log('OBDMEDebug: Connector: start');
     return new Promise((promSuccess, promReject) => {
       this.isConnected().then(isConnect => {
         if (isConnect) {
-          // if (callData is supported) {
-          //   continue
-          // } else {
-          //   promReject('BAD CALL');
-          // }
+          console.log('OBDMEDebug: Connector: isconnected');
           this.blueSerial.write(callData).then(success => {
-            this.blueSerial.subscribeRawData().subscribe(event => {
-              this.blueSerial.readUntil('\r\r').then(data => {
-                if (data !== '') {
-                  console.log(data);
-                  if (data === 'NO DATA\r\r') {
-                    promReject('NO DATA');
-                  } else if (data.indexOf(callData) === -1) {
-                    console.log(data.indexOf(callData));
-                    promReject('RERUN');
-                  } else {
-                    data = data.slice(data.indexOf(callData) + 5);
-                    const hexCall = '4' + callData[1] + ' ' + callData.slice(2, 4) + ' ';
+            console.log('OBDMEDebug: Connector: write data');
+            this.blueSerial.subscribe('\r\r').subscribe(data => {
+              console.log('OBDMEDebug: Connector: EVENT: ' + data);
+              if (data !== '') {
+                console.log(data);
+                // if (data === 'NO DATA\r\r') {
+                if (data.includes('NO DATA')) {
+                  console.log('OBDMEDebug: Connector: NO DATA');
+                  // promReject('NO DATA');
+                  promSuccess('NO DATA');
+                } else if (data.includes('OK')) {
+                  promSuccess('OK');
+                } else {
+                  console.log('OBDMEDebug: Connector: HAS DATA');
+                  const hexCall = '4' + callData[1] + ' ' + callData.slice(2, 4) + ' ';
+                  if (data.includes(hexCall)) {
+                    data = data.slice(data.indexOf(hexCall) + 6);
                     if (data.includes(hexCall)) {
-                      data = data.slice(data.indexOf(hexCall) + 6);
-                      promSuccess(this.parseHex(data, type));
-                    } else {
-                      promReject('Wrong call?');
+                      data = data.slice(0, data.indexOf(hexCall));
                     }
+                    console.log('OBDMEDebug: Connector: return: ' + data + 'and: ' + this.parseHex(data, type));
+                    promSuccess(this.parseHex(data, type));
                   }
                 }
-              });
+              }
             });
 
           }, failure => {
@@ -202,6 +206,7 @@ export class OBDConnectorService {
             promReject('Couldnt write');
           });
         } else {
+          console.log('OBDMEDebug: Connector: not connected');
           this.toast.connectToBluetooth();
           promReject('Not connected to bluetooth');
         }
@@ -259,6 +264,9 @@ export class OBDConnectorService {
     const finalArray = [];
     hexArray.forEach((data, index) => {
       finalArray[index] = (parseInt(data, 16).toString(2)).padStart(8, '0');
+      if (finalArray[index] === '\u0001') {
+        finalArray[index] = '';
+      }
     });
     return finalArray.join('');
   }
@@ -267,6 +275,9 @@ export class OBDConnectorService {
     const finalArray = [];
     hexArray.forEach((data, index) => {
       finalArray[index] = parseInt(data, 16).toString();
+      if (finalArray[index] === '\u0001') {
+        finalArray[index] = '';
+      }
     });
     return finalArray.join('');
   }

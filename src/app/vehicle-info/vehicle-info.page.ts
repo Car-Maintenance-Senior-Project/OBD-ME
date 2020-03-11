@@ -27,18 +27,39 @@ export class VehicleInfoPage implements OnInit {
    * Gets vehicle info
    */
   getVehicleInfo() {
-    // const supportedArray = this.obd.getAllPidsSupported();
-    // this.year = supportedArray[0];
-    this.obd.callOBDPid('09023\r', 'string').then(response => {
-      this.vin = response;
-      this.model = "CRV";
-      this.year = "2006";
-      this.make = "Honda";
-    }, rejection => {
-      this.vin = rejection;
-      this.model = "CRV";
-      this.year = "2006";
-      this.make = "Honda";
+    console.log('OBDMEDebug: START of call');
+    // this.obd.getSupportedPIDs().then(sucsess => {
+    //   const supportedArray = this.obd.getAllPidsSupported();
+    //   console.log('OBDMEDebug: gotPids');
+    //   this.obd.callOBDPid('09023\r', 'string').then(response => {
+    //     console.log('OBDMEDebug: response back: ' + response);
+    //     this.vin = response;
+    //     this.model = "CRV";
+    //     this.year = "2006";
+    //     this.make = "Honda";
+    //   }, rejection => {
+    //     console.log('OBDMEDebug: rejection back: ' + rejection);
+    //     this.vin = rejection;
+    //     this.model = "CRV";
+    //     this.year = "2006";
+    //     this.make = "Honda";
+    //   });
+    //   console.log('OBDMEDebug: finalArray: ' + supportedArray);
+    // }, failure => {
+    //   console.log('OBDMEDebug: didnt get pids');
+    // });
+    this.obd.callOBDPid('0104\r', 'number').then(resp => {
+      this.obd.callOBDPid('0103\r', 'number').then(resp => {
+        this.obd.callOBDPid('0102\r', 'number').then(resp => {
+
+        }, reje => {
+          //nothing
+        });
+      }, reje => {
+        //nothing
+      });
+    }, reje => {
+      //nothing
     });
   }
 }
