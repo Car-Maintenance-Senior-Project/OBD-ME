@@ -28,6 +28,11 @@ export class PidsServiceService {
     });
   }
 
+  getProfileName(): string {
+    return this.OBDConnector.getProfileName();
+  }
+
+  //Todo: could be longer than 6 so figure out how to do dynamic based on last digit of previous call
   getSupportedPIDs(): Promise<boolean> {
     return new Promise(async (gotPids, didntGetPids) => {
       // const array = ['0', '2', '4', '6', '8', 'A', 'C'];
@@ -76,32 +81,6 @@ export class PidsServiceService {
         didntGetPids(true);
       });
 
-      // array.forEach(async (element) => {
-      //   await this.OBDConnector.writeThenRead('01' + element + '01\r', 'binary').then(promSuccess => {
-      //     PIDs1String += promSuccess;
-      //   }, promReject => {
-      //     // TODO: figure out what to do when it fails
-      //     console.log('OBDMEDebug: Reject: ' + promReject);
-      //     didntGetPids(true);
-      //   });
-      // for (let i = 0; i < 6; i = i + 2) {
-      //   await this.OBDConnector.writeThenRead('01' + array[i] + '01\r', 'binary').then(promSuccess => {
-      //     PIDs1String += promSuccess;
-      //   }, promReject => {
-      //     // TODO: figure out what to do when it fails
-      //     console.log('OBDMEDebug: Reject: ' + promReject);
-      //     didntGetPids(true);
-      //   });
-      // }
-      // this.OBDConnector.writeThenRead('02' + element + '01\r', 'binary').then(promSuccess => {
-      //   PIDs2String += promSuccess;
-      // }, promReject => {
-      //   // TODO: figure out what to do when it fails
-      //   console.log('OBDMEDebug: Reject: ' + promReject);
-      //   didntGetPids(true);
-      // });
-      // });
-
     });
   }
 
@@ -145,19 +124,19 @@ export class PidsServiceService {
     console.log('OBDMEDebug: start of callPID');
     return new Promise((promSuccess, promReject) => {
       console.log('OBDMEDebug: start Prom');
-      // if (this.pidSupported(parseInt(call.charAt(1), 10), parseInt(call.slice(2, 4), 10))) {
-      console.log('OBDMEDebug: callPid: iftrue');
-      this.OBDConnector.writeThenRead(call, type).then(sucsess => {
-        console.log('OBDMEDebug: callPid: sucsess: ' + sucsess);
-        promSuccess(sucsess);
-      }, reject => {
-        console.log('OBDMEDebug: callPid: reject: ' + reject);
-        promReject(reject);
-      });
-      // } else {
-      //   console.log('OBDMEDebug: callPid: iffalse');
-      //   promReject('Pid not supported');
-      // }
+      if (this.pidSupported(parseInt(call.charAt(1), 10), parseInt(call.slice(2, 4), 10))) {
+        console.log('OBDMEDebug: callPid: iftrue');
+        this.OBDConnector.writeThenRead(call, type).then(sucsess => {
+          console.log('OBDMEDebug: callPid: sucsess: ' + sucsess);
+          promSuccess(sucsess);
+        }, reject => {
+          console.log('OBDMEDebug: callPid: reject: ' + reject);
+          promReject(reject);
+        });
+      } else {
+        console.log('OBDMEDebug: callPid: iffalse');
+        promReject('Pid not supported');
+      }
     });
   }
 }

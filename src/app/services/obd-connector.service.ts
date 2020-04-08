@@ -8,9 +8,11 @@ import { BluetoothSerial } from '@ionic-native/bluetooth-serial/ngx';
 import { Storage } from '@ionic/storage';
 import { LoadingController } from '@ionic/angular';
 import { ToastMasterService } from '../services/toast-master.service';
+import { Profile } from '../interfaces/profiles';
 // import { PidsServiceService } from '../services/pids-service.service';
 
 import { Device } from '../interfaces/device-struct';
+import { from } from 'rxjs';
 
 // example of long hex 09023\r014 \r0: 49 02 01 57 42 41 \r1: 33 4E 35 43 35 35 46 \r2: 4B 34 38 34 35 34 39 \r\r
 // example of short hex 09001\r49 00 55 40 00 00 \r\r
@@ -44,6 +46,7 @@ export class OBDConnectorService {
   public processing: boolean;
   private started = false;
   private loading: HTMLIonLoadingElement;
+  private profileLoaded: Profile;
 
 
   /**
@@ -58,6 +61,13 @@ export class OBDConnectorService {
       if (!this.started) {
         this.started = true;
         this.getPaired();
+        this.profileLoaded = {
+          vin: '',
+          maintenceRecord: [],
+          NickName: '1',
+          Errors: []
+        };
+
         this.store.get('storedMac').then(data => {
           if (data != null) {
             this.Connect(data).then(success => {
@@ -73,6 +83,10 @@ export class OBDConnectorService {
         reject(true);
       }
     });
+  }
+
+  getProfileName(): string {
+    return this.profileLoaded.NickName;
   }
 
   /**
@@ -114,8 +128,69 @@ export class OBDConnectorService {
     });
   }
 
-  runATCodes() {
-    // ATZ
+  runATCodes(): Promise<string> {
+    return new Promise((promSuccess, promReject) => {
+      this.isConnected().then(isConnect => {
+        if (isConnect) {
+          console.log('OBDMEDebug: Connector: isconnected');
+          this.blueSerial.write('Z').then(success => {
+            console.log('OBDMEDebug: Connector: write data');
+            this.blueSerial.subscribe('\r\r').subscribe(data => {
+              console.log('OBDMEDebug: Connector: EVENT: ' + data);
+              if (data !== '') {
+                console.log(data);
+                // if (data === 'NO DATA\r\r') {
+                if (data.includes('NO DATA')) {
+                  console.log('OBDMEDebug: Connector: NO DATA');
+                  // promReject('NO DATA');
+                  promSuccess('NO DATA');
+                } else if (data.includes('ELM327')) {
+                  this.blueSerial.write('SP0').then(success => {
+                    this.blueSerial.write('0100').then(success => {
+                      console.log('OBDMEDebug: Connector: write data');
+                      this.blueSerial.subscribe('\r\r').subscribe(data => {
+                        console.log('OBDMEDebug: Connector: EVENT: ' + data);
+                        if (data !== '') {
+                          console.log(data);
+                          // if (data === 'NO DATA\r\r') {
+                          if (data.includes('NO DATA')) {
+                            console.log('OBDMEDebug: Connector: NO DATA');
+                            // promReject('NO DATA');
+                            promSuccess('NO DATA');
+                            // } else if (data.includes('ELM327')) {
+
+                            //   promSuccess('OK');
+                          } else {
+                            promSuccess(data);
+                          }
+                        }
+                      });
+                    }, failure => {
+                      this.toast.errorMessage('Couldnt write data!');
+                      promReject('Couldnt write');
+                    });
+                  }, failure => {
+                    this.toast.errorMessage('Couldnt write data!');
+                    promReject('Couldnt write');
+                  });
+                  promSuccess('OK');
+                } else {
+                  promReject('No Response');
+                }
+              }
+            });
+
+          }, failure => {
+            this.toast.errorMessage('Couldnt write data!');
+            promReject('Couldnt write');
+          });
+        } else {
+          console.log('OBDMEDebug: Connector: not connected');
+          this.toast.connectToBluetooth();
+          promReject('Not connected to bluetooth');
+        }
+      });
+    });
   }
 
 
@@ -166,6 +241,7 @@ export class OBDConnectorService {
    * @param callData - Data to be written to the OBD
    * @param type - What it should be parsed as
    * @returns Promise with the response or rejection
+   * TODO: Mannage duplicats that also are more than one message long or set the OBD device to only listen to the main responder
    */
   writeThenRead(callData: string, type: string): Promise<string> {
     console.log('OBDMEDebug: Connector: start');

@@ -14,6 +14,7 @@ export class VehicleInfoPage implements OnInit {
   public make: string;
   public model: string;
   private vin: string;
+  private name: string;
   // private testVin = 'WBA3N5C55FK484549';
   // private vinNum: string;
 
@@ -21,6 +22,7 @@ export class VehicleInfoPage implements OnInit {
   }
 
   ngOnInit() {
+    this.name = this.obd.getProfileName();
   }
 
   /**
@@ -48,16 +50,18 @@ export class VehicleInfoPage implements OnInit {
     // }, failure => {
     //   console.log('OBDMEDebug: didnt get pids');
     // });
-    this.obd.callOBDPid('0104\r', 'number').then(resp => {
-      this.obd.callOBDPid('0103\r', 'number').then(resp => {
-        this.obd.callOBDPid('0102\r', 'number').then(resp => {
+    this.obd.callOBDPid('0300\r', 'number').then(resp => {
+      // Make a list of all the things it could be for easy lookup
+      this.make = resp;
+      // this.obd.callOBDPid('0103\r', 'number').then(resp => {
+      //   this.obd.callOBDPid('0102\r', 'number').then(resp => {
 
-        }, reje => {
-          //nothing
-        });
-      }, reje => {
-        //nothing
-      });
+      //   }, reje => {
+      //     //nothing
+      //   });
+      // }, reje => {
+      //   //nothing
+      // });
     }, reje => {
       //nothing
     });
