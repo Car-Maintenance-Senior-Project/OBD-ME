@@ -16,24 +16,13 @@ export class AppComponent {
       title: 'Home',
       url: '/home',
       icon: 'home'
-    },
-    {
-      title: 'Vehicle Info',
-      url: '/vehicle-info',
-      icon: 'car'
-    },
-    {
-      title: 'Maintenance Record',
-      url: '/maintenance-record',
-      icon: 'clipboard'
     }
   ];
 
   constructor(
     private platform: Platform,
     private splashScreen: SplashScreen,
-    private statusBar: StatusBar,
-    private darkThemeSwitcher: DarkThemeSwitcherService,
+    private statusBar: StatusBar
   ) {
     this.initializeApp();
   }
@@ -46,10 +35,15 @@ export class AppComponent {
   }
 
   ngOnInit() {
-    const darkPreferred = window.matchMedia("(prefers-color-scheme: dark)");
-    this.darkThemeSwitcher.enableDarkTheme(darkPreferred.matches);
+    const path = window.location.pathname;
 
-    darkPreferred.addListener(mediaQuery => this.darkThemeSwitcher.enableDarkTheme(mediaQuery.matches));
+    if (path !== undefined) {
+      this.selectedIndex = this.appPages.findIndex(page => page.url === path);
+    }
+
+    // default route is '/', so we default the selected index to the home page in this case
+    if (path === '/') {
+      this.selectedIndex = 0;
+    }
   }
-
 }
