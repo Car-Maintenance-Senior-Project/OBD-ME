@@ -32,8 +32,7 @@ export class AppComponent {
   constructor(
     private platform: Platform,
     private splashScreen: SplashScreen,
-    private statusBar: StatusBar,
-    private darkThemeSwitcher: DarkThemeSwitcherService,
+    private statusBar: StatusBar
   ) {
     this.initializeApp();
   }
@@ -46,10 +45,6 @@ export class AppComponent {
   }
 
   ngOnInit() {
-    const darkPreferred = window.matchMedia("(prefers-color-scheme: dark)");
-    this.darkThemeSwitcher.enableDarkTheme(darkPreferred.matches);
-
-    darkPreferred.addListener(mediaQuery => this.darkThemeSwitcher.enableDarkTheme(mediaQuery.matches));
   }
 
 }
