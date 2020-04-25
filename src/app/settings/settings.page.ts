@@ -28,7 +28,7 @@ export class SettingsPage implements OnInit {
     this.OBD.getPaired().then(resolve => {
       this.devices = this.OBD.getDeviceList();
     });
-    this.OBD.isConnected().then(resolve => {
+    this.OBD.isConnectedFun().then(resolve => {
       this.bluetoothConnected = resolve;
     });
   }
@@ -38,8 +38,8 @@ export class SettingsPage implements OnInit {
    * Tries to connect to that mac.
    */
   onChangeOfMac() {
-    this.OBD.Connect(this.chosenMac).then(sucsess => {
-      this.OBD.isConnected().then(resolve => {
+    this.OBD.connect(this.chosenMac).then(sucsess => {
+      this.OBD.isConnectedFun().then(resolve => {
         this.bluetoothConnected = resolve;
       });
     }, failure => {

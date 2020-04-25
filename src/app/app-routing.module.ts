@@ -8,7 +8,8 @@ const routes: Routes = [
   { path: 'vehicle-info', loadChildren: './vehicle-info/vehicle-info.module#VehicleInfoPageModule' },
   { path: 'maintenance-record', loadChildren: './maintenance-record/maintenance-record.module#MaintenanceRecordPageModule' },
   { path: 'maintenance-record/:id', loadChildren: './edit-maintenance-record/edit-maintenance-record.module#EditMaintenanceRecordPageModule' },
-  { path: 'add-maintenance-record', loadChildren: './add-maintenance-record/add-maintenance-record.module#AddMaintenanceRecordPageModule' },
+  { path: 'add-maintenance-record', loadChildren: './add-maintenance-record/add-maintenance-record.module#AddMaintenanceRecordPageModule' },  { path: 'fuel-economy', loadChildren: './fuel-economy/fuel-economy.module#FuelEconomyPageModule' },
+
 ];
 
 @NgModule({

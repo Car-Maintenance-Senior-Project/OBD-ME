@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 
-import { OBDConnectorService } from '../services/obdconnector.service';
+import { OBDConnectorService } from '../services/obd-connector.service';
 
 import { FuelEconomyInfo } from '../interfaces/fuel-economy-info';
 import { PIDConstants } from '../classes/pidconstants';

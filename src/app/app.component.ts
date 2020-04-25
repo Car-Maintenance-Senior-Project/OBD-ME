@@ -26,6 +26,11 @@ export class AppComponent {
       title: 'Maintenance Record',
       url: '/maintenance-record',
       icon: 'clipboard'
+    },
+    {
+      title: 'Fuel Economy',
+      url: '/fuel-economy',
+      icon: 'speedometer'
     }
   ];
 
@@ -45,6 +50,16 @@ export class AppComponent {
   }
 
   ngOnInit() {
+    const path = window.location.pathname;
+
+    if (path !== undefined) {
+      this.selectedIndex = this.appPages.findIndex(page => page.url === path);
+    }
+
+    // default route is '/', so we default the selected index to the home page in this case
+    if (path === '/') {
+      this.selectedIndex = 0;
+    }
   }
 
 }

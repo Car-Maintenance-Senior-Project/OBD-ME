@@ -20,7 +20,7 @@ export class PidsServiceService {
         this.service1SupportedPIDs = [];
         this.service2SupportedPIDs = [];
         this.service9SupportedPIDs = [];
-        this.getSupportedPIDs();
+        // this.getSupportedPIDs();
         resolve(true);
       } catch (e) {
         reject(true);
@@ -33,56 +33,56 @@ export class PidsServiceService {
   }
 
   //Todo: could be longer than 6 so figure out how to do dynamic based on last digit of previous call
-  getSupportedPIDs(): Promise<boolean> {
-    return new Promise(async (gotPids, didntGetPids) => {
-      // const array = ['0', '2', '4', '6', '8', 'A', 'C'];
-      let PIDs1String: string;
-      let PIDs2String: string;
-      this.OBDConnector.writeThenRead('01' + '0' + '01\r', 'binary').then(promSuccess => {
-        PIDs1String += promSuccess;
-        this.OBDConnector.writeThenRead('01' + '2' + '01\r', 'binary').then(promSuccess => {
-          PIDs1String += promSuccess;
-          this.OBDConnector.writeThenRead('01' + '4' + '01\r', 'binary').then(promSuccess => {
-            PIDs1String += promSuccess;
-            this.OBDConnector.writeThenRead('01' + '6' + '01\r', 'binary').then(promSuccess => {
-              PIDs1String += promSuccess;
-              for (let c = 0; c < PIDs1String.length; c++) {
-                this.service1SupportedPIDs[c] = (PIDs1String[c] === '1');
-              }
-              this.OBDConnector.writeThenRead('09001\r', 'binary').then(promSuccess => {
-                for (let c = 0; c < promSuccess.length; c++) {
-                  this.service9SupportedPIDs[c] = (promSuccess[c] === '1');
-                }
-                gotPids(true);
-              }, promReject => {
-                // TODO: figure out what to do when it fails
-                console.log('OBDMEDebug: Reject: ' + promReject);
-                didntGetPids(true);
-              });
-            }, promReject => {
-              // TODO: figure out what to do when it fails
-              console.log('OBDMEDebug: Reject: ' + promReject);
-              didntGetPids(true);
-            });
-          }, promReject => {
-            // TODO: figure out what to do when it fails
-            console.log('OBDMEDebug: Reject: ' + promReject);
-            didntGetPids(true);
-          });
-        }, promReject => {
-          // TODO: figure out what to do when it fails
-          console.log('OBDMEDebug: Reject: ' + promReject);
-          didntGetPids(true);
-        });
+  // getSupportedPIDs(): Promise<boolean> {
+  //   return new Promise(async (gotPids, didntGetPids) => {
+  //     // const array = ['0', '2', '4', '6', '8', 'A', 'C'];
+  //     let PIDs1String: string;
+  //     let PIDs2String: string;
+  //     this.OBDConnector.writeThenRead('01' + '0' + '01\r', 'binary').then(promSuccess => {
+  //       PIDs1String += promSuccess;
+  //       this.OBDConnector.writeThenRead('01' + '2' + '01\r', 'binary').then(promSuccess => {
+  //         PIDs1String += promSuccess;
+  //         this.OBDConnector.writeThenRead('01' + '4' + '01\r', 'binary').then(promSuccess => {
+  //           PIDs1String += promSuccess;
+  //           this.OBDConnector.writeThenRead('01' + '6' + '01\r', 'binary').then(promSuccess => {
+  //             PIDs1String += promSuccess;
+  //             for (let c = 0; c < PIDs1String.length; c++) {
+  //               this.service1SupportedPIDs[c] = (PIDs1String[c] === '1');
+  //             }
+  //             this.OBDConnector.writeThenRead('09001\r', 'binary').then(promSuccess => {
+  //               for (let c = 0; c < promSuccess.length; c++) {
+  //                 this.service9SupportedPIDs[c] = (promSuccess[c] === '1');
+  //               }
+  //               gotPids(true);
+  //             }, promReject => {
+  //               // TODO: figure out what to do when it fails
+  //               console.log('OBDMEDebug: Reject: ' + promReject);
+  //               didntGetPids(true);
+  //             });
+  //           }, promReject => {
+  //             // TODO: figure out what to do when it fails
+  //             console.log('OBDMEDebug: Reject: ' + promReject);
+  //             didntGetPids(true);
+  //           });
+  //         }, promReject => {
+  //           // TODO: figure out what to do when it fails
+  //           console.log('OBDMEDebug: Reject: ' + promReject);
+  //           didntGetPids(true);
+  //         });
+  //       }, promReject => {
+  //         // TODO: figure out what to do when it fails
+  //         console.log('OBDMEDebug: Reject: ' + promReject);
+  //         didntGetPids(true);
+  //       });
 
-      }, promReject => {
-        // TODO: figure out what to do when it fails
-        console.log('OBDMEDebug: Reject: ' + promReject);
-        didntGetPids(true);
-      });
+  //     }, promReject => {
+  //       // TODO: figure out what to do when it fails
+  //       console.log('OBDMEDebug: Reject: ' + promReject);
+  //       didntGetPids(true);
+  //     });
 
-    });
-  }
+  //   });
+  // }
 
   getAllPidsSupported(): string[] {
     let pids1, pids2, pids9: string;
