@@ -177,7 +177,7 @@ export class OBDConnectorService {
     });
   }
 
-  getSupportedPids1(): Promise<>
+  // getSupportedPids1(): Promise<>
 
   private getSupportedPIDs(): Promise<any> {
     return new Promise<any>((resolve, reject) => {
