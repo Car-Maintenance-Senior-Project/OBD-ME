@@ -8,6 +8,8 @@ import { Subscription } from 'rxjs';
 import { filter } from 'rxjs/operators';
 import { Storage } from '@ionic/storage';
 
+import { StorageKeys } from '../classes/storage-keys';
+
 declare var google;
 
 @Component({
@@ -78,18 +80,21 @@ export class FuelEconomyPage implements OnInit {
     this.pathColors = [];
     this.lastCoords = null;
 
+    // TODO: initialize fuel economy tracker w/ first odometer point
+
     this.clearCurrentMapTrack();
 
     this.positionSubscription = this.geolocation.watchPosition()
       .pipe(
         filter((p) => p.coords !== undefined) //Filter Out Errors
       )
-      .subscribe(data => {
-        setTimeout(() => {
-          this.trackedRoute.push({lat: data.coords.latitude, lng: data.coords.longitude});
+      .subscribe(posData => {
+        // setTimeout(() => {
+          // TODO: get current MPG and use it to determine the color to use
+          this.trackedRoute.push({lat: posData.coords.latitude, lng: posData.coords.longitude});
           this.pathColors.push(this.colors[Math.floor(Math.random() * this.colors.length)]);
           this.drawSegment(this.trackedRoute[this.trackedRoute.length - 1], this.pathColors[this.pathColors.length - 1])       
-        }, 0);
+        // }, 0);
       });
   }
 

@@ -20,7 +20,7 @@ export class FuelEconomyService {
   private GRAMS_PER_POUND: number = 454
 
   constructor(private obd: OBDConnectorService) {
-    // this.mpgInfo = this.obd.currentProfile.fuelEconomy; //TODO: figure out how to get this tied into the current car profile data
+    this.mpgInfo = this.obd.currentProfile.fuelEconomy; //TODO: figure out how to get this tied into the current car profile data
     this.mpgInfo = { mpg: 0, count: 0 };
     // this.lastOdometerReading = this.obd.callPID(PIDConstants.) //TODO: get reading from odometer - this requires 4 pieces of data...
   }

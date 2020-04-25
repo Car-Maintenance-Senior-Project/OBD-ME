@@ -4,6 +4,8 @@ import { Platform } from '@ionic/angular';
 import { SplashScreen } from '@ionic-native/splash-screen/ngx';
 import { StatusBar } from '@ionic-native/status-bar/ngx';
 
+import { DarkThemeSwitcherService } from '../app/services/dark-theme-switcher.service';
+
 @Component({
   selector: 'app-root',
   templateUrl: 'app.component.html',
@@ -37,9 +39,11 @@ export class AppComponent {
   constructor(
     private platform: Platform,
     private splashScreen: SplashScreen,
-    private statusBar: StatusBar
+    private statusBar: StatusBar,
+    private darkTheme: DarkThemeSwitcherService
   ) {
     this.initializeApp();
+    console.log(window.matchMedia('(prefers-color-scheme: dark)'));
   }
 
   initializeApp() {
@@ -60,6 +64,12 @@ export class AppComponent {
     if (path === '/') {
       this.selectedIndex = 0;
     }
+
+    // set up auto dark mode tracking, but still allow settings page
+    // to handle manual toggling
+    const prefersDarkMode = window.matchMedia('(prefers-color-scheme: dark)');
+    this.darkTheme.enableDarkTheme(prefersDarkMode.matches);
+    prefersDarkMode.addListener((mediaQuery) => this.darkTheme.enableDarkTheme(mediaQuery.matches));
   }
 
 }
