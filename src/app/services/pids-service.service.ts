@@ -120,23 +120,23 @@ export class PidsServiceService {
     }
   }
 
-  callOBDPid(call: string, type: string): Promise<string> {
+  callOBDPid(call: string, type: any): Promise<string> {
     console.log('OBDMEDebug: start of callPID');
     return new Promise((promSuccess, promReject) => {
       console.log('OBDMEDebug: start Prom');
-      if (this.pidSupported(parseInt(call.charAt(1), 10), parseInt(call.slice(2, 4), 10))) {
-        console.log('OBDMEDebug: callPid: iftrue');
-        this.OBDConnector.writeThenRead(call, type).then(sucsess => {
-          console.log('OBDMEDebug: callPid: sucsess: ' + sucsess);
-          promSuccess(sucsess);
-        }, reject => {
-          console.log('OBDMEDebug: callPid: reject: ' + reject);
-          promReject(reject);
-        });
-      } else {
-        console.log('OBDMEDebug: callPid: iffalse');
-        promReject('Pid not supported');
-      }
+      // if (this.pidSupported(parseInt(call.charAt(1), 10), parseInt(call.slice(2, 4), 10))) {
+      console.log('OBDMEDebug: callPid: iftrue');
+      this.OBDConnector.callPID(call, type).then(sucsess => {
+        console.log('OBDMEDebug: callPid: sucsess: ' + sucsess);
+        promSuccess(sucsess);
+      }, reject => {
+        console.log('OBDMEDebug: callPid: reject: ' + reject);
+        promReject(reject);
+      });
+      // } else {
+      //   console.log('OBDMEDebug: callPid: iffalse');
+      //   promReject('Pid not supported');
+      // }
     });
   }
 }
