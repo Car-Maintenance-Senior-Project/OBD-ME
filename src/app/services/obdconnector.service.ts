@@ -22,7 +22,7 @@ export class OBDConnectorService {
   private service1and2SupportedPIDs: boolean[];
   private service9SupportedPIDs: boolean[];
 
-  constructor(private btSerial: BluetoothSerial, private storage: Storage, private vinParser: VINParserService) { 
+  constructor(private btSerial: BluetoothSerial, private storage: Storage, private vinParser: VINParserService) {
     try {
       this.service1and2SupportedPIDs = [true];
       this.service9SupportedPIDs = [true];
@@ -31,7 +31,7 @@ export class OBDConnectorService {
       }, reject => {
         // TODO: handle something here
       });
-    } catch(e) {
+    } catch (e) {
       // TODO: error message
     }
   }
@@ -50,7 +50,7 @@ export class OBDConnectorService {
 
       this.btSerial.isEnabled().then(enabled => {
 
-        var connect = function() {
+        var connect = function () {
           if (MACAddress === '') {
             this.storage.get(StorageKeys.LASTMAC).then(value => {
               if (value != '') {
@@ -88,7 +88,7 @@ export class OBDConnectorService {
           });
         }
 
-        var disconnect = function() {
+        var disconnect = function () {
           this.btSerial.disconnect().then(connect, fail => {
             this.isConnected = false;
             // TODO: show error disconnect failed or let caller handle that
@@ -152,12 +152,12 @@ export class OBDConnectorService {
         }
       });
       const hexArray = split.join('').trim().split(' ');
-  
+
       const finalArray = [];
       let nextChar: string;
-  
+
       hexArray.forEach((data, index) => {
-        switch(type) {
+        switch (type) {
           case PIDType.String: {
             nextChar = String.fromCharCode(parseInt(data, 16));
             if (nextChar === '\u0001') {
@@ -177,48 +177,56 @@ export class OBDConnectorService {
     });
   }
 
+  getSupportedPids1(): Promise<>
+
   private getSupportedPIDs(): Promise<any> {
     return new Promise<any>((resolve, reject) => {
       let PIDs1and2String: string;
 
       this.callPID(PIDConstants.Group1SupportedPIDs1, PIDType.Binary).then(group1Data1 => {
         PIDs1and2String += group1Data1;
-        this.callPID(PIDConstants.Group1SupportedPIDs2, PIDType.Binary).then(group1Data2 => {
-          PIDs1and2String += group1Data2;
-          this.callPID(PIDConstants.Group1SupportedPIDs3, PIDType.Binary).then(group1Data3 => {
-            PIDs1and2String += group1Data3;
-            this.callPID(PIDConstants.Group1SupportedPIDs4, PIDType.Binary).then(group1Data4 => {
-              PIDs1and2String += group1Data4;
-
-              for (let c = 0; c < PIDs1and2String.length; c++) {
-                this.service1and2SupportedPIDs[c] = (PIDs1and2String[c] === '1');
-              }
-
-              this.callPID(PIDConstants.Group9SupportedPIDs, PIDType.Binary).then(group9Data => {
-                for (let c = 0; c < group9Data.length; c++) {
-                  this.service9SupportedPIDs[c] = (group9Data[c] === '1');
+        if (PIDs1and2String.charAt(PIDs1and2String.length - 1) === '1') {
+          this.callPID(PIDConstants.Group1SupportedPIDs2, PIDType.Binary).then(group1Data2 => {
+            PIDs1and2String += group1Data2;
+            if (PIDs1and2String.charAt(PIDs1and2String.length - 1) === '1') {
+              this.callPID(PIDConstants.Group1SupportedPIDs3, PIDType.Binary).then(group1Data3 => {
+                PIDs1and2String += group1Data3;
+                if (PIDs1and2String.charAt(PIDs1and2String.length - 1) === '1') {
+                  this.callPID(PIDConstants.Group1SupportedPIDs4, PIDType.Binary).then(group1Data4 => {
+                    PIDs1and2String += group1Data4;
+                  }, group1Error4 => {
+                    // TODO: figure out what to do when it fails
+                    reject(group1Error4);
+                  });
                 }
-                resolve('success');
-
-              }, group9Error => {
+              }, group1Error3 => {
                 // TODO: figure out what to do when it fails
-                reject(group9Error);
+                reject(group1Error3);
               });
-            }, group1Error4 => {
-              // TODO: figure out what to do when it fails
-              reject(group1Error4);
-            });
-          }, group1Error3 => {
+            }
+          }, group1Error2 => {
             // TODO: figure out what to do when it fails
-            reject(group1Error3);
+            reject(group1Error2);
           });
-        }, group1Error2 => {
-          // TODO: figure out what to do when it fails
-          reject(group1Error2);
-        });
+        }
       }, group1Error1 => {
         // TODO: figure out what to do when it fails
         reject(group1Error1);
+      }).then(ehhhhhh => {
+        for (let c = 0; c < PIDs1and2String.length; c++) {
+          this.service1and2SupportedPIDs[c] = (PIDs1and2String[c] === '1');
+        }
+
+        this.callPID(PIDConstants.Group9SupportedPIDs, PIDType.Binary).then(group9Data => {
+          for (let c = 0; c < group9Data.length; c++) {
+            this.service9SupportedPIDs[c] = (group9Data[c] === '1');
+          }
+          resolve('success');
+
+        }, group9Error => {
+          // TODO: figure out what to do when it fails
+          reject(group9Error);
+        });
       });
     });
   }

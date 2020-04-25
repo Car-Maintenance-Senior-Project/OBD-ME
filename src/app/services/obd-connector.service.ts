@@ -107,7 +107,7 @@ export class OBDConnectorService {
           this.store.set('storedMac', MacAddress);
 
           this.blueSerial.connect(MacAddress).subscribe(success => {
-            this.runATCodes();
+            // this.runATCodes();
             this.loading.dismiss();
             this.toast.connectedMessage();
             // this.pids.getSupportedPIDs();
@@ -128,70 +128,70 @@ export class OBDConnectorService {
     });
   }
 
-  runATCodes(): Promise<string> {
-    return new Promise((promSuccess, promReject) => {
-      this.isConnected().then(isConnect => {
-        if (isConnect) {
-          console.log('OBDMEDebug: Connector: isconnected');
-          this.blueSerial.write('Z').then(success => {
-            console.log('OBDMEDebug: Connector: write data');
-            this.blueSerial.subscribe('\r\r').subscribe(data => {
-              console.log('OBDMEDebug: Connector: EVENT: ' + data);
-              if (data !== '') {
-                console.log(data);
-                // if (data === 'NO DATA\r\r') {
-                if (data.includes('NO DATA')) {
-                  console.log('OBDMEDebug: Connector: NO DATA');
-                  // promReject('NO DATA');
-                  promSuccess('NO DATA');
-                } else if (data.includes('ELM327')) {
-                  this.blueSerial.write('SP0').then(success => {
-                    this.blueSerial.write('0100').then(success => {
-                      console.log('OBDMEDebug: Connector: write data');
-                      this.blueSerial.subscribe('\r\r').subscribe(data => {
-                        console.log('OBDMEDebug: Connector: EVENT: ' + data);
-                        if (data !== '') {
-                          console.log(data);
-                          // if (data === 'NO DATA\r\r') {
-                          if (data.includes('NO DATA')) {
-                            console.log('OBDMEDebug: Connector: NO DATA');
-                            // promReject('NO DATA');
-                            promSuccess('NO DATA');
-                            // } else if (data.includes('ELM327')) {
+  // runATCodes(): Promise<string> {
+  //   return new Promise((promSuccess, promReject) => {
+  //     this.isConnected().then(isConnect => {
+  //       if (isConnect) {
+  //         console.log('OBDMEDebug: Connector: isconnected');
+  //         this.blueSerial.write('Z').then(success => {
+  //           console.log('OBDMEDebug: Connector: write data');
+  //           this.blueSerial.subscribe('\r\r').subscribe(data => {
+  //             console.log('OBDMEDebug: Connector: EVENT: ' + data);
+  //             if (data !== '') {
+  //               console.log(data);
+  //               // if (data === 'NO DATA\r\r') {
+  //               if (data.includes('NO DATA')) {
+  //                 console.log('OBDMEDebug: Connector: NO DATA');
+  //                 // promReject('NO DATA');
+  //                 promSuccess('NO DATA');
+  //               } else if (data.includes('ELM327')) {
+  //                 this.blueSerial.write('SP0').then(success => {
+  //                   this.blueSerial.write('0100').then(success => {
+  //                     console.log('OBDMEDebug: Connector: write data');
+  //                     this.blueSerial.subscribe('\r\r').subscribe(data => {
+  //                       console.log('OBDMEDebug: Connector: EVENT: ' + data);
+  //                       if (data !== '') {
+  //                         console.log(data);
+  //                         // if (data === 'NO DATA\r\r') {
+  //                         if (data.includes('NO DATA')) {
+  //                           console.log('OBDMEDebug: Connector: NO DATA');
+  //                           // promReject('NO DATA');
+  //                           promSuccess('NO DATA');
+  //                           // } else if (data.includes('ELM327')) {
 
-                            //   promSuccess('OK');
-                          } else {
-                            promSuccess(data);
-                          }
-                        }
-                      });
-                    }, failure => {
-                      this.toast.errorMessage('Couldnt write data!');
-                      promReject('Couldnt write');
-                    });
-                  }, failure => {
-                    this.toast.errorMessage('Couldnt write data!');
-                    promReject('Couldnt write');
-                  });
-                  promSuccess('OK');
-                } else {
-                  promReject('No Response');
-                }
-              }
-            });
+  //                           //   promSuccess('OK');
+  //                         } else {
+  //                           promSuccess(data);
+  //                         }
+  //                       }
+  //                     });
+  //                   }, failure => {
+  //                     this.toast.errorMessage('Couldnt write data!');
+  //                     promReject('Couldnt write');
+  //                   });
+  //                 }, failure => {
+  //                   this.toast.errorMessage('Couldnt write data!');
+  //                   promReject('Couldnt write');
+  //                 });
+  //                 promSuccess('OK');
+  //               } else {
+  //                 promReject('No Response');
+  //               }
+  //             }
+  //           });
 
-          }, failure => {
-            this.toast.errorMessage('Couldnt write data!');
-            promReject('Couldnt write');
-          });
-        } else {
-          console.log('OBDMEDebug: Connector: not connected');
-          this.toast.connectToBluetooth();
-          promReject('Not connected to bluetooth');
-        }
-      });
-    });
-  }
+  //         }, failure => {
+  //           this.toast.errorMessage('Couldnt write data!');
+  //           promReject('Couldnt write');
+  //         });
+  //       } else {
+  //         console.log('OBDMEDebug: Connector: not connected');
+  //         this.toast.connectToBluetooth();
+  //         promReject('Not connected to bluetooth');
+  //       }
+  //     });
+  //   });
+  // }
 
 
   /**
