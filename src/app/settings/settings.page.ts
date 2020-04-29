@@ -12,13 +12,13 @@ import { OBDConnectorService } from '../services/obd-connector.service';
 export class SettingsPage implements OnInit {
 
   public darkModeChecked: boolean;
-  public bluetoothConnected: boolean = false;
+  public bluetoothConnected = false;
   public bluetoothChipColor: string = this.bluetoothConnected ? "success" : "danger";
   private devices: Device[];
   private chosenMac: string;
 
-  constructor(private darkThemeSwitcher: DarkThemeSwitcherService, 
-              private OBD: OBDConnectorService) { }
+  constructor(private darkThemeSwitcher: DarkThemeSwitcherService,
+    private OBD: OBDConnectorService) { }
 
   /**
    * on init - checks dark mode, bluetooth status, and get device list
@@ -27,9 +27,7 @@ export class SettingsPage implements OnInit {
     this.darkModeChecked = this.darkThemeSwitcher.enabled;
     this.OBD.getPaired().then(resolve => {
       this.devices = this.OBD.getDeviceList();
-    });
-    this.OBD.isConnected().then(resolve => {
-      this.bluetoothConnected = resolve;
+      this.bluetoothConnected = this.OBD.isConnected;
     });
   }
 
@@ -38,10 +36,8 @@ export class SettingsPage implements OnInit {
    * Tries to connect to that mac.
    */
   onChangeOfMac() {
-    this.OBD.Connect(this.chosenMac).then(sucsess => {
-      this.OBD.isConnected().then(resolve => {
-        this.bluetoothConnected = resolve;
-      });
+    this.OBD.connect(this.chosenMac).then(sucsess => {
+      this.bluetoothConnected = this.OBD.isConnected;
     }, failure => {
       // console.log('Couldnt connect to selected device');
     });

@@ -9,11 +9,9 @@ import { Storage } from '@ionic/storage';
 import { LoadingController } from '@ionic/angular';
 import { ToastMasterService } from '../services/toast-master.service';
 import { Profile } from '../interfaces/profiles';
-// import { PidsServiceService } from '../services/pids-service.service';
 import { VINParserService } from '../services/vinparser.service';
 
 import { Device } from '../interfaces/device-struct';
-// import { from } from 'rxjs';
 
 import { ConnectResult } from '../enums/connect-result.enum';
 import { PIDType } from '../enums/pidtype.enum';
@@ -55,9 +53,10 @@ export class OBDConnectorService {
   private started = false;
   private loading: HTMLIonLoadingElement;
   private profileLoaded: Profile;
-  private isConnected: boolean;
+  public isConnected: boolean;
   private bluetoothEnabled: boolean;
   public currentProfile: CarProfile;
+  private AllProfiles: Profile[];
 
   // for now we're only supporting services 01, 02, 03, and 09
   private service1and2SupportedPIDs: boolean[];
@@ -73,30 +72,33 @@ export class OBDConnectorService {
    */
   onStartUp(): Promise<boolean> {
     return new Promise((resolve, reject) => {
-      if (!this.started) {
-        this.started = true;
-        this.getPaired();
-        this.profileLoaded = {
-          vin: '',
-          maintenceRecord: [],
-          NickName: '1',
-          Errors: []
-        };
+      this.getPaired();
+      this.profileLoaded = {
+        vin: '',
+        maintenceRecord: [],
+        NickName: '1',
+        Errors: []
+      };
 
-        this.store.get('storedMac').then(data => {
-          if (data != null) {
-            this.connect(data).then(success => {
-              resolve(true);
-            }, fail => {
-              resolve(false);
-            });
-          } else {
+      // this.store.get('AllProfiles').then(data => {
+      //   if (data != null) {
+      //     this.AllProfiles = data;
+      //   } else {
+      //     this.AllProfiles = [];
+      //   }
+
+      this.store.get('storedMac').then(data => {
+        if (data != null) {
+          this.connect(data).then(success => {
+            resolve(true);
+          }, fail => {
             resolve(false);
-          }
-        });
-      } else {
-        reject(true);
-      }
+          });
+        } else {
+          resolve(false);
+        }
+      });
+      // });
     });
   }
 
@@ -127,7 +129,7 @@ export class OBDConnectorService {
 
         var connect = function () {
           if (MACAddress === '') {
-            this.storage.get(StorageKeys.LASTMAC).then(value => {
+            this.store.get(StorageKeys.LASTMAC).then(value => {
               if (value != '') {
                 MACAddress = value;
               } else {
@@ -141,10 +143,10 @@ export class OBDConnectorService {
             this.isConnected = true;
             this.callPID(PIDConstants.VIN, PIDType.String).then(vin => {
               let parsedVin = this.vinParser.ParseVin(vin);
-              let allProfiles = this.storage.get(StorageKeys.CARPROFILES);
+              let allProfiles = this.store.get(StorageKeys.CARPROFILES);
               let profileSearch: CarProfile = allProfiles.find(profile => profile.vin === parsedVin);
               if (profileSearch) {
-                this.currentProfile = profileSearch
+                this.currentProfile = profileSearch;
               } else {
                 this.currentProfile = {
                   vin: vin,
@@ -369,15 +371,15 @@ export class OBDConnectorService {
   callPID(pid: string, type: PIDType): Promise<string> {
     return new Promise<string>((resolve, reject) => {
       // TODO: Get the supported pids to work.  Currently parsing seems to work fine, just doesnt check for them correctly
-      // if (this.pidSupported(parseInt(pid.charAt(1), 10), parseInt(pid.slice(2, 4), 10))) {
-      this.writeThenRead(pid).then(data => {
-        resolve(this.parseData(data, type));
-      }, error => {
-        reject(error);
-      });
-      // } else {
-      //   reject('PID not supported');
-      // }
+      if (this.pidSupported(parseInt(pid.charAt(1), 10), parseInt(pid.slice(2, 4), 10))) {
+        this.writeThenRead(pid).then(data => {
+          resolve(this.parseData(data, type));
+        }, error => {
+          reject(error);
+        });
+      } else {
+        reject('PID not supported');
+      }
     });
   }
 
