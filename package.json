@@ -72,5 +72,8 @@
             "cordova-plugin-bluetooth-serial": {},
             "cordova-sqlite-storage": {}
         }
+    },
+    "resolutions": {
+        "@babel/preset-env": "7.5.5"
     }
 }
