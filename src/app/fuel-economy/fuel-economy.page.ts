@@ -36,7 +36,7 @@ export class FuelEconomyPage implements OnInit {
     // setTimeout(() => this.mpg.stopDataCollection(), 10000);
   }
 
-  ngOnInit  () {
+  ngOnInit() {
     this.plt.ready().then(() => {
       this.loadHistoricRoutes();
 
@@ -90,10 +90,10 @@ export class FuelEconomyPage implements OnInit {
       )
       .subscribe(posData => {
         // setTimeout(() => {
-          // TODO: get current MPG and use it to determine the color to use
-          this.trackedRoute.push({lat: posData.coords.latitude, lng: posData.coords.longitude});
-          this.pathColors.push(this.colors[Math.floor(Math.random() * this.colors.length)]);
-          this.drawSegment(this.trackedRoute[this.trackedRoute.length - 1], this.pathColors[this.pathColors.length - 1])       
+        // TODO: get current MPG and use it to determine the color to use
+        this.trackedRoute.push({ lat: posData.coords.latitude, lng: posData.coords.longitude });
+        this.pathColors.push(this.colors[Math.floor(Math.random() * this.colors.length)]);
+        this.drawSegment(this.trackedRoute[this.trackedRoute.length - 1], this.pathColors[this.pathColors.length - 1]);
         // }, 0);
       });
   }
@@ -113,7 +113,7 @@ export class FuelEconomyPage implements OnInit {
       this.currentMapTrack.push(pathSeg);
     }
 
-    this.lastCoords = coords;   
+    this.lastCoords = coords;
   }
 
   redrawPath(path, colors) {
@@ -121,9 +121,9 @@ export class FuelEconomyPage implements OnInit {
 
     for (var i = 0; i < path.length - 1; i++) {
       var pathSeg = new google.maps.Polyline({
-        path: [path[i], path[i+1]],
+        path: [path[i], path[i + 1]],
         geodesic: true,
-        strokeColor: colors[i+1],
+        strokeColor: colors[i + 1],
         strokeOpacity: 1.0,
         strokeWeight: 3,
       });
@@ -142,8 +142,8 @@ export class FuelEconomyPage implements OnInit {
         let newRoute = { finished: new Date().getTime(), path: this.trackedRoute, colors: this.pathColors };
         this.previousTracks.push(newRoute);
         this.storage.set('routes', this.previousTracks);
-      }      
-    }    
+      }
+    }
   }
 
   showHistoryRoute(path, colors) {

@@ -28,13 +28,7 @@ export class SettingsPage implements OnInit {
     this.darkModeChecked = this.darkThemeSwitcher.enabled;
     this.OBD.getPaired().then(resolve => {
       this.devices = this.OBD.getDeviceList();
-<<<<<<< HEAD
       this.bluetoothConnected = this.OBD.isConnected;
-=======
-    });
-    this.OBD.isConnectedFun().then(resolve => {
-      this.bluetoothConnected = resolve;
->>>>>>> e51663c65a76ce9bc16770dd9749b1a3897be4d5
     });
   }
 
@@ -44,13 +38,7 @@ export class SettingsPage implements OnInit {
    */
   onChangeOfMac() {
     this.OBD.connect(this.chosenMac).then(sucsess => {
-<<<<<<< HEAD
       this.bluetoothConnected = this.OBD.isConnected;
-=======
-      this.OBD.isConnectedFun().then(resolve => {
-        this.bluetoothConnected = resolve;
-      });
->>>>>>> e51663c65a76ce9bc16770dd9749b1a3897be4d5
     }, failure => {
       this.bluetoothConnected = this.OBD.isConnected;
       this.chosenMac = '';
