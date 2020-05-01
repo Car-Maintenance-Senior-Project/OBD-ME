@@ -8,7 +8,6 @@ import { BluetoothSerial } from '@ionic-native/bluetooth-serial/ngx';
 import { Storage } from '@ionic/storage';
 import { LoadingController } from '@ionic/angular';
 import { ToastMasterService } from '../services/toast-master.service';
-import { Profile } from '../interfaces/profiles';
 import { VINParserService } from '../services/vinparser.service';
 
 import { Device } from '../interfaces/device-struct';
@@ -52,11 +51,9 @@ export class OBDConnectorService {
   public processing: boolean;
   private started = false;
   private loading: HTMLIonLoadingElement;
-  private profileLoaded: Profile;
   public isConnected: boolean;
   private bluetoothEnabled: boolean;
   public currentProfile: CarProfile;
-  private AllProfiles: Profile[];
 
   // for now we're only supporting services 01, 02, 03, and 09
   private service1and2SupportedPIDs: boolean[];
@@ -73,37 +70,28 @@ export class OBDConnectorService {
   onStartUp(): Promise<boolean> {
     return new Promise((resolve, reject) => {
       this.getPaired();
-      this.profileLoaded = {
+
+      this.currentProfile = {
         vin: '',
-        maintenceRecord: [],
-        NickName: '1',
-        Errors: []
+        vinData: null,
+        nickname: '-1',
+        fuelEconomy: null
       };
 
-      // this.store.get('AllProfiles').then(data => {
+      this.connect();
+      // this.store.get('storedMac').then(data => {
       //   if (data != null) {
-      //     this.AllProfiles = data;
+      //     this.connect(data).then(success => {
+      //       resolve(true);
+      //     }, fail => {
+      //       resolve(false);
+      //     });
       //   } else {
-      //     this.AllProfiles = [];
+      //     resolve(false);
       //   }
-
-      this.store.get('storedMac').then(data => {
-        if (data != null) {
-          this.connect(data).then(success => {
-            resolve(true);
-          }, fail => {
-            resolve(false);
-          });
-        } else {
-          resolve(false);
-        }
-      });
+      // });
       // });
     });
-  }
-
-  getProfileName(): string {
-    return this.profileLoaded.NickName;
   }
 
   /**
@@ -115,72 +103,109 @@ export class OBDConnectorService {
    */
   connect(MACAddress?: string): Promise<ConnectResult> {
     return new Promise<ConnectResult>((resolve, reject) => {
-      // initialize conditions to false when a connection is attempted
-      this.bluetoothEnabled = false;
-      this.isConnected = false;
-      this.currentProfile = {
-        vin: '',
-        vinData: null,
-        nickname: '',
-        fuelEconomy: null
-      };
-
-      this.blueSerial.isEnabled().then(enabled => {
-
-        var connect = function () {
-          if (MACAddress === '') {
-            this.store.get(StorageKeys.LASTMAC).then(value => {
-              if (value != '') {
-                MACAddress = value;
-              } else {
-                reject(ConnectResult.NoGivenOrStoredMAC);
-              }
-            });
-          }
-
-          // TODO: no idea how this works....
-          this.btSerial.connect(MACAddress).subscribe(success => {
-            this.isConnected = true;
-            this.callPID(PIDConstants.VIN, PIDType.String).then(vin => {
-              let parsedVin = this.vinParser.ParseVin(vin);
-              let allProfiles = this.store.get(StorageKeys.CARPROFILES);
-              let profileSearch: CarProfile = allProfiles.find(profile => profile.vin === parsedVin);
-              if (profileSearch) {
-                this.currentProfile = profileSearch;
-              } else {
-                this.currentProfile = {
-                  vin: vin,
-                  vinData: parsedVin,
-                  nickname: '',
-                  fuelEconomy: null
-                };
-              }
-            });
-            this.storage.set(StorageKeys.LASTMAC, MACAddress);
-            resolve(ConnectResult.Success);
-          }, error => {
-            this.isConnected = false;
-            // TODO: show error connect failed or let caller handle that
-            reject(ConnectResult.Failure);
-          });
-        }
-
-        var disconnect = function () {
-          this.btSerial.disconnect().then(connect, fail => {
-            this.isConnected = false;
-            // TODO: show error disconnect failed or let caller handle that
-            reject(ConnectResult.DisconnectFail);
-          });
-        }
-
-        this.bluetoothEnabled = true;
-        this.blueSerial.isConnected().then(disconnect, connect);
-
-      }, disabled => {
+      this.loader.create({
+        message: 'Connecting to bluetooth'
+      }).then(overlay => {
+        this.loading = overlay;
+        this.loading.present();
+        // initialize conditions to false when a connection is attempted
         this.bluetoothEnabled = false;
         this.isConnected = false;
-        // TODO: show error Bluetooth disabled or let caller handle that
-        reject(ConnectResult.BluetoothDisabledFail);
+        this.currentProfile = {
+          vin: '',
+          vinData: null,
+          nickname: '-1',
+          fuelEconomy: null
+        };
+
+        this.blueSerial.isEnabled().then(enabled => {
+
+          const connect = function () {
+            if (MACAddress === '') {
+              this.store.get(StorageKeys.LASTMAC).then(value => {
+                if (value != null) {
+                  MACAddress = value;
+                } else {
+                  this.loading.dismiss();
+                  this.toast.notConnectedMessage();
+                  reject(ConnectResult.NoGivenOrStoredMAC);
+                }
+              });
+            }
+
+            // TODO: no idea how this works....
+            this.btSerial.connect(MACAddress).subscribe(success => {
+              this.isConnected = true;
+              this.callPID(PIDConstants.VIN, PIDType.String).then(vinRaw => {
+                const parsedVin = this.vinParser.ParseVin(vinRaw);
+                const allProfiles: CarProfile[] = this.store.get(StorageKeys.CARPROFILES);
+                const profileSearch: CarProfile = allProfiles.find(profile => profile.vin === parsedVin);
+                if (profileSearch) {
+                  this.currentProfile = profileSearch;
+                } else {
+                  if (allProfiles.length === 0) {
+                    this.currentProfile = {
+                      vin: vinRaw,
+                      vinData: parsedVin,
+                      nickname: '1',
+                      fuelEconomy: null
+                    };
+                  } else {
+                    let newNick = '-1';
+                    for (let i = 1; i < 1000; i++) {
+                      if (allProfiles[i - 1].nickname !== i.toString()) {
+                        newNick = i.toString();
+                        break;
+                      }
+                      this.currentProfile = {
+                        vin: vinRaw,
+                        vinData: parsedVin,
+                        nickname: newNick,
+                        fuelEconomy: null
+                      };
+                    }
+                  }
+                  allProfiles.push(this.currentProfile);
+                  this.store.set(StorageKeys.CARPROFILES, allProfiles);
+                }
+              });
+              this.store.set(StorageKeys.LASTMAC, MACAddress);
+              this.loading.dismiss();
+              this.toast.connectedMessage();
+              resolve(ConnectResult.Success);
+            }, error => {
+              this.isConnected = false;
+              // TODO: show error connect failed or let caller handle that
+              this.loading.dismiss();
+              this.toast.notConnectedMessage();
+              reject(ConnectResult.Failure);
+            });
+          };
+
+          const disconnect = function () {
+            this.btSerial.disconnect().then(connect, fail => {
+              this.isConnected = false;
+              // TODO: show error disconnect failed or let caller handle that
+              this.loading.dismiss();
+              this.toast.notDisconnectedMessage();
+              reject(ConnectResult.DisconnectFail);
+            });
+          };
+
+          this.bluetoothEnabled = true;
+          this.blueSerial.isConnected().then(disconnect, connect);
+
+        }, disabled => {
+          this.bluetoothEnabled = false;
+          this.isConnected = false;
+          // TODO: show error Bluetooth disabled or let caller handle that
+          this.loading.dismiss();
+          this.toast.notConnectedMessage();
+          reject(ConnectResult.BluetoothDisabledFail);
+        });
+        this.loading.dismiss();
+        this.toast.errorMessage('Total Failure');
+        reject(ConnectResult.Failure);
       });
     });
   }
@@ -249,6 +274,21 @@ export class OBDConnectorService {
   //     });
   //   });
   // }
+
+  changeCurrentName(newName: string): void {
+    this.currentProfile.nickname = newName;
+    this.saveProfiles();
+  }
+
+  private saveProfiles(): Promise<boolean> {
+    return new Promise<boolean>((resolve, reject) => {
+      this.store.get(StorageKeys.CARPROFILES).then(allProfiles => {
+        allProfiles.splice(allProfiles.findIndex(profile => profile.vin === this.currentProfile.vin), 1);
+        allProfiles.push(this.currentProfile);
+        this.store.set(StorageKeys.CARPROFILES, allProfiles);
+      });
+    });
+  }
 
 
   /**

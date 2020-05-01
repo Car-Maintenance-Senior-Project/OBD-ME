@@ -22,7 +22,7 @@ export class VehicleInfoPage implements OnInit {
   }
 
   ngOnInit() {
-    this.name = this.obd.getProfileName();
+    this.name = this.obd.currentProfile.nickname;
   }
 
   /**
@@ -65,5 +65,9 @@ export class VehicleInfoPage implements OnInit {
     }, reje => {
       //nothing
     });
+  }
+
+  changeName() {
+    this.obd.changeCurrentName(this.name);
   }
 }

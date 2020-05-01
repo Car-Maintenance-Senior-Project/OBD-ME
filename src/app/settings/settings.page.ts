@@ -17,7 +17,8 @@ export class SettingsPage implements OnInit {
   private devices: Device[];
   private chosenMac: string;
 
-  constructor(private darkThemeSwitcher: DarkThemeSwitcherService,
+  constructor(
+    private darkThemeSwitcher: DarkThemeSwitcherService,
     private OBD: OBDConnectorService) { }
 
   /**
@@ -39,7 +40,8 @@ export class SettingsPage implements OnInit {
     this.OBD.connect(this.chosenMac).then(sucsess => {
       this.bluetoothConnected = this.OBD.isConnected;
     }, failure => {
-      // console.log('Couldnt connect to selected device');
+      this.bluetoothConnected = this.OBD.isConnected;
+      this.chosenMac = '';
     });
   }
 
