@@ -1,7 +1,7 @@
 import { Component, OnInit, NgZone } from '@angular/core';
 import { BluetoothSerial } from '@ionic-native/bluetooth-serial/ngx';
 
-import { PidsServiceService } from '../services/pids-service.service';
+import { OBDConnectorService } from '../services/obd-connector.service';
 
 @Component({
   selector: 'app-vehicle-info',
@@ -18,11 +18,11 @@ export class VehicleInfoPage implements OnInit {
   // private testVin = 'WBA3N5C55FK484549';
   // private vinNum: string;
 
-  constructor(private ngZone: NgZone, private bs: BluetoothSerial, private obd: PidsServiceService) {
+  constructor(private ngZone: NgZone, private bs: BluetoothSerial, private obd: OBDConnectorService) {
   }
 
   ngOnInit() {
-    this.name = this.obd.getProfileName();
+    this.name = this.obd.currentProfile.nickname;
   }
 
   /**
@@ -50,7 +50,7 @@ export class VehicleInfoPage implements OnInit {
     // }, failure => {
     //   console.log('OBDMEDebug: didnt get pids');
     // });
-    this.obd.callOBDPid('0300\r', 'number').then(resp => {
+    this.obd.callPID('0300\r', 2).then(resp => {
       // Make a list of all the things it could be for easy lookup
       this.make = resp;
       // this.obd.callOBDPid('0103\r', 'number').then(resp => {
@@ -65,5 +65,9 @@ export class VehicleInfoPage implements OnInit {
     }, reje => {
       //nothing
     });
+  }
+
+  changeName() {
+    this.obd.changeCurrentName(this.name);
   }
 }

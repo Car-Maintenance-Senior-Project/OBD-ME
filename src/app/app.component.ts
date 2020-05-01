@@ -1,19 +1,19 @@
 import { Component, OnInit } from '@angular/core';
 
-import { DarkThemeSwitcherService } from './services/dark-theme-switcher.service';
-
 import { Platform } from '@ionic/angular';
 import { SplashScreen } from '@ionic-native/splash-screen/ngx';
 import { StatusBar } from '@ionic-native/status-bar/ngx';
+
+import { OBDConnectorService } from './services/obd-connector.service';
 
 @Component({
   selector: 'app-root',
   templateUrl: 'app.component.html',
   styleUrls: ['app.component.scss']
 })
-export class AppComponent implements OnInit {
-
-  public primaryPages = [
+export class AppComponent {
+  public selectedIndex = 0; // default to home page as selected for when app starts up with '/' default path
+  public appPages = [
     {
       title: 'Home',
       url: '/home',
@@ -35,7 +35,7 @@ export class AppComponent implements OnInit {
     private platform: Platform,
     private splashScreen: SplashScreen,
     private statusBar: StatusBar,
-    private darkThemeSwitcher: DarkThemeSwitcherService,
+    private OBD: OBDConnectorService
   ) {
     this.initializeApp();
   }
@@ -43,15 +43,9 @@ export class AppComponent implements OnInit {
   initializeApp() {
     this.platform.ready().then(() => {
       this.statusBar.styleDefault();
+      this.OBD.onStartUp();
       this.splashScreen.hide();
     });
-  }
-
-  ngOnInit() {
-    const darkPreferred = window.matchMedia("(prefers-color-scheme: dark)");
-    this.darkThemeSwitcher.enableDarkTheme(darkPreferred.matches);
-
-    darkPreferred.addListener(mediaQuery => this.darkThemeSwitcher.enableDarkTheme(mediaQuery.matches));
   }
 
 }

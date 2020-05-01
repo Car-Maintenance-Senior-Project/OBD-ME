@@ -1,12 +1,12 @@
 import { TestBed } from '@angular/core/testing';
 
-import { PidsServiceService } from './pids-service.service';
+import { VINParserService } from './vinparser.service';
 
-describe('PidsServiceService', () => {
+describe('VINParserService', () => {
   beforeEach(() => TestBed.configureTestingModule({}));
 
   it('should be created', () => {
-    const service: PidsServiceService = TestBed.get(PidsServiceService);
+    const service: VINParserService = TestBed.get(VINParserService);
     expect(service).toBeTruthy();
   });
 });

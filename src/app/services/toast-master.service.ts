@@ -28,7 +28,7 @@ export class ToastMasterService {
   /**
    * Connects to bluetooth
    */
-  async connectToBluetooth() {
+  async notConnectedMessage() {
     const toast = await this.toastController.create({
       message: 'Please connect to bluetooth in settings.',
       duration: this.defaultTime
@@ -39,7 +39,7 @@ export class ToastMasterService {
   /**
    * Disconnects from bluetooth
    */
-  async disconnectFromBluetooth() {
+  async notDisconnectedMessage() {
     const toast = await this.toastController.create({
       message: 'Can\'t disconnect from bluetooth.',
       duration: this.defaultTime

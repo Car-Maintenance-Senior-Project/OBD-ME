@@ -23,15 +23,6 @@ export class HomePage {
    * @param OBD - The obd connector service
    */
   constructor(private OBD: OBDConnectorService) {
-    this.OBD.onStartUp().then(resolve => {
-      if (resolve) {
-        // Device is connected
-      } else {
-        // Prompt to connect to bluetooth
-      }
-    }, reject => {
-      // Already has been started so do nothing
-    });
   }
 
 }
