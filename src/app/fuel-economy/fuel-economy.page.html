@@ -1,0 +1,44 @@
+<ion-header>
+  <ion-toolbar>
+      <ion-buttons slot="start">
+          <ion-menu-button></ion-menu-button>
+      </ion-buttons>
+      <ion-title>
+          Fuel Economy
+      </ion-title>
+      <ion-buttons slot="end">
+          <ion-button routerLink="/settings" routerDirection="forward">
+              <ion-icon slot="icon-only" name="settings"></ion-icon>
+          </ion-button>
+      </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true">
+  <button ion-button full icon-left (click)="startTracking()" *ngIf="!isTracking">
+    <ion-icon name="locate"></ion-icon>
+    Start Tracking
+  </button>
+  <button ion-button full color="danger" icon-left (click)="stopTracking()" *ngIf="isTracking">
+    <ion-icon name="hand-left-outline"></ion-icon>
+    Stop Tracking
+  </button>
+
+  <button ion-button (click)="deleteHistoricRoutes()">
+    Clear History
+  </button>
+ 
+  <div #map id="map"></div>
+
+  <ion-label>
+    MPG:
+  </ion-label>
+ 
+  <ion-list>
+    <ion-list-header>Previous Tracks</ion-list-header>
+    <ion-item *ngFor="let route of previousTracks">
+      {{ route.finished | date }}, {{ route.path.length }} Waypoints
+      <button ion-button clear item-end (click)="showHistoryRoute(route.path, route.colors)">View Route</button>
+    </ion-item>
+  </ion-list>
+</ion-content>

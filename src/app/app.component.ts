@@ -28,6 +28,11 @@ export class AppComponent {
       title: 'Maintenance Record',
       url: '/maintenance-record',
       icon: 'clipboard'
+    },
+    {
+      title: 'Fuel Economy',
+      url: '/fuel-economy',
+      icon: 'speedometer'
     }
   ];
 
@@ -38,6 +43,7 @@ export class AppComponent {
     private OBD: OBDConnectorService
   ) {
     this.initializeApp();
+    console.log(window.matchMedia('(prefers-color-scheme: dark)'));
   }
 
   initializeApp() {
