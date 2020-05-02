@@ -284,11 +284,16 @@ export class OBDConnectorService {
     this.saveProfiles();
   }
 
-  private saveProfiles(): Promise<boolean> {
+  saveProfiles(): Promise<boolean> {
     return new Promise<boolean>((resolve, reject) => {
       this.store.get(StorageKeys.CARPROFILES).then(allProfiles => {
-        allProfiles.splice(allProfiles.findIndex(profile => profile.vin === this.currentProfile.vin), 1);
-        allProfiles.push(this.currentProfile);
+        if (allProfiles != null) {
+          allProfiles.splice(allProfiles.findIndex(profile => profile.vin === this.currentProfile.vin), 1);
+          allProfiles.push(this.currentProfile);
+        }
+        else {
+          allProfiles = [this.currentProfile];
+        }        
         this.store.set(StorageKeys.CARPROFILES, allProfiles);
       });
     });

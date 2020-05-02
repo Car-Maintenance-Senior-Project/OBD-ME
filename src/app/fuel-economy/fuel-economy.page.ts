@@ -31,7 +31,7 @@ export class FuelEconomyPage implements OnInit {
 
   private positionSubscription: Subscription;
 
-  constructor(private mpg: FuelEconomyService, 
+  constructor(public mpg: FuelEconomyService, 
               public navCtrl: NavController, 
               private plt: Platform, 
               private geolocation: Geolocation) { }
@@ -79,7 +79,6 @@ export class FuelEconomyPage implements OnInit {
         filter((p) => p.coords !== undefined) //Filter Out Errors
       )
       .subscribe(posData => {
-        // TODO: get current MPG and use it to determine the color to use
         this.trackedRoute.push({ lat: posData.coords.latitude, lng: posData.coords.longitude });
         this.drawSegment(this.trackedRoute[this.trackedRoute.length - 1]);
       });
