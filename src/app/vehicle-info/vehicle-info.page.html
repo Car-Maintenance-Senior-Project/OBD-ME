@@ -15,7 +15,7 @@
     </ion-toolbar>
 </ion-header>
 
-<!-- <ion-content>
+<ion-content>
     <ion-item>
         <ion-label>Vin:</ion-label>
         <ion-input [value]="vin" readonly></ion-input>
@@ -35,25 +35,9 @@
     <ion-button expand="block" (click)="getVehicleInfo()">
         Get Info
     </ion-button>
-</ion-content> -->
+</ion-content>
 
 <ion-content>
-    <ion-item>
-        <ion-label>Vin:</ion-label>
-        <ion-input [value]="vin" readonly></ion-input>
-    </ion-item>
-    <ion-item>
-        <ion-label>Supported Pids1:</ion-label>
-        <ion-input [value]="year" readonly></ion-input>
-    </ion-item>
-    <ion-item>
-        <ion-label>Supported Pids2:</ion-label>
-        <ion-input [value]="make" readonly></ion-input>
-    </ion-item>
-    <ion-item>
-        <ion-label>Supported Pids9:</ion-label>
-        <ion-input [value]="model" readonly></ion-input>
-    </ion-item>
     <ion-button expand="block" (click)="getVehicleInfo()">
         Get Info
     </ion-button>
@@ -67,61 +51,3 @@
     </ion-button>
     </ion-item>
 </ion-content>
-
-<!-- Temp Test Code -->
-
-<!-- <ion-header>
-    <ion-toolbar>
-        <ion-title>
-            <ion-menu-button></ion-menu-button>
-            Bluetooth Testing
-        </ion-title>
-        <ion-button (click)="BSconnect()" slot="end">
-          <ion-icon name="Bluetooth"></ion-icon>
-          <p>Connect</p>
-      </ion-button>
-        <ion-button (click)="attemptToWriteData()" slot="end">
-            <ion-icon name="Bluetooth"></ion-icon>
-            <p>Write</p>
-        </ion-button>
-        <ion-button (click)="readAgain()" slot="end">
-          <ion-icon name="Bluetooth"></ion-icon>
-          <p>ReadAgain</p>
-      </ion-button>
-    </ion-toolbar>
-</ion-header>
-
-<ion-content>
-    <!-- <ion-list>
-    <ion-list-header>Bluetooth Devices (compareWith)</ion-list-header>
-
-
-  </ion-list>
-
-    <ion-list>
-        <ion-list-header>Bluetooth Stuff</ion-list-header>
-
-        <ion-item>
-            <ion-label>Users</ion-label>
-            <ion-select [(ngModel)]="chosenOne">
-                <ion-select-option *ngFor="let device of devices" [value]="device.id">{{device.name}}</ion-select-option>
-            </ion-select>
-        </ion-item>
-    </ion-list>
-
-    <!-- <ion-list>
-        <ion-card-content ion-item *ngFor="let device of devices">
-            <p>{{device.name || 'Unnamed'}}</p>
-            <p>{{device.id}}</p>
-            <p> RSSI: {{device.rssi}}</p>
-        </ion-card-content>
-    </ion-list
-
-    <p>Mac to connect to: {{chosenOne}}</p>
-    <p>Errors: {{displayStatus}}</p>
-    <!-- <p>Update: {{update}}</p>
-    <p>Is being processed/loading: {{displayIsWorking}}</p>
-    <p>Is it connected: {{displayConnectionStatus}}</p>
-    <p>Write status: {{displayWriteStatus}}</p>
-    <p>Read Status: {{displayReadStatus}}</p>
-</ion-content> -->

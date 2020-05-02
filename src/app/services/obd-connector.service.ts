@@ -218,7 +218,9 @@ export class OBDConnectorService {
                     vin: vinRaw,
                     vinData: parsedVin,
                     nickname: '1',
-                    fuelEconomy: null
+                    fuelEconomy: null,
+                    pastRoutes: null,
+                    maintenanceRecords: null
                   };
                 } else {
                   let newNick = '-1';
@@ -231,7 +233,9 @@ export class OBDConnectorService {
                       vin: vinRaw,
                       vinData: parsedVin,
                       nickname: newNick,
-                      fuelEconomy: null
+                      fuelEconomy: null,
+                      pastRoutes: null,
+                      maintenanceRecords: null
                     };
                   }
                 }
