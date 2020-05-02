@@ -17,6 +17,7 @@ import { PIDType } from '../enums/pidtype.enum';
 import { StorageKeys } from '../classes/storage-keys';
 import { PIDConstants } from '../classes/pidconstants';
 import { CarProfile } from '../interfaces/car-profile';
+import { Router } from '@angular/router';
 
 // example of long hex 09023\r014 \r0: 49 02 01 57 42 41 \r1: 33 4E 35 43 35 35 46 \r2: 4B 34 38 34 35 34 39 \r\r
 // example of short hex 09001\r49 00 55 40 00 00 \r\r
@@ -42,7 +43,8 @@ export class OBDConnectorService {
     private loader: LoadingController,
     private toast: ToastMasterService,
     // private pids: PidsServiceService
-    private vinParser: VINParserService
+    private vinParser: VINParserService,
+    private route: Router
   ) { }
 
 
@@ -78,19 +80,12 @@ export class OBDConnectorService {
         fuelEconomy: null
       };
 
-      this.connect();
-      // this.store.get('storedMac').then(data => {
-      //   if (data != null) {
-      //     this.connect(data).then(success => {
-      //       resolve(true);
-      //     }, fail => {
-      //       resolve(false);
-      //     });
-      //   } else {
-      //     resolve(false);
-      //   }
-      // });
-      // });
+      this.connect().then(result1 => {
+        console.log('OBDMEDebug: ResultSuc: ' + ConnectResult[result1]);
+      }, result2 => {
+        console.log('OBDMEDebug: ResultRej: ' + ConnectResult[result2]);
+        this.route.navigate(['settings']);
+      });
     });
   }
 
@@ -120,92 +115,143 @@ export class OBDConnectorService {
 
         this.blueSerial.isEnabled().then(enabled => {
 
-          const connect = function () {
-            if (MACAddress === '') {
-              this.store.get(StorageKeys.LASTMAC).then(value => {
-                if (value != null) {
-                  MACAddress = value;
-                } else {
-                  this.loading.dismiss();
-                  this.toast.notConnectedMessage();
-                  reject(ConnectResult.NoGivenOrStoredMAC);
-                }
-              });
-            }
-
-            // TODO: no idea how this works....
-            this.btSerial.connect(MACAddress).subscribe(success => {
-              this.isConnected = true;
-              this.callPID(PIDConstants.VIN, PIDType.String).then(vinRaw => {
-                const parsedVin = this.vinParser.ParseVin(vinRaw);
-                const allProfiles: CarProfile[] = this.store.get(StorageKeys.CARPROFILES);
-                const profileSearch: CarProfile = allProfiles.find(profile => profile.vin === parsedVin);
-                if (profileSearch) {
-                  this.currentProfile = profileSearch;
-                } else {
-                  if (allProfiles.length === 0) {
-                    this.currentProfile = {
-                      vin: vinRaw,
-                      vinData: parsedVin,
-                      nickname: '1',
-                      fuelEconomy: null
-                    };
-                  } else {
-                    let newNick = '-1';
-                    for (let i = 1; i < 1000; i++) {
-                      if (allProfiles[i - 1].nickname !== i.toString()) {
-                        newNick = i.toString();
-                        break;
-                      }
-                      this.currentProfile = {
-                        vin: vinRaw,
-                        vinData: parsedVin,
-                        nickname: newNick,
-                        fuelEconomy: null
-                      };
-                    }
-                  }
-                  allProfiles.push(this.currentProfile);
-                  this.store.set(StorageKeys.CARPROFILES, allProfiles);
-                }
-              });
-              this.store.set(StorageKeys.LASTMAC, MACAddress);
-              this.loading.dismiss();
-              this.toast.connectedMessage();
-              resolve(ConnectResult.Success);
-            }, error => {
-              this.isConnected = false;
-              // TODO: show error connect failed or let caller handle that
-              this.loading.dismiss();
-              this.toast.notConnectedMessage();
-              reject(ConnectResult.Failure);
-            });
-          };
-
-          const disconnect = function () {
-            this.btSerial.disconnect().then(connect, fail => {
-              this.isConnected = false;
-              // TODO: show error disconnect failed or let caller handle that
-              this.loading.dismiss();
-              this.toast.notDisconnectedMessage();
-              reject(ConnectResult.DisconnectFail);
-            });
-          };
-
           this.bluetoothEnabled = true;
-          this.blueSerial.isConnected().then(disconnect, connect);
+          this.store.get(StorageKeys.LASTMAC).then(value => {
+            console.log('OBDMEDebug: LASTMAC: ' + value);
+            if (MACAddress === undefined) {
+              if (value !== null) {
+                MACAddress = value;
+              } else {
+                console.log('OBDMEDebug: LASTMAC: No Value saved/given');
+                this.loading.dismiss();
+                this.toast.notConnectedMessage();
+                reject(ConnectResult.NoGivenOrStoredMAC);
+                return;
+              }
+            }
+            console.log('OBDMEDebug: MACAddress: ' + MACAddress);
+            this.blueSerial.isConnected().then(data => {
+              console.log('OBDMEDebug: isConnected1: BT is connected');
+              this.blueSerial.disconnect().then(sucsess => {
+                console.log('OBDMEDebug: isConnected1: BT got disconnected');
+                this.connectToBT(MACAddress).then(returnSuc => {
+                  console.log('OBDMEDebug: isConnected1: BT Suc');
+                  resolve(returnSuc);
+                  return;
+                }, returnRej => {
+                  console.log('OBDMEDebug: isConnected1: BT failed');
+                  reject(returnRej);
+                  return;
+                });
 
+                console.log('OBDMEDebug: isConnected1: BT ??????????');
+              }, fail => {
+                console.log('OBDMEDebug: isConnected1: BT failed Dis');
+                this.isConnected = false;
+                this.loading.dismiss();
+                this.toast.notDisconnectedMessage();
+                reject(ConnectResult.DisconnectFail);
+                return;
+              });
+
+
+            }, data2 => {
+              console.log('OBDMEDebug: isConnected2: BT is disconnected');
+              this.connectToBT(MACAddress).then(returnSuc => {
+                console.log('OBDMEDebug: isConnected2: BT suc');
+                resolve(returnSuc);
+                return;
+              }, returnRej => {
+                console.log('OBDMEDebug: isConnected2: BT fail');
+                reject(returnRej);
+                return;
+              });
+              console.log('OBDMEDebug: isConnected2: BT ?????????');
+            });
+          }, error => {
+            console.log('OBDMEDebug: LASTMAC: GetFail');
+            this.isConnected = false;
+            // TODO: show error connect failed or let caller handle that
+            this.loading.dismiss();
+            this.toast.notConnectedMessage();
+            reject(ConnectResult.Failure);
+            return;
+          });
         }, disabled => {
+          console.log('OBDMEDebug: BlueNotEnabled');
           this.bluetoothEnabled = false;
           this.isConnected = false;
           // TODO: show error Bluetooth disabled or let caller handle that
           this.loading.dismiss();
-          this.toast.notConnectedMessage();
+          this.toast.errorMessage('Please turn on Bluetooth');
           reject(ConnectResult.BluetoothDisabledFail);
+          return;
         });
         this.loading.dismiss();
-        this.toast.errorMessage('Total Failure');
+        this.toast.errorMessage('Total Failure: This should not happen');
         reject(ConnectResult.Failure);
+      });
+    });
+  }
+
+  private connectToBT(MACAddress: string): Promise<ConnectResult> {
+    return new Promise<ConnectResult>((resolve, reject) => {
+      console.log('OBDMEDebug: connectProcess: Start');
+      this.blueSerial.connect(MACAddress).subscribe(success => {
+        console.log('OBDMEDebug: connectProcess: Connected');
+        this.isConnected = true;
+        this.callPID(PIDConstants.VIN, PIDType.String).then(vinRaw => {
+          console.log('OBDMEDebug: connectProcess: Got Vin: ' + vinRaw);
+          this.vinParser.ParseVIN(vinRaw).then(parsedVin => {
+            console.log('OBDMEDebug: connectProcess: Parsed Vin: ' + parsedVin);
+            this.store.get(StorageKeys.CARPROFILES).then(allProfiles => {
+              const profileSearch: CarProfile = allProfiles.find(profile => profile.vin === vinRaw);
+              if (profileSearch) {
+                this.currentProfile = profileSearch;
+              } else {
+                if (allProfiles.length === 0) {
+                  this.currentProfile = {
+                    vin: vinRaw,
+                    vinData: parsedVin,
+                    nickname: '1',
+                    fuelEconomy: null
+                  };
+                } else {
+                  let newNick = '-1';
+                  for (let i = 1; i < 1000; i++) {
+                    if (allProfiles[i - 1].nickname !== i.toString()) {
+                      newNick = i.toString();
+                      break;
+                    }
+                    this.currentProfile = {
+                      vin: vinRaw,
+                      vinData: parsedVin,
+                      nickname: newNick,
+                      fuelEconomy: null
+                    };
+                  }
+                }
+                allProfiles.push(this.currentProfile);
+                console.log('OBDMEDebug: connectProcess: Profiles Done: ' + allProfiles);
+                this.store.set(StorageKeys.CARPROFILES, allProfiles);
+              }
+            });
+            this.store.set(StorageKeys.LASTMAC, MACAddress);
+            this.loading.dismiss();
+            this.toast.connectedMessage();
+            console.log('OBDMEDebug: connectProcess: Suc');
+            resolve(ConnectResult.Success);
+            return;
+          });
+        });
+      }, reject1 => {
+        console.log('OBDMEDebug: connectProcess: Fail');
+        this.isConnected = false;
+        // TODO: show error connect failed or let caller handle that
+        this.loading.dismiss();
+        this.toast.notConnectedMessage();
+        reject(ConnectResult.Failure);
+        return;
       });
     });
   }
@@ -440,16 +486,19 @@ export class OBDConnectorService {
         switch (type) {
           case PIDType.String: {
             nextChar = String.fromCharCode(parseInt(data, 16));
-            if (nextChar === '\u0001') {
-              nextChar = '';
-            }
+            break;
           }
           case PIDType.Binary: {
             nextChar = (parseInt(data, 16).toString(2)).padStart(8, '0');
+            break;
           }
           case PIDType.Number: {
             nextChar = parseInt(data, 16).toString();
+            break;
           }
+        }
+        if (nextChar === '\u0001') {
+          nextChar = '';
         }
         finalArray[index] = nextChar;
       });
