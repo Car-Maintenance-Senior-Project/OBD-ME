@@ -77,7 +77,9 @@ export class OBDConnectorService {
         vin: '',
         vinData: null,
         nickname: '-1',
-        fuelEconomy: null
+        fuelEconomy: null,
+        pastRoutes: null,
+        maintenanceRecords: null
       };
 
       this.connect().then(result1 => {
@@ -110,7 +112,9 @@ export class OBDConnectorService {
           vin: '',
           vinData: null,
           nickname: '-1',
-          fuelEconomy: null
+          fuelEconomy: null,
+          pastRoutes: null,
+          maintenanceRecords: null
         };
 
         this.blueSerial.isEnabled().then(enabled => {

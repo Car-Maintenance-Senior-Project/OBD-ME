@@ -23,7 +23,6 @@ export class AddMaintenanceRecordPage implements OnInit {
   ngOnInit() {
   }
 
-  //TODO: explore using forms/formbuilder, ask Norman about it
   addRecord(): void {
     if (this.type != "" && this.date != null && this.cost != null) {
       this.storageService.addRecord({
