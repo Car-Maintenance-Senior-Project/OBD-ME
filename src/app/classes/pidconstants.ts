@@ -6,5 +6,4 @@ export class PIDConstants {
     public static Group9SupportedPIDs: string = '09001\r';
     public static VIN: string = '0902\r';
     public static MAF: string = '01101\r';
-    public static Odometer: string = '01A64\r' // TODO: no clue if this is right, ask Quentin
 }

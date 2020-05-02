@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
-
 import { Storage } from '@ionic/storage';
 
+import { OBDConnectorService } from '../services/obd-connector.service';
 import { MaintenanceRecord } from '../interfaces/maintenance-record';
 
 @Injectable({
@@ -12,7 +12,7 @@ export class MaintenanceRecordStorageService {
   public records: MaintenanceRecord[] = [];
   public loaded: boolean = false;
 
-  constructor(private storage: Storage) { }
+  constructor(private storage: Storage, private obd: OBDConnectorService) { }
 
   deleteRecord(record: MaintenanceRecord): void {
     let index = this.records.indexOf(record);
@@ -35,25 +35,24 @@ export class MaintenanceRecordStorageService {
   }
 
   saveRecords(): void {
-    //TODO: this sorts by descending date by default, eventually add other sort options
     this.records.sort((a,b) => {
       let date1 = a.date;
       let date2 = b.date;
       return date1 > date2 ? -1 : 1;
     });
-    this.storage.set('maintenance-records', this.records);
+    this.obd.currentProfile.maintenanceRecords = this.records;
+    // TYLER: save profiles
   }
 
-  loadRecords(): Promise<boolean> {
-    return new Promise((resolve) => {
-      this.storage.get('maintenance-records').then((records) => {
-        if (records != null) {
-          this.records = records;
-        }
-        this.loaded = true;
-        resolve(true);
-      });
-    });
+  loadRecords() {
+    if (this.obd.currentProfile.maintenanceRecords != null) {
+      this.records = this.obd.currentProfile.maintenanceRecords
+    }
+    else {
+      this.records = [];
+      this.obd.currentProfile.maintenanceRecords = this.records;
+      // TYLER: save profiles
+    }
   }
 
   getRecord(id: string): MaintenanceRecord {

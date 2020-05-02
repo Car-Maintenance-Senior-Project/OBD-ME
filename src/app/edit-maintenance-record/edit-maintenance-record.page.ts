@@ -26,13 +26,8 @@ export class EditMaintenanceRecordPage implements OnInit {
   }
 
   loadRecord(): void {
-    if (this.storage.loaded) {
-      this.record = Object.assign({}, this.storage.getRecord(this.id));
-    } else {
-      this.storage.loadRecords().then(() => {
-        this.record = Object.assign({}, this.storage.getRecord(this.id));
-      });
-    }
+    this.storage.loadRecords();
+    this.record = Object.assign({}, this.storage.getRecord(this.id));
   }
 
   updateRecord(): void {

@@ -4,6 +4,7 @@ import { Platform } from '@ionic/angular';
 import { SplashScreen } from '@ionic-native/splash-screen/ngx';
 import { StatusBar } from '@ionic-native/status-bar/ngx';
 
+import { DarkThemeSwitcherService } from './services/dark-theme-switcher.service';
 import { OBDConnectorService } from './services/obd-connector.service';
 
 @Component({
@@ -40,10 +41,27 @@ export class AppComponent {
     private platform: Platform,
     private splashScreen: SplashScreen,
     private statusBar: StatusBar,
-    private OBD: OBDConnectorService
-  ) {
+    private OBD: OBDConnectorService,
+    private darkTheme: DarkThemeSwitcherService
+  ) { }
+
+  ngOnInit() {
+    const path = window.location.pathname;
+    if (path !== undefined) {
+      this.selectedIndex = this.appPages.findIndex(page => page.url === path);
+    }
+    // default route is '/', so we default the selected index to the home page in this case
+    if (path === '/') {
+      this.selectedIndex = 0;
+    }
+
+    // set up auto dark mode tracking, but still allow settings page
+    // to handle manual toggling
+    const prefersDarkMode = window.matchMedia('(prefers-color-scheme: dark)');
+    this.darkTheme.enableDarkTheme(prefersDarkMode.matches);
+    prefersDarkMode.addListener((mediaQuery) => this.darkTheme.enableDarkTheme(mediaQuery.matches));
+
     this.initializeApp();
-    console.log(window.matchMedia('(prefers-color-scheme: dark)'));
   }
 
   initializeApp() {
