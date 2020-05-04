@@ -1,4 +1,4 @@
-### [Home](https://car-maintenance-senior-project.github.io/OBD-ME/index)		||		[Security](https://car-maintenance-senior-project.github.io/OBD-ME/security)		||		[Materials](https://car-maintenance-senior-project.github.io/OBD-ME/materials)		||		[About Us](https://car-maintenance-senior-project.github.io/OBD-ME/about)		||		[Calvin CS Department](https://computing.calvin.edu/)
+### [Home](https://car-maintenance-senior-project.github.io/OBD-ME/index)		||		[Security](https://car-maintenance-senior-project.github.io/OBD-ME/security)		||		[Materials/References](https://car-maintenance-senior-project.github.io/OBD-ME/materials)		||		[About Us](https://car-maintenance-senior-project.github.io/OBD-ME/about)
 
 ## Notes on Security of OBD Devices
 
