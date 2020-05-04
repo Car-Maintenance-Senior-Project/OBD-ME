@@ -191,68 +191,83 @@ export class OBDConnectorService {
           reject(ConnectResult.BluetoothDisabledFail);
           return;
         });
-        this.loading.dismiss();
-        this.toast.errorMessage('Total Failure: This should not happen');
-        reject(ConnectResult.Failure);
+        // this.loading.dismiss();
+        // this.toast.errorMessage('Total Failure: This should not happen');
+        // reject(ConnectResult.Failure);
       });
     });
   }
 
   private connectToBT(MACAddress: string): Promise<ConnectResult> {
     return new Promise<ConnectResult>((resolve, reject) => {
-      console.log('OBDMEDebug: connectProcess: Start');
-      this.blueSerial.connect(MACAddress).subscribe(success => {
-        console.log('OBDMEDebug: connectProcess: Connected');
-        this.isConnected = true;
-        this.callPID(PIDConstants.VIN, PIDType.String).then(vinRaw => {
-          console.log('OBDMEDebug: connectProcess: Got Vin: ' + vinRaw);
-          this.vinParser.ParseVIN(vinRaw).then(parsedVin => {
-            console.log('OBDMEDebug: connectProcess: Parsed Vin: ' + parsedVin);
-            this.store.get(StorageKeys.CARPROFILES).then(allProfiles => {
-              const profileSearch: CarProfile = allProfiles.find(profile => profile.vin === vinRaw);
-              if (profileSearch) {
-                this.currentProfile = profileSearch;
-              } else {
-                if (allProfiles.length === 0) {
-                  this.currentProfile = {
-                    vin: vinRaw,
-                    vinData: parsedVin,
-                    nickname: '1',
-                    fuelEconomy: null,
-                    pastRoutes: null,
-                    maintenanceRecords: null
-                  };
+      console.log('OBDMEDebug: connectProcess: Start: ' + MACAddress);
+      this.blueSerial.disconnect().then(disconnected => {
+        this.blueSerial.connect(MACAddress).subscribe(success => {
+          console.log('OBDMEDebug: connectProcess: Connected');
+          this.isConnected = true;
+          this.callPID(PIDConstants.VIN, PIDType.String).then(vinRaw => {
+            console.log('OBDMEDebug: connectProcess: Got Vin: ' + vinRaw);
+            this.vinParser.ParseVIN(vinRaw).then(parsedVin => {
+              console.log('OBDMEDebug: connectProcess: Parsed Vin: ' + JSON.stringify(parsedVin));
+              this.store.get(StorageKeys.CARPROFILES).then(allProfiles => {
+                console.log('OBDMEDebug: connectProcess: allProfiles: ' + JSON.stringify(allProfiles));
+                if (allProfiles === null) {
+                  allProfiles = [];
+                }
+                const profileSearch: CarProfile = allProfiles.find(profile => profile.vin === vinRaw);
+                console.log('OBDMEDebug: connectProcess: profileSearch: ' + JSON.stringify(profileSearch));
+                if (profileSearch !== undefined) {
+                  this.currentProfile = profileSearch;
                 } else {
-                  let newNick = '-1';
-                  for (let i = 1; i < 1000; i++) {
-                    if (allProfiles[i - 1].nickname !== i.toString()) {
-                      newNick = i.toString();
-                      break;
-                    }
+                  if (allProfiles.length === 0) {
                     this.currentProfile = {
                       vin: vinRaw,
                       vinData: parsedVin,
-                      nickname: newNick,
+                      nickname: '1',
                       fuelEconomy: null,
                       pastRoutes: null,
                       maintenanceRecords: null
                     };
+                  } else {
+                    let newNick = '-1';
+                    for (let i = 1; i < 1000; i++) {
+                      if (allProfiles[i - 1].nickname !== i.toString()) {
+                        newNick = i.toString();
+                        break;
+                      }
+                      this.currentProfile = {
+                        vin: vinRaw,
+                        vinData: parsedVin,
+                        nickname: newNick,
+                        fuelEconomy: null,
+                        pastRoutes: null,
+                        maintenanceRecords: null
+                      };
+                    }
                   }
+                  allProfiles.push(this.currentProfile);
+                  console.log('OBDMEDebug: connectProcess: Profiles Done: ' + JSON.stringify(allProfiles));
+                  this.store.set(StorageKeys.CARPROFILES, allProfiles);
                 }
-                allProfiles.push(this.currentProfile);
-                console.log('OBDMEDebug: connectProcess: Profiles Done: ' + allProfiles);
-                this.store.set(StorageKeys.CARPROFILES, allProfiles);
-              }
+                this.store.set(StorageKeys.LASTMAC, MACAddress);
+                this.loading.dismiss();
+                this.toast.connectedMessage();
+                console.log('OBDMEDebug: connectProcess: Suc');
+                resolve(ConnectResult.Success);
+                return;
+              });
             });
-            this.store.set(StorageKeys.LASTMAC, MACAddress);
-            this.loading.dismiss();
-            this.toast.connectedMessage();
-            console.log('OBDMEDebug: connectProcess: Suc');
-            resolve(ConnectResult.Success);
-            return;
           });
+        }, reject1 => {
+          console.log('OBDMEDebug: connectProcess: Fail');
+          this.isConnected = false;
+          // TODO: show error connect failed or let caller handle that
+          this.loading.dismiss();
+          this.toast.notConnectedMessage();
+          reject(ConnectResult.Failure);
+          return;
         });
-      }, reject1 => {
+      }, notDis => {
         console.log('OBDMEDebug: connectProcess: Fail');
         this.isConnected = false;
         // TODO: show error connect failed or let caller handle that
@@ -330,6 +345,7 @@ export class OBDConnectorService {
   // }
 
   changeCurrentName(newName: string): void {
+    console.log('OBDMEDebug: saveProfiles: NewNick: ' + newName);
     this.currentProfile.nickname = newName;
     this.saveProfiles();
   }
@@ -337,8 +353,12 @@ export class OBDConnectorService {
   private saveProfiles(): Promise<boolean> {
     return new Promise<boolean>((resolve, reject) => {
       this.store.get(StorageKeys.CARPROFILES).then(allProfiles => {
-        allProfiles.splice(allProfiles.findIndex(profile => profile.vin === this.currentProfile.vin), 1);
+        console.log('OBDMEDebug: saveProfiles: initProfiles' + JSON.stringify(allProfiles));
+        const splicedProfile = allProfiles.splice(allProfiles.findIndex(profile => profile.vin === this.currentProfile.vin), 1);
+        console.log('OBDMEDebug: saveProfiles: splicedProfile' + JSON.stringify(splicedProfile));
+        console.log('OBDMEDebug: saveProfiles: currentProfile' + JSON.stringify(this.currentProfile));
         allProfiles.push(this.currentProfile);
+        console.log('OBDMEDebug: saveProfiles: saveProfiles' + JSON.stringify(allProfiles));
         this.store.set(StorageKeys.CARPROFILES, allProfiles);
       });
     });
@@ -387,93 +407,104 @@ export class OBDConnectorService {
     });
   }
 
-  // /**
-  //  * Writes the given request to the OBD and then subscribes for a response from the OBD
-  //  * @param callData - Data to be written to the OBD
-  //  * @param type - What it should be parsed as
-  //  * @returns Promise with the response or rejection
-  //  * TODO: Mannage duplicats that also are more than one message long or set the OBD device to only listen to the main responder
-  //  */
-  // writeThenRead(callData: string, type: string): Promise<string> {
-  //   console.log('OBDMEDebug: Connector: start');
-  //   return new Promise((promSuccess, promReject) => {
-  //     this.isConnected().then(isConnect => {
-  //       if (isConnect) {
-  //         console.log('OBDMEDebug: Connector: isconnected');
-  //         this.blueSerial.write(callData).then(success => {
-  //           console.log('OBDMEDebug: Connector: write data');
-  //           this.blueSerial.subscribe('\r\r').subscribe(data => {
-  //             console.log('OBDMEDebug: Connector: EVENT: ' + data);
-  //             if (data !== '') {
-  //               console.log(data);
-  //               // if (data === 'NO DATA\r\r') {
-  //               if (data.includes('NO DATA')) {
-  //                 console.log('OBDMEDebug: Connector: NO DATA');
-  //                 // promReject('NO DATA');
-  //                 promSuccess('NO DATA');
-  //               } else if (data.includes('OK')) {
-  //                 promSuccess('OK');
-  //               } else {
-  //                 console.log('OBDMEDebug: Connector: HAS DATA');
-  //                 const hexCall = '4' + callData[1] + ' ' + callData.slice(2, 4) + ' ';
-  //                 if (data.includes(hexCall)) {
-  //                   data = data.slice(data.indexOf(hexCall) + 6);
-  //                   if (data.includes(hexCall)) {
-  //                     data = data.slice(0, data.indexOf(hexCall));
-  //                   }
-  //                   console.log('OBDMEDebug: Connector: return: ' + data + 'and: ' + this.parseHex(data, type));
-  //                   promSuccess(this.parseHex(data, type));
-  //                 }
-  //               }
-  //             }
-  //           });
+  /**
+   * Writes the given request to the OBD and then subscribes for a response from the OBD
+   * @param callData - Data to be written to the OBD
+   * @param type - What it should be parsed as
+   * @returns Promise with the response or rejection
+   * TODO: Mannage duplicats that also are more than one message long or set the OBD device to only listen to the main responder
+   */
+  writeThenRead(callData: string): Promise<string> {
+    console.log('OBDMEDebug: Connector: start');
+    return new Promise((promSuccess, promReject) => {
+      this.isConnectedFun().then(isConnect => {
+        if (isConnect) {
+          console.log('OBDMEDebug: Connector: isconnected');
+          this.blueSerial.write(callData).then(success => {
+            console.log('OBDMEDebug: Connector: write data');
+            this.blueSerial.subscribe('\r\r').subscribe(data => {
+              console.log('OBDMEDebug: Connector: EVENT: ' + data);
+              if (data !== '') {
+                console.log(data);
+                // if (data === 'NO DATA\r\r') {
+                if (data.includes('NO DATA')) {
+                  console.log('OBDMEDebug: Connector: NO DATA');
+                  // promReject('NO DATA');
+                  promSuccess('NO DATA');
+                } else if (data.includes('OK')) {
+                  promSuccess('OK');
+                } else if (data.includes('?')) {
+                  console.log('OBDMEDebug: Connector: Needs Rerun');
+                  this.writeThenRead(callData).then(yes => {
+                    promSuccess(yes);
+                  }, no => {
+                    promReject(no);
+                  });
+                } else {
+                  console.log('OBDMEDebug: Connector: HAS DATA');
+                  const hexCall = '4' + callData[1] + ' ' + callData.slice(2, 4) + ' ';
+                  if (data.includes(hexCall)) {
+                    data = data.slice(data.indexOf(hexCall) + 6);
+                    if (data.includes(hexCall)) {
+                      data = data.slice(0, data.indexOf(hexCall));
+                    }
+                    console.log('OBDMEDebug: Connector: return: ' + data);
+                    promSuccess(data);
+                  }
+                }
+              }
+            });
 
-  //         }, failure => {
-  //           this.toast.errorMessage('Couldnt write data!');
-  //           promReject('Couldnt write');
-  //         });
-  //       } else {
-  //         console.log('OBDMEDebug: Connector: not connected');
-  //         this.toast.connectToBluetooth();
-  //         promReject('Not connected to bluetooth');
-  //       }
-  //     });
-  //   });
-  // }
-
-  private writeThenRead(pid: string): Promise<string> {
-    return new Promise<string>((resolve, reject) => {
-      if (this.bluetoothEnabled && this.isConnected) {
-        this.blueSerial.write(pid).then(success => {
-          this.blueSerial.readUntil('\r\r').then(receivedData => {
-            resolve(receivedData);
-          }, error => {
-            // TODO: error message
-            reject('Error on data read');
+          }, failure => {
+            this.toast.errorMessage('Couldnt write data!');
+            promReject('Couldnt write');
           });
-        }, error => {
-          // TODO: error message
-          reject('Error on data write');
-        });
-      } else {
-        // TODO: show error that call can't happen yet because connection isn't established
-        reject('Proper connection not established');
-      }
+        } else {
+          console.log('OBDMEDebug: Connector: not connected');
+          this.toast.notConnectedMessage();
+          promReject('Not connected to bluetooth');
+        }
+      });
     });
   }
+
+  // private writeThenRead(pid: string): Promise<string> {
+  //   return new Promise<string>((resolve, reject) => {
+  //     console.log('OBDMEDebug: writeThenRead: start');
+  //     if (this.bluetoothEnabled && this.isConnected) {
+  //       console.log('OBDMEDebug: writeThenRead: writeStart');
+  //       this.blueSerial.write(pid).then(success => {
+  //         this.blueSerial.readUntil('\r\r').then(receivedData => {
+  //           resolve(receivedData);
+  //         }, error => {
+  //           // TODO: error message
+  //           reject('Error on data read');
+  //         });
+  //       }, error => {
+  //         // TODO: error message
+  //         reject('Error on data write');
+  //       });
+  //     } else {
+  //       // TODO: show error that call can't happen yet because connection isn't established
+  //       reject('Proper connection not established');
+  //     }
+  //   });
+  // }
 
   callPID(pid: string, type: PIDType): Promise<string> {
     return new Promise<string>((resolve, reject) => {
       // TODO: Get the supported pids to work.  Currently parsing seems to work fine, just doesnt check for them correctly
-      if (this.pidSupported(parseInt(pid.charAt(1), 10), parseInt(pid.slice(2, 4), 10))) {
-        this.writeThenRead(pid).then(data => {
-          resolve(this.parseData(data, type));
-        }, error => {
-          reject(error);
-        });
-      } else {
-        reject('PID not supported');
-      }
+      // if (this.pidSupported(parseInt(pid.charAt(1), 10), parseInt(pid.slice(2, 4), 10))) {
+      this.writeThenRead(pid).then(data => {
+        console.log('OBDMEDebug: callPid: dataBack: ' + data);
+        console.log('OBDMEDebug: callPid: parsedData: ' + JSON.stringify(this.parseData(data, type)));
+        resolve(this.parseData(data, type));
+      }, error => {
+        reject(error);
+      });
+      // } else {
+      //   reject('PID not supported');
+      // }
     });
   }
 

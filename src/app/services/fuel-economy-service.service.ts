@@ -13,9 +13,9 @@ export class FuelEconomyService {
   public mpgInfo: FuelEconomyInfo;
   private previousTracks = [];
 
-  private readonly AIR_FUEL_RATIO: number = 14.7          // good A/F ratio is 14.7 grams air to 1 gram fuel
-  private readonly GASOLINE_DENSITY: number = 6.17        // gasoline is typically 6.17 lb/gal
-  private readonly GRAMS_PER_POUND: number = 454
+  private readonly AIR_FUEL_RATIO: number = 14.7;          // good A/F ratio is 14.7 grams air to 1 gram fuel
+  private readonly GASOLINE_DENSITY: number = 6.17;        // gasoline is typically 6.17 lb/gal
+  private readonly GRAMS_PER_POUND: number = 454;
 
   private readonly MILES_PER_KM: number = 0.62137119;
 
@@ -24,7 +24,7 @@ export class FuelEconomyService {
   private readonly GOOD = "#00cc00";
   private readonly AVERAGE = "#ffff00";
   private readonly BAD = "#ff8000";
-  private readonly TERRIBLE = "#ff0000";  
+  private readonly TERRIBLE = "#ff0000";
 
   constructor(private obd: OBDConnectorService) { }
 
@@ -37,7 +37,7 @@ export class FuelEconomyService {
   calcMPG(coords1, coords2): string {
     let distTraveled = this.distance(coords1, coords2);
 
-    var maf: number;    
+    var maf: number;
     this.obd.callPID(PIDConstants.MAF, PIDType.Number).then(data => {
       maf = Number(data);
     });
@@ -65,18 +65,18 @@ export class FuelEconomyService {
     else if (x >= 1.20) {
       colorString = this.TERRIBLE;
     }
-    
+
     return colorString;
   }
 
-  distance(coords1, coords2): number{
+  distance(coords1, coords2): number {
     let lat1: number = coords1.lat;
     let lat2: number = coords2.lat;
     let lng1: number = coords1.lng;
     let lng2: number = coords2.lng;
 
     let p = 0.017453292519943295;    // Math.PI / 180
-    let x = 0.5 - Math.cos((lat1-lat2) * p) / 2 + Math.cos(lat2 * p) *Math.cos((lat1) * p) * (1 - Math.cos(((lng1- lng2) * p))) / 2;
+    let x = 0.5 - Math.cos((lat1 - lat2) * p) / 2 + Math.cos(lat2 * p) * Math.cos((lat1) * p) * (1 - Math.cos(((lng1 - lng2) * p))) / 2;
     let distance = (12742 * Math.asin(Math.sqrt(x))); // 2 * R; R = 6371 km
     return distance * this.MILES_PER_KM; // convert to miles
   }
@@ -102,7 +102,7 @@ export class FuelEconomyService {
     }
     // TYLER: save profiles
   }
-  
+
   deleteHistoricRoutes() {
     this.previousTracks = [];
     this.obd.currentProfile.pastRoutes = [];

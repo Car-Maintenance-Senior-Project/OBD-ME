@@ -31,24 +31,31 @@ export class FuelEconomyPage implements OnInit {
 
   private positionSubscription: Subscription;
 
-  constructor(private mpg: FuelEconomyService, 
-              public navCtrl: NavController, 
-              private plt: Platform, 
-              private geolocation: Geolocation) { }
+  constructor(
+    private mpg: FuelEconomyService,
+    public navCtrl: NavController,
+    private plt: Platform,
+    private geolocation: Geolocation) { }
 
   ngOnInit() {
+    console.log('OBDMEDebug: Geolocation: start');
     this.plt.ready().then(() => {
       this.mpg.loadHistoricInfo();
+      console.log('OBDMEDebug: Geolocation: start1');
 
-      let mapOptions = {
+      const mapOptions = {
         zoom: 13,
         mapTypeId: google.maps.MapTypeId.ROADMAP,
         mapTypeControl: false,
         streetViewControl: false,
         fullscreenControl: false
-      }
+      };
+
+      console.log('OBDMEDebug: Geolocation: start2');
 
       this.map = new google.maps.Map(this.mapElement.nativeElement, mapOptions);
+
+      console.log('OBDMEDebug: Geolocation: start3');
 
       this.geolocation.getCurrentPosition().then(pos => {
         let latLng = new google.maps.LatLng(pos.coords.latitude, pos.coords.longitude);
@@ -57,6 +64,7 @@ export class FuelEconomyPage implements OnInit {
       }).catch((error) => {
         console.log('Error getting location', error);
       });
+      console.log('OBDMEDebug: Geolocation: start4');
     });
   }
 

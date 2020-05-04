@@ -23,6 +23,10 @@ export class VehicleInfoPage implements OnInit {
 
   ngOnInit() {
     this.name = this.obd.currentProfile.nickname;
+    this.year = this.obd.currentProfile.vinData.year;
+    this.model = this.obd.currentProfile.vinData.model;
+    this.make = this.obd.currentProfile.vinData.make;
+    this.vin = this.obd.currentProfile.vin;
   }
 
   /**
