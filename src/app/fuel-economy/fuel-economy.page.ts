@@ -6,11 +6,20 @@ import { NavController, Platform } from '@ionic/angular';
 import { Geolocation } from '@ionic-native/geolocation/ngx';
 import { Subscription } from 'rxjs';
 import { filter } from 'rxjs/operators';
-import { Storage } from '@ionic/storage';
 
-import { OBDConnectorService } from '../services/obd-connector.service';
-
-declare var google;
+import {
+  GoogleMaps,
+  GoogleMap,
+  LatLng,
+  GoogleMapsEvent,
+  GoogleMapOptions,
+  GoogleMapsMapTypeId,
+  CameraPosition,
+  MarkerOptions,
+  Marker,
+  Environment,
+  PolylineOptions
+} from '@ionic-native/google-maps';
 
 @Component({
   selector: 'app-fuel-economy',
@@ -34,29 +43,24 @@ export class FuelEconomyPage implements OnInit {
   constructor(public mpg: FuelEconomyService, 
               public navCtrl: NavController, 
               private plt: Platform, 
-              private geolocation: Geolocation) { }
+              private geolocation: Geolocation,
+              public googleMaps: GoogleMaps) { }
 
   ngOnInit() {
     this.plt.ready().then(() => {
       this.mpg.loadHistoricInfo();
-
-      let mapOptions = {
-        zoom: 13,
-        mapTypeId: google.maps.MapTypeId.ROADMAP,
-        mapTypeControl: false,
-        streetViewControl: false,
-        fullscreenControl: false
-      }
-
-      this.map = new google.maps.Map(this.mapElement.nativeElement, mapOptions);
-
-      this.geolocation.getCurrentPosition().then(pos => {
-        let latLng = new google.maps.LatLng(pos.coords.latitude, pos.coords.longitude);
-        this.map.setCenter(latLng);
-        this.map.setZoom(16);
-      }).catch((error) => {
-        console.log('Error getting location', error);
-      });
+      
+      this.map = GoogleMaps.create('map_canvas');
+      this.map.one(GoogleMapsEvent.MAP_READY).then(() => {
+        this.geolocation.getCurrentPosition().then(pos => {
+          let latLng = new LatLng(pos.coords.latitude, pos.coords.longitude);
+          this.map.setCameraTarget(latLng);
+          this.map.setCameraZoom(16);
+          this.map.setMapTypeId(GoogleMapsMapTypeId.ROADMAP);
+        }).catch((error) => {
+          console.log('Error getting location', error);
+        });
+      });      
     });
   }
 
@@ -85,19 +89,19 @@ export class FuelEconomyPage implements OnInit {
   }
 
   drawSegment(coords): any {
-    let pathSeg;
+    let pathSeg: PolylineOptions;
 
     if (this.lastCoords != null) {
       let nextColor: string = this.mpg.calcMPG(this.lastCoords, coords);
-      pathSeg = new google.maps.Polyline({
-        path: [this.lastCoords, coords],
+      pathSeg = {
+        points: [this.lastCoords, coords],
         geodesic: true,
-        strokeColor: nextColor,
-        strokeOpacity: 1.0,
-        strokeWeight: 3,
-      });
-      pathSeg.setMap(this.map);
-      this.currentMapTrack.push(pathSeg);
+        color: nextColor,
+      };
+      this.map.addPolyline(pathSeg).then(() => {
+        this.currentMapTrack.push(pathSeg);
+        this.map.setCameraTarget(coords);
+      });      
     }
 
     this.lastCoords = coords;
@@ -107,15 +111,14 @@ export class FuelEconomyPage implements OnInit {
     this.clearCurrentMapTrack();
 
     for (var i = 0; i < path.length - 1; i++) {
-      var pathSeg = new google.maps.Polyline({
-        path: [path[i], path[i + 1]],
+      var pathSeg: PolylineOptions = {
+        points: [path[i], path[i + 1]],
         geodesic: true,
-        strokeColor: colors[i + 1],
-        strokeOpacity: 1.0,
-        strokeWeight: 3,
-      });
-      pathSeg.setMap(this.map);
-      this.currentMapTrack.push(pathSeg);
+        color: colors[i + 1],
+      };
+      this.map.addPolyline(pathSeg).then(() => {
+        this.currentMapTrack.push(pathSeg);
+      });      
     }
   }
 
@@ -140,9 +143,7 @@ export class FuelEconomyPage implements OnInit {
   }
 
   clearCurrentMapTrack() {
-    this.currentMapTrack.forEach(seg => {
-      seg.setMap(null);
-    });
+    this.map.clear();
     this.currentMapTrack = [];
   }
 }
