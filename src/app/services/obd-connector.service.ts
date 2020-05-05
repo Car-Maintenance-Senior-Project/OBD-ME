@@ -73,14 +73,36 @@ export class OBDConnectorService {
     return new Promise((resolve, reject) => {
       this.getPaired();
 
-      this.currentProfile = {
-        vin: '',
-        vinData: null,
-        nickname: '-1',
-        fuelEconomy: null,
-        pastRoutes: null,
-        maintenanceRecords: null
-      };
+
+      this.store.get(StorageKeys.CARPROFILES).then(allProfiles => {
+        if (allProfiles === null) {
+          this.currentProfile = {
+            vin: '',
+            vinData: null,
+            nickname: '-1',
+            fuelEconomy: null,
+            pastRoutes: null,
+            maintenanceRecords: null,
+            lastProfile: true
+          };
+        } else {
+          const lastProfile: CarProfile = allProfiles.find(profiles => profiles.lastProfile === true);
+          if (lastProfile === undefined) {
+            this.currentProfile = {
+              vin: '',
+              vinData: null,
+              nickname: '-1',
+              fuelEconomy: null,
+              pastRoutes: null,
+              maintenanceRecords: null,
+              lastProfile: true
+            };
+          } else {
+            this.currentProfile = lastProfile;
+          }
+        }
+      });
+
 
       this.connect().then(result1 => {
         console.log('OBDMEDebug: ResultSuc: ' + ConnectResult[result1]);
@@ -134,43 +156,48 @@ export class OBDConnectorService {
               }
             }
             console.log('OBDMEDebug: MACAddress: ' + MACAddress);
-            this.blueSerial.isConnected().then(data => {
+            this.blueSerial.isConnected().then(async data => {
               console.log('OBDMEDebug: isConnected1: BT is connected');
-              this.blueSerial.disconnect().then(sucsess => {
-                console.log('OBDMEDebug: isConnected1: BT got disconnected');
+              for (let i = 0; i < 4; i++) {
+                await this.blueSerial.disconnect().then(sucsess => {
+                  console.log('OBDMEDebug: isConnected1: BT got disconnected');
+                  this.connectToBT(MACAddress).then(returnSuc => {
+                    console.log('OBDMEDebug: isConnected1: BT Suc');
+                    resolve(returnSuc);
+                    return;
+                  }, returnRej => {
+                    console.log('OBDMEDebug: isConnected1: BT failed');
+                    // reject(returnRej);
+                    // return;
+                  });
+                  console.log('OBDMEDebug: isConnected1: BT ??????????');
+                }, fail => {
+                  console.log('OBDMEDebug: isConnected1: BT failed Dis');
+                  this.isConnected = false;
+                });
+              }
+              this.loading.dismiss();
+              this.toast.notDisconnectedMessage();
+              reject(ConnectResult.DisconnectFail);
+              return;
+            }, data2 => {
+              console.log('OBDMEDebug: isConnected2: BT is disconnected');
+              for (let i = 0; i < 4; i++) {
                 this.connectToBT(MACAddress).then(returnSuc => {
-                  console.log('OBDMEDebug: isConnected1: BT Suc');
+                  console.log('OBDMEDebug: isConnected2: BT suc');
                   resolve(returnSuc);
                   return;
                 }, returnRej => {
-                  console.log('OBDMEDebug: isConnected1: BT failed');
-                  reject(returnRej);
-                  return;
+                  console.log('OBDMEDebug: isConnected2: BT fail');
+                  // reject(returnRej);
+                  // return;
                 });
-
-                console.log('OBDMEDebug: isConnected1: BT ??????????');
-              }, fail => {
-                console.log('OBDMEDebug: isConnected1: BT failed Dis');
-                this.isConnected = false;
-                this.loading.dismiss();
-                this.toast.notDisconnectedMessage();
-                reject(ConnectResult.DisconnectFail);
-                return;
-              });
-
-
-            }, data2 => {
-              console.log('OBDMEDebug: isConnected2: BT is disconnected');
-              this.connectToBT(MACAddress).then(returnSuc => {
-                console.log('OBDMEDebug: isConnected2: BT suc');
-                resolve(returnSuc);
-                return;
-              }, returnRej => {
-                console.log('OBDMEDebug: isConnected2: BT fail');
-                reject(returnRej);
-                return;
-              });
-              console.log('OBDMEDebug: isConnected2: BT ?????????');
+                console.log('OBDMEDebug: isConnected2: BT ?????????');
+              }
+              this.loading.dismiss();
+              this.toast.notDisconnectedMessage();
+              reject(ConnectResult.DisconnectFail);
+              return;
             });
           }, error => {
             console.log('OBDMEDebug: LASTMAC: GetFail');
@@ -217,6 +244,7 @@ export class OBDConnectorService {
                 const profileSearch: CarProfile = allProfiles.find(profile => profile.vin === vinRaw);
                 console.log('OBDMEDebug: connectProcess: profileSearch: ' + JSON.stringify(profileSearch));
                 if (profileSearch !== undefined) {
+                  profileSearch.lastProfile = true;
                   this.currentProfile = profileSearch;
                 } else {
                   if (allProfiles.length === 0) {
@@ -226,7 +254,8 @@ export class OBDConnectorService {
                       nickname: '1',
                       fuelEconomy: null,
                       pastRoutes: null,
-                      maintenanceRecords: null
+                      maintenanceRecords: null,
+                      lastProfile: true
                     };
                   } else {
                     let newNick = '-1';
@@ -235,15 +264,16 @@ export class OBDConnectorService {
                         newNick = i.toString();
                         break;
                       }
-                      this.currentProfile = {
-                        vin: vinRaw,
-                        vinData: parsedVin,
-                        nickname: newNick,
-                        fuelEconomy: null,
-                        pastRoutes: null,
-                        maintenanceRecords: null
-                      };
                     }
+                    this.currentProfile = {
+                      vin: vinRaw,
+                      vinData: parsedVin,
+                      nickname: newNick,
+                      fuelEconomy: null,
+                      pastRoutes: null,
+                      maintenanceRecords: null,
+                      lastProfile: true
+                    };
                   }
                   allProfiles.push(this.currentProfile);
                   console.log('OBDMEDebug: connectProcess: Profiles Done: ' + JSON.stringify(allProfiles));
