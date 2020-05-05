@@ -136,7 +136,8 @@ export class OBDConnectorService {
           nickname: '-1',
           fuelEconomy: null,
           pastRoutes: null,
-          maintenanceRecords: null
+          maintenanceRecords: null,
+          lastProfile: false
         };
 
         this.blueSerial.isEnabled().then(enabled => {
