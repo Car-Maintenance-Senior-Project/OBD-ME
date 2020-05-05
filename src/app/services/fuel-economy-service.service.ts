@@ -11,6 +11,7 @@ import { PIDType } from '../enums/pidtype.enum';
 })
 export class FuelEconomyService {
   public mpgInfo: FuelEconomyInfo;
+  public test = "testtests";
   private previousTracks = [];
 
   private readonly AIR_FUEL_RATIO: number = 14.7;          // good A/F ratio is 14.7 grams air to 1 gram fuel
@@ -100,19 +101,19 @@ export class FuelEconomyService {
       };
       this.obd.currentProfile.fuelEconomy = this.mpgInfo;
     }
-    // TYLER: save profiles
+    this.obd.saveProfiles();
   }
 
   deleteHistoricRoutes() {
     this.previousTracks = [];
     this.obd.currentProfile.pastRoutes = [];
-    // TYLER: save profiles
+    this.obd.saveProfiles();
   }
 
   addRoute(newRoute) {
     this.previousTracks.push(newRoute);
     this.obd.currentProfile.pastRoutes = this.previousTracks;
     this.obd.currentProfile.fuelEconomy = this.mpgInfo;
-    // TYLER: save profiles
+    this.obd.saveProfiles();
   }
 }
