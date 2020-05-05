@@ -6,15 +6,11 @@ import { NavController, Platform } from '@ionic/angular';
 import { Geolocation } from '@ionic-native/geolocation/ngx';
 import { Subscription } from 'rxjs';
 import { filter } from 'rxjs/operators';
+import { Storage } from '@ionic/storage';
 
-import {
-  GoogleMaps,
-  LatLng,
-  GoogleMapsEvent,
-  GoogleMapsMapTypeId,
+import { OBDConnectorService } from '../services/obd-connector.service';
 
-  PolylineOptions
-} from '@ionic-native/google-maps';
+declare var google;
 
 @Component({
   selector: 'app-fuel-economy',
@@ -45,18 +41,30 @@ export class FuelEconomyPage implements OnInit {
     console.log('OBDMEDebug: Geolocation: start');
     this.plt.ready().then(() => {
       this.mpg.loadHistoricInfo();
+      console.log('OBDMEDebug: Geolocation: start1');
 
-      this.map = GoogleMaps.create('map_canvas');
-      this.map.one(GoogleMapsEvent.MAP_READY).then(() => {
-        this.geolocation.getCurrentPosition().then(pos => {
-          let latLng = new LatLng(pos.coords.latitude, pos.coords.longitude);
-          this.map.setCameraTarget(latLng);
-          this.map.setCameraZoom(16);
-          this.map.setMapTypeId(GoogleMapsMapTypeId.ROADMAP);
-        }).catch((error) => {
-          console.log('Error getting location', error);
-        });
+      const mapOptions = {
+        zoom: 13,
+        mapTypeId: google.maps.MapTypeId.ROADMAP,
+        mapTypeControl: false,
+        streetViewControl: false,
+        fullscreenControl: false
+      };
+
+      console.log('OBDMEDebug: Geolocation: start2');
+
+      this.map = new google.maps.Map(this.mapElement.nativeElement, mapOptions);
+
+      console.log('OBDMEDebug: Geolocation: start3');
+
+      this.geolocation.getCurrentPosition().then(pos => {
+        let latLng = new google.maps.LatLng(pos.coords.latitude, pos.coords.longitude);
+        this.map.setCenter(latLng);
+        this.map.setZoom(16);
+      }).catch((error) => {
+        console.log('Error getting location', error);
       });
+      console.log('OBDMEDebug: Geolocation: start4');
     });
   }
 
@@ -79,25 +87,26 @@ export class FuelEconomyPage implements OnInit {
         filter((p) => p.coords !== undefined) //Filter Out Errors
       )
       .subscribe(posData => {
+        // TODO: get current MPG and use it to determine the color to use
         this.trackedRoute.push({ lat: posData.coords.latitude, lng: posData.coords.longitude });
         this.drawSegment(this.trackedRoute[this.trackedRoute.length - 1]);
       });
   }
 
   drawSegment(coords): any {
-    let pathSeg: PolylineOptions;
+    let pathSeg;
 
     if (this.lastCoords != null) {
       let nextColor: string = this.mpg.calcMPG(this.lastCoords, coords);
-      pathSeg = {
-        points: [this.lastCoords, coords],
+      pathSeg = new google.maps.Polyline({
+        path: [this.lastCoords, coords],
         geodesic: true,
-        color: nextColor,
-      };
-      this.map.addPolyline(pathSeg).then(() => {
-        this.currentMapTrack.push(pathSeg);
-        this.map.setCameraTarget(coords);
+        strokeColor: nextColor,
+        strokeOpacity: 1.0,
+        strokeWeight: 3,
       });
+      pathSeg.setMap(this.map);
+      this.currentMapTrack.push(pathSeg);
     }
 
     this.lastCoords = coords;
@@ -107,14 +116,15 @@ export class FuelEconomyPage implements OnInit {
     this.clearCurrentMapTrack();
 
     for (var i = 0; i < path.length - 1; i++) {
-      var pathSeg: PolylineOptions = {
-        points: [path[i], path[i + 1]],
+      var pathSeg = new google.maps.Polyline({
+        path: [path[i], path[i + 1]],
         geodesic: true,
-        color: colors[i + 1],
-      };
-      this.map.addPolyline(pathSeg).then(() => {
-        this.currentMapTrack.push(pathSeg);
+        strokeColor: colors[i + 1],
+        strokeOpacity: 1.0,
+        strokeWeight: 3,
       });
+      pathSeg.setMap(this.map);
+      this.currentMapTrack.push(pathSeg);
     }
   }
 
@@ -139,7 +149,9 @@ export class FuelEconomyPage implements OnInit {
   }
 
   clearCurrentMapTrack() {
-    this.map.clear();
+    this.currentMapTrack.forEach(seg => {
+      seg.setMap(null);
+    });
     this.currentMapTrack = [];
   }
 }

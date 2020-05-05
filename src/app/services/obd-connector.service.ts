@@ -381,21 +381,14 @@ export class OBDConnectorService {
     this.saveProfiles();
   }
 
-  saveProfiles(): Promise<boolean> {
+  private saveProfiles(): Promise<boolean> {
     return new Promise<boolean>((resolve, reject) => {
       this.store.get(StorageKeys.CARPROFILES).then(allProfiles => {
         console.log('OBDMEDebug: saveProfiles: initProfiles' + JSON.stringify(allProfiles));
-        if (allProfiles != null) {
-          const splicedProfile = allProfiles.splice(allProfiles.findIndex(profile => profile.vin === this.currentProfile.vin), 1);
-          console.log('OBDMEDebug: saveProfiles: splicedProfile' + JSON.stringify(splicedProfile));
-          console.log('OBDMEDebug: saveProfiles: currentProfile' + JSON.stringify(this.currentProfile));
-          allProfiles.push(this.currentProfile);
-        }
-        else if (this.currentProfile.nickname !== '-1') {
-          allProfiles = [this.currentProfile];
-        } else {
-          allProfiles = [];
-        }
+        const splicedProfile = allProfiles.splice(allProfiles.findIndex(profile => profile.vin === this.currentProfile.vin), 1);
+        console.log('OBDMEDebug: saveProfiles: splicedProfile' + JSON.stringify(splicedProfile));
+        console.log('OBDMEDebug: saveProfiles: currentProfile' + JSON.stringify(this.currentProfile));
+        allProfiles.push(this.currentProfile);
         console.log('OBDMEDebug: saveProfiles: saveProfiles' + JSON.stringify(allProfiles));
         this.store.set(StorageKeys.CARPROFILES, allProfiles);
       });
