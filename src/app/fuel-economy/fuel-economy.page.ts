@@ -9,15 +9,10 @@ import { filter } from 'rxjs/operators';
 
 import {
   GoogleMaps,
-  GoogleMap,
   LatLng,
   GoogleMapsEvent,
-  GoogleMapOptions,
   GoogleMapsMapTypeId,
-  CameraPosition,
-  MarkerOptions,
-  Marker,
-  Environment,
+
   PolylineOptions
 } from '@ionic-native/google-maps';
 
