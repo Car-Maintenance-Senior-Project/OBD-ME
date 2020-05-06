@@ -388,7 +388,7 @@ export class OBDConnectorService {
     this.saveProfiles();
   }
 
-  private saveProfiles(): Promise<boolean> {
+  public saveProfiles(): Promise<boolean> {
     return new Promise<boolean>((resolve, reject) => {
       this.store.get(StorageKeys.CARPROFILES).then(allProfiles => {
         console.log('OBDMEDebug: saveProfiles: initProfiles' + JSON.stringify(allProfiles));

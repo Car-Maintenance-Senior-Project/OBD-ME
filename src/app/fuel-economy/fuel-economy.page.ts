@@ -6,9 +6,6 @@ import { NavController, Platform } from '@ionic/angular';
 import { Geolocation } from '@ionic-native/geolocation/ngx';
 import { Subscription } from 'rxjs';
 import { filter } from 'rxjs/operators';
-import { Storage } from '@ionic/storage';
-
-import { OBDConnectorService } from '../services/obd-connector.service';
 
 declare var google;
 
@@ -21,27 +18,21 @@ export class FuelEconomyPage implements OnInit {
   @ViewChild('map', null) mapElement: ElementRef;
   private map: any;
   private currentMapTrack = [];
-
   private isTracking = false;
   private trackedRoute = [];
   private pathColors = [];
   private lastCoords = null;
-
-  colors = ["#b35a55", "#7fe5f0", "#ff0000", "#ff80ed"];
-
   private positionSubscription: Subscription;
 
   constructor(
-    private mpg: FuelEconomyService,
+    public mpg: FuelEconomyService,
     public navCtrl: NavController,
     private plt: Platform,
     private geolocation: Geolocation) { }
 
   ngOnInit() {
-    console.log('OBDMEDebug: Geolocation: start');
     this.plt.ready().then(() => {
       this.mpg.loadHistoricInfo();
-      console.log('OBDMEDebug: Geolocation: start1');
 
       const mapOptions = {
         zoom: 13,
@@ -51,11 +42,7 @@ export class FuelEconomyPage implements OnInit {
         fullscreenControl: false
       };
 
-      console.log('OBDMEDebug: Geolocation: start2');
-
       this.map = new google.maps.Map(this.mapElement.nativeElement, mapOptions);
-
-      console.log('OBDMEDebug: Geolocation: start3');
 
       this.geolocation.getCurrentPosition().then(pos => {
         let latLng = new google.maps.LatLng(pos.coords.latitude, pos.coords.longitude);
@@ -64,7 +51,6 @@ export class FuelEconomyPage implements OnInit {
       }).catch((error) => {
         console.log('Error getting location', error);
       });
-      console.log('OBDMEDebug: Geolocation: start4');
     });
   }
 
@@ -81,13 +67,11 @@ export class FuelEconomyPage implements OnInit {
 
     this.clearCurrentMapTrack();
 
-    //TYLER: maybe have to change to manual time-based checking if subscription updates too fast
     this.positionSubscription = this.geolocation.watchPosition()
       .pipe(
         filter((p) => p.coords !== undefined) //Filter Out Errors
       )
       .subscribe(posData => {
-        // TODO: get current MPG and use it to determine the color to use
         this.trackedRoute.push({ lat: posData.coords.latitude, lng: posData.coords.longitude });
         this.drawSegment(this.trackedRoute[this.trackedRoute.length - 1]);
       });
