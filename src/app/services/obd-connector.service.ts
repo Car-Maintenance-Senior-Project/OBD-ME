@@ -75,7 +75,9 @@ export class OBDConnectorService {
 
 
       this.store.get(StorageKeys.CARPROFILES).then(allProfiles => {
+        console.log('OBDMEDebug: allProfiles: ' + JSON.stringify(allProfiles));
         if (allProfiles === null) {
+          console.log('OBDMEDebug: null');
           this.currentProfile = {
             vin: '',
             vinData: null,
@@ -87,6 +89,7 @@ export class OBDConnectorService {
           };
         } else {
           const lastProfile: CarProfile = allProfiles.find(profiles => profiles.lastProfile === true);
+          console.log('OBDMEDebug: lastProfile: ' + JSON.stringify(lastProfile));
           if (lastProfile === undefined) {
             this.currentProfile = {
               vin: '',
@@ -101,14 +104,14 @@ export class OBDConnectorService {
             this.currentProfile = lastProfile;
           }
         }
-      });
-
-
-      this.connect().then(result1 => {
-        console.log('OBDMEDebug: ResultSuc: ' + ConnectResult[result1]);
-      }, result2 => {
-        console.log('OBDMEDebug: ResultRej: ' + ConnectResult[result2]);
-        this.route.navigate(['settings']);
+        console.log('OBDMEDebug: this.currentProfile: ' + JSON.stringify(this.currentProfile));
+      }).then(initConnect => {
+        this.connect().then(result1 => {
+          console.log('OBDMEDebug: ResultSuc: ' + ConnectResult[result1]);
+        }, result2 => {
+          console.log('OBDMEDebug: ResultRej: ' + ConnectResult[result2]);
+          this.route.navigate(['settings']);
+        });
       });
     });
   }
@@ -130,15 +133,15 @@ export class OBDConnectorService {
         // initialize conditions to false when a connection is attempted
         this.bluetoothEnabled = false;
         this.isConnected = false;
-        this.currentProfile = {
-          vin: '',
-          vinData: null,
-          nickname: '-1',
-          fuelEconomy: null,
-          pastRoutes: null,
-          maintenanceRecords: null,
-          lastProfile: false
-        };
+        // this.currentProfile = {
+        //   vin: '',
+        //   vinData: null,
+        //   nickname: '-1',
+        //   fuelEconomy: null,
+        //   pastRoutes: null,
+        //   maintenanceRecords: null,
+        //   lastProfile: false
+        // };
 
         this.blueSerial.isEnabled().then(enabled => {
 
@@ -243,6 +246,9 @@ export class OBDConnectorService {
                 if (allProfiles === null) {
                   allProfiles = [];
                 }
+                allProfiles.forEach(profile => {
+                  profile.lastProfile = false;
+                });
                 const profileSearch: CarProfile = allProfiles.find(profile => profile.vin === vinRaw);
                 console.log('OBDMEDebug: connectProcess: profileSearch: ' + JSON.stringify(profileSearch));
                 if (profileSearch !== undefined) {
