@@ -34,35 +34,39 @@ export class FuelEconomyService {
     this.mpgInfo.mpg += diff;
   }
 
-  calcMPG(coords1, coords2): string {
-    let distTraveled = this.distance(coords1, coords2);
+  calcMPG(coords1, coords2): Promise<string> {
+    return new Promise<string>((resolve) => {
+      let distTraveled = this.distance(coords1, coords2);
 
-    var maf: number;
-    this.obd.callPID(PIDConstants.MAF, PIDType.MAF).then(data => {
-      maf = parseFloat(data);
+      var maf: number;
+      this.obd.callPID(PIDConstants.MAF, PIDType.MAF).then(data => {
+        maf = parseFloat(data);
+
+        let fuelGals = maf / this.AIR_FUEL_RATIO / this.GASOLINE_DENSITY / this.GRAMS_PER_POUND;
+        let currentMPG = distTraveled / fuelGals;
+
+        this.updateAverage(currentMPG);
+
+        let x = currentMPG / this.mpgInfo.mpg;
+
+        var colorString: string;
+        if (x < 0.85) {
+          colorString = this.GREAT;
+        } else if (x >= 0.85 && x < 1.05) {
+          colorString = this.GOOD;
+        } else if (x >= 1.05 && x < 1.10) {
+          colorString = this.AVERAGE;
+        } else if (x >= 1.10 && x < 1.20) {
+          colorString = this.BAD;
+        } else if (x >= 1.20) {
+          colorString = this.TERRIBLE;
+        }
+
+        resolve(colorString);
+      }, reject => {
+        // Die gracfully
+      });
     });
-
-    let fuelGals = maf / this.AIR_FUEL_RATIO / this.GASOLINE_DENSITY / this.GRAMS_PER_POUND;
-    let currentMPG = distTraveled / fuelGals;
-
-    this.updateAverage(currentMPG);
-
-    let x = currentMPG / this.mpgInfo.mpg;
-
-    var colorString: string;
-    if (x < 0.85) {
-      colorString = this.GREAT;
-    } else if (x >= 0.85 && x < 1.05) {
-      colorString = this.GOOD;
-    } else if (x >= 1.05 && x < 1.10) {
-      colorString = this.AVERAGE;
-    } else if (x >= 1.10 && x < 1.20) {
-      colorString = this.BAD;
-    } else if (x >= 1.20) {
-      colorString = this.TERRIBLE;
-    }
-
-    return colorString;
   }
 
   distance(coords1, coords2): number {

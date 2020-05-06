@@ -30,16 +30,12 @@ export class VehicleInfoPage implements OnInit {
       this.model = this.obd.currentProfile.vinData.model;
       this.make = this.obd.currentProfile.vinData.make;
       this.vin = this.obd.currentProfile.vin;
-
     }
   }
 
   changeName() {
     if (this.obd.currentProfile.nickname !== '-1') {
       this.obd.changeCurrentName(this.name);
-      this.obd.callPID(PIDConstants.MAF, PIDType.Number).then(data => {
-        console.log('OBDMEDebug: numberMAF: ' + data);
-      });
     }
   }
 }

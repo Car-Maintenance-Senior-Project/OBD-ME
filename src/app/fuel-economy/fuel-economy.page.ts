@@ -93,23 +93,25 @@ export class FuelEconomyPage implements OnInit {
       });
   }
 
-  drawSegment(coords): any {
+  drawSegment(coords): void {
     let pathSeg;
 
     if (this.lastCoords != null) {
-      let nextColor: string = this.mpg.calcMPG(this.lastCoords, coords);
-      pathSeg = new google.maps.Polyline({
-        path: [this.lastCoords, coords],
-        geodesic: true,
-        strokeColor: nextColor,
-        strokeOpacity: 1.0,
-        strokeWeight: 3,
+      this.mpg.calcMPG(this.lastCoords, coords).then(nextColor => {
+        pathSeg = new google.maps.Polyline({
+          path: [this.lastCoords, coords],
+          geodesic: true,
+          strokeColor: nextColor,
+          strokeOpacity: 1.0,
+          strokeWeight: 3,
+        });
+        pathSeg.setMap(this.map);
+        this.currentMapTrack.push(pathSeg);
+        this.lastCoords = coords;
       });
-      pathSeg.setMap(this.map);
-      this.currentMapTrack.push(pathSeg);
+    } else {
+      this.lastCoords = coords;
     }
-
-    this.lastCoords = coords;
   }
 
   redrawPath(path, colors) {

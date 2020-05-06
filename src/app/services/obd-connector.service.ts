@@ -540,39 +540,50 @@ export class OBDConnectorService {
     });
   }
 
-  private parseData(data: string, type: PIDType): Promise<string> {
+  //private parseData(data: string, type: PIDType): Promise<string> {
+  parseData(data: string, type: PIDType): Promise<string> {
     return new Promise<string>((resolve) => {
+      console.log(data);
       const split = data.split('\r');
+      console.log(split);
       split.forEach((section, index) => {
         if (section.indexOf(':') === 1) {
           split[index] = section.slice(3);
         }
       });
+      console.log(split);
       const hexArray = split.join('').trim().split(' ');
-
+      console.log(hexArray);
       const finalArray = [];
       let nextChar: string;
 
-      hexArray.forEach((data, index) => {
+      hexArray.forEach((splitData, index) => {
         switch (type) {
           case PIDType.String: {
-            nextChar = String.fromCharCode(parseInt(data, 16));
+            nextChar = String.fromCharCode(parseInt(splitData, 16));
             break;
           }
           case PIDType.Binary: {
-            nextChar = (parseInt(data, 16).toString(2)).padStart(8, '0');
+            nextChar = (parseInt(splitData, 16).toString(2)).padStart(8, '0');
             break;
           }
           case PIDType.Number: {
-            nextChar = parseInt(data, 16).toString();
+            nextChar = parseInt(splitData, 16).toString();
+            break;
+          }
+          case PIDType.MAF: {
+            nextChar = parseInt(splitData, 16).toString();
             break;
           }
         }
+        console.log(nextChar);
         if (nextChar === '\u0001') {
           nextChar = '';
         }
         finalArray[index] = nextChar;
       });
+
+      console.log(JSON.stringify(finalArray));
       if (PIDType.MAF !== type) {
         resolve(finalArray.join(''));
       } else {
