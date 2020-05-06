@@ -32,18 +32,12 @@
         <ion-label>Model:</ion-label>
         <ion-input [value]="model" readonly></ion-input>
     </ion-item>
-    <ion-button expand="block" (click)="getVehicleInfo()">
-        Get Info
-    </ion-button>
 </ion-content>
 
 <ion-content>
-    <ion-button expand="block" (click)="getVehicleInfo()">
-        Get Info
-    </ion-button>
     <ion-item>
         <ion-label>Vehicle NickName:</ion-label>
-        <ion-input [value]="name"></ion-input>
+        <ion-input [(ngModel)]="name"></ion-input>
     </ion-item>
     <ion-item>
         <ion-button expand="block" (click)="changeName()">

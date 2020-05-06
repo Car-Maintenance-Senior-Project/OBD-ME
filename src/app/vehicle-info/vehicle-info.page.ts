@@ -2,6 +2,8 @@ import { Component, OnInit, NgZone } from '@angular/core';
 import { BluetoothSerial } from '@ionic-native/bluetooth-serial/ngx';
 
 import { OBDConnectorService } from '../services/obd-connector.service';
+import { PIDConstants } from '../classes/pidconstants';
+import { PIDType } from '../enums/pidtype.enum';
 
 @Component({
   selector: 'app-vehicle-info',
@@ -22,52 +24,18 @@ export class VehicleInfoPage implements OnInit {
   }
 
   ngOnInit() {
-    this.name = this.obd.currentProfile.nickname;
-  }
-
-  /**
-   * Gets vehicle info
-   */
-  getVehicleInfo() {
-    console.log('OBDMEDebug: START of call');
-    // this.obd.getSupportedPIDs().then(sucsess => {
-    //   const supportedArray = this.obd.getAllPidsSupported();
-    //   console.log('OBDMEDebug: gotPids');
-    //   this.obd.callOBDPid('09023\r', 'string').then(response => {
-    //     console.log('OBDMEDebug: response back: ' + response);
-    //     this.vin = response;
-    //     this.model = "CRV";
-    //     this.year = "2006";
-    //     this.make = "Honda";
-    //   }, rejection => {
-    //     console.log('OBDMEDebug: rejection back: ' + rejection);
-    //     this.vin = rejection;
-    //     this.model = "CRV";
-    //     this.year = "2006";
-    //     this.make = "Honda";
-    //   });
-    //   console.log('OBDMEDebug: finalArray: ' + supportedArray);
-    // }, failure => {
-    //   console.log('OBDMEDebug: didnt get pids');
-    // });
-    this.obd.callPID('0300\r', 2).then(resp => {
-      // Make a list of all the things it could be for easy lookup
-      this.make = resp;
-      // this.obd.callOBDPid('0103\r', 'number').then(resp => {
-      //   this.obd.callOBDPid('0102\r', 'number').then(resp => {
-
-      //   }, reje => {
-      //     //nothing
-      //   });
-      // }, reje => {
-      //   //nothing
-      // });
-    }, reje => {
-      //nothing
-    });
+    if (this.obd.currentProfile.nickname !== '-1') {
+      this.name = this.obd.currentProfile.nickname;
+      this.year = this.obd.currentProfile.vinData.year;
+      this.model = this.obd.currentProfile.vinData.model;
+      this.make = this.obd.currentProfile.vinData.make;
+      this.vin = this.obd.currentProfile.vin;
+    }
   }
 
   changeName() {
-    this.obd.changeCurrentName(this.name);
+    if (this.obd.currentProfile.nickname !== '-1') {
+      this.obd.changeCurrentName(this.name);
+    }
   }
 }

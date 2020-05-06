@@ -9,4 +9,5 @@ export interface CarProfile {
     fuelEconomy: FuelEconomyInfo;
     pastRoutes: any;
     maintenanceRecords: MaintenanceRecord[];
+    lastProfile: boolean;
 }

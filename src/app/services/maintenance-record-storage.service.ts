@@ -41,7 +41,7 @@ export class MaintenanceRecordStorageService {
       return date1 > date2 ? -1 : 1;
     });
     this.obd.currentProfile.maintenanceRecords = this.records;
-    this.obd.saveProfiles();
+    // TYLER: save profiles
   }
 
   loadRecords() {
@@ -51,7 +51,7 @@ export class MaintenanceRecordStorageService {
     else {
       this.records = [];
       this.obd.currentProfile.maintenanceRecords = this.records;
-      this.obd.saveProfiles();
+      // TYLER: save profiles
     }
   }
 

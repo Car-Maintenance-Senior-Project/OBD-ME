@@ -13,11 +13,12 @@ export class MaintenanceRecordPage implements OnInit {
 
   @ViewChild(IonList, null) recordList: IonList;
 
-  constructor(public recordStorage: MaintenanceRecordStorageService,
-              private alertController: AlertController,
-              private navController: NavController) {
+  constructor(
+    public recordStorage: MaintenanceRecordStorageService,
+    private alertController: AlertController,
+    private navController: NavController) {
   }
-  
+
   ngOnInit() {
     this.recordStorage.loadRecords();
   }
@@ -43,7 +44,7 @@ export class MaintenanceRecordPage implements OnInit {
       ]
     }).then((prompt) => {
       prompt.present();
-    });    
+    });
   }
 
   editRecord(id: string): void {

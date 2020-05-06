@@ -37,12 +37,15 @@ export class SettingsPage implements OnInit {
    * Tries to connect to that mac.
    */
   onChangeOfMac() {
-    this.OBD.connect(this.chosenMac).then(sucsess => {
-      this.bluetoothConnected = this.OBD.isConnected;
-    }, failure => {
-      this.bluetoothConnected = this.OBD.isConnected;
-      this.chosenMac = '';
-    });
+    if (this.chosenMac !== '') {
+      this.OBD.connect(this.chosenMac).then(sucsess => {
+        this.bluetoothConnected = this.OBD.isConnected;
+      }, failure => {
+        this.bluetoothConnected = this.OBD.isConnected;
+        this.chosenMac = '';
+      });
+    }
+
   }
 
   toggleDarkTheme(): void {

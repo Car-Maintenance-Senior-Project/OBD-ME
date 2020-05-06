@@ -31,24 +31,31 @@ export class FuelEconomyPage implements OnInit {
 
   private positionSubscription: Subscription;
 
-  constructor(public mpg: FuelEconomyService, 
-              public navCtrl: NavController, 
-              private plt: Platform, 
-              private geolocation: Geolocation) { }
+  constructor(
+    private mpg: FuelEconomyService,
+    public navCtrl: NavController,
+    private plt: Platform,
+    private geolocation: Geolocation) { }
 
   ngOnInit() {
+    console.log('OBDMEDebug: Geolocation: start');
     this.plt.ready().then(() => {
       this.mpg.loadHistoricInfo();
+      console.log('OBDMEDebug: Geolocation: start1');
 
-      let mapOptions = {
+      const mapOptions = {
         zoom: 13,
         mapTypeId: google.maps.MapTypeId.ROADMAP,
         mapTypeControl: false,
         streetViewControl: false,
         fullscreenControl: false
-      }
+      };
+
+      console.log('OBDMEDebug: Geolocation: start2');
 
       this.map = new google.maps.Map(this.mapElement.nativeElement, mapOptions);
+
+      console.log('OBDMEDebug: Geolocation: start3');
 
       this.geolocation.getCurrentPosition().then(pos => {
         let latLng = new google.maps.LatLng(pos.coords.latitude, pos.coords.longitude);
@@ -57,6 +64,7 @@ export class FuelEconomyPage implements OnInit {
       }).catch((error) => {
         console.log('Error getting location', error);
       });
+      console.log('OBDMEDebug: Geolocation: start4');
     });
   }
 
@@ -79,28 +87,31 @@ export class FuelEconomyPage implements OnInit {
         filter((p) => p.coords !== undefined) //Filter Out Errors
       )
       .subscribe(posData => {
+        // TODO: get current MPG and use it to determine the color to use
         this.trackedRoute.push({ lat: posData.coords.latitude, lng: posData.coords.longitude });
         this.drawSegment(this.trackedRoute[this.trackedRoute.length - 1]);
       });
   }
 
-  drawSegment(coords): any {
+  drawSegment(coords): void {
     let pathSeg;
 
     if (this.lastCoords != null) {
-      let nextColor: string = this.mpg.calcMPG(this.lastCoords, coords);
-      pathSeg = new google.maps.Polyline({
-        path: [this.lastCoords, coords],
-        geodesic: true,
-        strokeColor: nextColor,
-        strokeOpacity: 1.0,
-        strokeWeight: 3,
+      this.mpg.calcMPG(this.lastCoords, coords).then(nextColor => {
+        pathSeg = new google.maps.Polyline({
+          path: [this.lastCoords, coords],
+          geodesic: true,
+          strokeColor: nextColor,
+          strokeOpacity: 1.0,
+          strokeWeight: 3,
+        });
+        pathSeg.setMap(this.map);
+        this.currentMapTrack.push(pathSeg);
+        this.lastCoords = coords;
       });
-      pathSeg.setMap(this.map);
-      this.currentMapTrack.push(pathSeg);
+    } else {
+      this.lastCoords = coords;
     }
-
-    this.lastCoords = coords;
   }
 
   redrawPath(path, colors) {
