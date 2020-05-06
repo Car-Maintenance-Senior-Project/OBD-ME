@@ -38,11 +38,11 @@ export class FuelEconomyService {
     let distTraveled = this.distance(coords1, coords2);
 
     var maf: number;
-    this.obd.callPID(PIDConstants.MAF, PIDType.Number).then(data => {
-      maf = Number(data);
+    this.obd.callPID(PIDConstants.MAF, PIDType.MAF).then(data => {
+      maf = parseFloat(data);
     });
 
-    let fuelGals = maf / this.AIR_FUEL_RATIO / this.GASOLINE_DENSITY / this.GRAMS_PER_POUND
+    let fuelGals = maf / this.AIR_FUEL_RATIO / this.GASOLINE_DENSITY / this.GRAMS_PER_POUND;
     let currentMPG = distTraveled / fuelGals;
 
     this.updateAverage(currentMPG);
@@ -52,17 +52,13 @@ export class FuelEconomyService {
     var colorString: string;
     if (x < 0.85) {
       colorString = this.GREAT;
-    }
-    else if (x >= 0.85 && x < 1.05) {
+    } else if (x >= 0.85 && x < 1.05) {
       colorString = this.GOOD;
-    }
-    else if (x >= 1.05 && x < 1.10) {
+    } else if (x >= 1.05 && x < 1.10) {
       colorString = this.AVERAGE;
-    }
-    else if (x >= 1.10 && x < 1.20) {
+    } else if (x >= 1.10 && x < 1.20) {
       colorString = this.BAD;
-    }
-    else if (x >= 1.20) {
+    } else if (x >= 1.20) {
       colorString = this.TERRIBLE;
     }
 
@@ -84,16 +80,14 @@ export class FuelEconomyService {
   loadHistoricInfo() {
     if (this.obd.currentProfile.pastRoutes != null) {
       this.previousTracks = this.obd.currentProfile.pastRoutes;
-    }
-    else {
+    } else {
       this.previousTracks = [];
       this.obd.currentProfile.pastRoutes = this.previousTracks;
     }
 
     if (this.obd.currentProfile.fuelEconomy != null) {
       this.mpgInfo = this.obd.currentProfile.fuelEconomy;
-    }
-    else {
+    } else {
       this.mpgInfo = {
         mpg: 0,
         count: 0

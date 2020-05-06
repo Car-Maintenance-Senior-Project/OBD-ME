@@ -159,46 +159,47 @@ export class OBDConnectorService {
             console.log('OBDMEDebug: MACAddress: ' + MACAddress);
             this.blueSerial.isConnected().then(async data => {
               console.log('OBDMEDebug: isConnected1: BT is connected');
-              for (let i = 0; i < 4; i++) {
-                await this.blueSerial.disconnect().then(sucsess => {
-                  console.log('OBDMEDebug: isConnected1: BT got disconnected');
-                  this.connectToBT(MACAddress).then(returnSuc => {
-                    console.log('OBDMEDebug: isConnected1: BT Suc');
-                    resolve(returnSuc);
-                    return;
-                  }, returnRej => {
-                    console.log('OBDMEDebug: isConnected1: BT failed');
-                    // reject(returnRej);
-                    // return;
-                  });
-                  console.log('OBDMEDebug: isConnected1: BT ??????????');
-                }, fail => {
-                  console.log('OBDMEDebug: isConnected1: BT failed Dis');
-                  this.isConnected = false;
-                });
-              }
-              this.loading.dismiss();
-              this.toast.notDisconnectedMessage();
-              reject(ConnectResult.DisconnectFail);
-              return;
-            }, data2 => {
-              console.log('OBDMEDebug: isConnected2: BT is disconnected');
-              for (let i = 0; i < 4; i++) {
+              // for (let i = 0; i < 4; i++) {
+              await this.blueSerial.disconnect().then(sucsess => {
+                console.log('OBDMEDebug: isConnected1: BT got disconnected');
                 this.connectToBT(MACAddress).then(returnSuc => {
-                  console.log('OBDMEDebug: isConnected2: BT suc');
+                  console.log('OBDMEDebug: isConnected1: BT Suc');
                   resolve(returnSuc);
                   return;
                 }, returnRej => {
-                  console.log('OBDMEDebug: isConnected2: BT fail');
-                  // reject(returnRej);
-                  // return;
+                  console.log('OBDMEDebug: isConnected1: BT failed');
+                  reject(returnRej);
+                  return;
                 });
-                console.log('OBDMEDebug: isConnected2: BT ?????????');
-              }
-              this.loading.dismiss();
-              this.toast.notDisconnectedMessage();
-              reject(ConnectResult.DisconnectFail);
-              return;
+                console.log('OBDMEDebug: isConnected1: BT ??????????');
+              }, fail => {
+                console.log('OBDMEDebug: isConnected1: BT failed Dis');
+                this.isConnected = false;
+                this.loading.dismiss();
+                this.toast.notDisconnectedMessage();
+                reject(ConnectResult.DisconnectFail);
+                return;
+              });
+              // }
+
+            }, data2 => {
+              console.log('OBDMEDebug: isConnected2: BT is disconnected');
+              // for (let i = 0; i < 4; i++) {
+              this.connectToBT(MACAddress).then(returnSuc => {
+                console.log('OBDMEDebug: isConnected2: BT suc');
+                resolve(returnSuc);
+                return;
+              }, returnRej => {
+                console.log('OBDMEDebug: isConnected2: BT fail');
+                reject(returnRej);
+                return;
+              });
+              console.log('OBDMEDebug: isConnected2: BT ?????????');
+              // }
+              // this.loading.dismiss();
+              // this.toast.notDisconnectedMessage();
+              // reject(ConnectResult.DisconnectFail);
+              // return;
             });
           }, error => {
             console.log('OBDMEDebug: LASTMAC: GetFail');
@@ -572,7 +573,12 @@ export class OBDConnectorService {
         }
         finalArray[index] = nextChar;
       });
-      resolve(finalArray.join(''));
+      if (PIDType.MAF !== type) {
+        resolve(finalArray.join(''));
+      } else {
+        resolve((((256 * parseFloat(finalArray[0])) + parseFloat(finalArray[1])) / 100).toString());
+      }
+
     });
   }
 
