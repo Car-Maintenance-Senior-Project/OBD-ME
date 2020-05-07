@@ -19,6 +19,8 @@ import { PIDConstants } from '../classes/pidconstants';
 import { CarProfile } from '../interfaces/car-profile';
 import { Router } from '@angular/router';
 
+// import { HomePage } from '../home/home.page';
+
 // example of long hex 09023\r014 \r0: 49 02 01 57 42 41 \r1: 33 4E 35 43 35 35 46 \r2: 4B 34 38 34 35 34 39 \r\r
 // example of short hex 09001\r49 00 55 40 00 00 \r\r
 
@@ -44,7 +46,8 @@ export class OBDConnectorService {
     private toast: ToastMasterService,
     // private pids: PidsServiceService
     private vinParser: VINParserService,
-    private route: Router
+    private route: Router,
+    // private home: HomePage
   ) { }
 
 
@@ -56,6 +59,7 @@ export class OBDConnectorService {
   public isConnected: boolean;
   private bluetoothEnabled: boolean;
   public currentProfile: CarProfile;
+  public isLoading = true;
 
   // for now we're only supporting services 01, 02, 03, and 09
   private service1and2SupportedPIDs: boolean[];
@@ -104,15 +108,20 @@ export class OBDConnectorService {
             };
           } else {
             this.currentProfile = lastProfile;
+            // this.currentProfile.pictureSaved = false;
+            // this.saveProfiles();
           }
         }
         console.log('OBDMEDebug: this.currentProfile: ' + JSON.stringify(this.currentProfile));
       }).then(initConnect => {
         this.connect().then(result1 => {
           console.log('OBDMEDebug: ResultSuc: ' + ConnectResult[result1]);
+          this.isLoading = false;
+          // this.home.parsePhotos();
         }, result2 => {
           console.log('OBDMEDebug: ResultRej: ' + ConnectResult[result2]);
           this.route.navigate(['settings']);
+          this.isLoading = false;
         });
       });
     });

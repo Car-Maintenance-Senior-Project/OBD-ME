@@ -37,6 +37,19 @@ export class HomePage {
   }
 
   ngOnInit() {
+    if (!this.OBD.isLoading) {
+      this.parsePhotos();
+    } else {
+      this.image = '../../assets/2006-honda-crv.jpg';
+    }
+  }
+
+  parsePhotos() {
+    console.log('OBDMEDebug: Starting Photos');
+    if (this.OBD.currentProfile.pictureSaved === undefined) {
+      this.image = '../../assets/2006-honda-crv.jpg';
+      return;
+    }
     if (this.OBD.currentProfile.pictureSaved === false) {
       this.httpNative.get('https://api.carmd.com/v3.0/image?vin=' + this.OBD.currentProfile.vin, {}, {
         'content-type': 'application/json',
@@ -47,15 +60,18 @@ export class HomePage {
         this.httpNative.downloadFile(JSON.parse(data.data).data.image,
           {}, {}, this.file.cacheDirectory + '/tempProfilePhoto.jpg').then(suc => {
             this.file.resolveDirectoryUrl(this.file.cacheDirectory).then(data => {
-              return this.base64.encodeFile(this.file.cacheDirectory + '/tempProfilePhoto.jpg');
-            }).then(newData => {
-              console.log('OBDMEDebug: PictureJSON: ' + JSON.stringify(newData));
-              this.store.set('img:' + this.OBD.currentProfile.vin, newData).then(next => {
-                this.OBD.currentProfile.pictureSaved = true;
-                this.OBD.saveProfiles();
-                this.displayPhoto();
+              this.base64.encodeFile(this.file.cacheDirectory + '/tempProfilePhoto.jpg').then(newData => {
+                console.log('OBDMEDebug: PictureJSON: ' + JSON.stringify(newData));
+                this.store.set('img:' + this.OBD.currentProfile.vin, newData).then(next => {
+                  this.OBD.currentProfile.pictureSaved = true;
+                  this.OBD.saveProfiles();
+                  this.displayPhoto();
+                });
+                this.file.removeFile(this.file.cacheDirectory, 'tempProfilePhoto.jpg');
+              }).catch(error => {
+                console.log('OBDMEDebug: ' + error);
+                this.image = '../../assets/2006-honda-crv.jpg';
               });
-              this.file.removeFile(this.file.cacheDirectory, 'tempProfilePhoto.jpg');
             });
           }, rej => {
             this.image = '../../assets/2006-honda-crv.jpg';
