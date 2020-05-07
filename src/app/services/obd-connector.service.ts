@@ -20,6 +20,8 @@ import { CarProfile } from '../interfaces/car-profile';
 import { Router } from '@angular/router';
 
 // import { HomePage } from '../home/home.page';
+import { HTTP } from '@ionic-native/http/ngx';
+import { VINData } from '../interfaces/vindata';
 
 // example of long hex 09023\r014 \r0: 49 02 01 57 42 41 \r1: 33 4E 35 43 35 35 46 \r2: 4B 34 38 34 35 34 39 \r\r
 // example of short hex 09001\r49 00 55 40 00 00 \r\r
@@ -48,6 +50,7 @@ export class OBDConnectorService {
     private vinParser: VINParserService,
     private route: Router,
     // private home: HomePage
+    private http: HTTP
   ) { }
 
 
@@ -119,10 +122,12 @@ export class OBDConnectorService {
         this.connect().then(result1 => {
           console.log('OBDMEDebug: ResultSuc: ' + ConnectResult[result1]);
           this.isLoading = false;
+          console.log('OBDMEDebug: this.currentProfile: ' + JSON.stringify(this.currentProfile));
           // this.home.parsePhotos();
         }, result2 => {
           console.log('OBDMEDebug: ResultRej: ' + ConnectResult[result2]);
-          // this.route.navigate(['settings']);
+          this.route.navigate(['settings']);
+          console.log('OBDMEDebug: this.currentProfile: ' + JSON.stringify(this.currentProfile));
           this.isLoading = false;
         });
       });
@@ -254,7 +259,18 @@ export class OBDConnectorService {
           this.isConnected = true;
           this.callPID(PIDConstants.VIN, PIDType.String).then(vinRaw => {
             console.log('OBDMEDebug: connectProcess: Got Vin: ' + vinRaw);
-            this.vinParser.ParseVIN(vinRaw).then(parsedVin => {
+            // this.vinParser.ParseVIN(vinRaw).then(parsedVin => {
+            this.http.get('https://api.carmd.com/v3.0/decode?vin=' + vinRaw, {}, {
+              'content-type': 'application/json',
+              'authorization': 'Basic NTgyMjhmZGUtNGE1Yi00OWZkLThlMzAtNTlhNTU1NzYxYWNi',
+              'partner-token': 'dc22f0426ac94a48b7779458ab235e54'
+            }).then(dataBack => {
+              console.log('OBDMEDebug: connectProcess: dataBack: ' + JSON.stringify(dataBack));
+              const parsedVin: VINData = {
+                year: JSON.parse(dataBack.data).data.year,
+                make: JSON.parse(dataBack.data).data.make,
+                model: JSON.parse(dataBack.data).data.model
+              };
               console.log('OBDMEDebug: connectProcess: Parsed Vin: ' + JSON.stringify(parsedVin));
               this.store.get(StorageKeys.CARPROFILES).then(allProfiles => {
                 console.log('OBDMEDebug: connectProcess: allProfiles: ' + JSON.stringify(allProfiles));
@@ -270,38 +286,39 @@ export class OBDConnectorService {
                   profileSearch.lastProfile = true;
                   this.currentProfile = profileSearch;
                 } else {
-                  if (allProfiles.length === 0) {
-                    this.currentProfile = {
-                      vin: vinRaw,
-                      vinData: parsedVin,
-                      nickname: '1',
-                      fuelEconomy: null,
-                      pastRoutes: null,
-                      maintenanceRecords: null,
-                      lastProfile: true,
-                      pictureSaved: false,
-                      errorCodes: []
-                    };
-                  } else {
-                    let newNick = '-1';
-                    for (let i = 1; i < 1000; i++) {
-                      if (allProfiles[i - 1].nickname !== i.toString()) {
-                        newNick = i.toString();
-                        break;
-                      }
-                    }
-                    this.currentProfile = {
-                      vin: vinRaw,
-                      vinData: parsedVin,
-                      nickname: newNick,
-                      fuelEconomy: null,
-                      pastRoutes: null,
-                      maintenanceRecords: null,
-                      lastProfile: true,
-                      pictureSaved: false,
-                      errorCodes: []
-                    };
-                  }
+                  // if (allProfiles.length === 0) {
+                  //   this.currentProfile = {
+                  //     vin: vinRaw,
+                  //     vinData: parsedVin,
+                  //     nickname: '1',
+                  //     fuelEconomy: null,
+                  //     pastRoutes: null,
+                  //     maintenanceRecords: null,
+                  //     lastProfile: true,
+                  //     pictureSaved: false,
+                  //     errorCodes: []
+                  //   };
+                  // } else {
+                  // let newNick = '-1';
+                  // for (let i = 1; i < 1000; i++) {
+                  //   console.log('OBDMEDebug: AHHHHHH: ' + allProfiles.findIndex(profile => profile.nickname === i.toString));
+                  //   if (allProfiles.findIndex(profile => profile.nickname === i.toString) === '-1') {
+                  //     newNick = i.toString();
+                  //     break;
+                  //   }
+                  // }
+                  this.currentProfile = {
+                    vin: vinRaw,
+                    vinData: parsedVin,
+                    nickname: allProfiles.length + 1,
+                    fuelEconomy: null,
+                    pastRoutes: null,
+                    maintenanceRecords: null,
+                    lastProfile: true,
+                    pictureSaved: false,
+                    errorCodes: []
+                  };
+                  // }
                   allProfiles.push(this.currentProfile);
                   console.log('OBDMEDebug: connectProcess: Profiles Done: ' + JSON.stringify(allProfiles));
                   this.store.set(StorageKeys.CARPROFILES, allProfiles);
@@ -568,15 +585,15 @@ export class OBDConnectorService {
   //private parseData(data: string, type: PIDType): Promise<string> {
   parseData(data: string, type: PIDType): Promise<string> {
     return new Promise<string>((resolve) => {
-      console.log(data);
+      // console.log(data);
       const split = data.split('\r');
-      console.log(split);
+      // console.log(split);
       split.forEach((section, index) => {
         if (section.indexOf(':') === 1) {
           split[index] = section.slice(3);
         }
       });
-      console.log(split);
+      // console.log(split);
       const hexArray = split.join('').trim().split(' ');
       console.log(hexArray);
       const finalArray = [];
@@ -601,7 +618,7 @@ export class OBDConnectorService {
             break;
           }
         }
-        console.log(nextChar);
+        // console.log(nextChar);
         if (nextChar === '\u0001') {
           nextChar = '';
         }

@@ -90,6 +90,7 @@ export class FuelEconomyPage implements OnInit {
           strokeWeight: 3,
         });
         pathSeg.setMap(this.map);
+        this.pathColors.push(nextColor);
         this.currentMapTrack.push(pathSeg);
         this.lastCoords = coords;
       });
@@ -115,13 +116,13 @@ export class FuelEconomyPage implements OnInit {
   }
 
   stopTracking() {
-    if (this.isTracking == false) {
-      return
+    if (this.isTracking === false) {
+      return;
     }
     this.isTracking = false;
     this.positionSubscription.unsubscribe();
     if (this.currentMapTrack) {
-      this.clearCurrentMapTrack()
+      this.clearCurrentMapTrack();
 
       if (this.trackedRoute.length > 1) {
         let newRoute = { finished: new Date().getTime(), path: this.trackedRoute, colors: this.pathColors };

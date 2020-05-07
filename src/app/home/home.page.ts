@@ -82,6 +82,7 @@ export class HomePage {
           this.image = '../../assets/2006-honda-crv.jpg';
           this.errors = [];
         }
+
       });
     }
   }
@@ -89,12 +90,13 @@ export class HomePage {
   parsePhotos(activeProfile: CarProfile) {
     console.log('OBDMEDebug: Starting Photos');
     if (activeProfile.pictureSaved === false && activeProfile.nickname !== '-1') {
+      console.log('OBDMEDebug: Command: ' + 'https://api.carmd.com/v3.0/image?vin=' + activeProfile.vin);
       this.httpNative.get('https://api.carmd.com/v3.0/image?vin=' + activeProfile.vin, {}, {
         'content-type': 'application/json',
         'authorization': 'Basic NTgyMjhmZGUtNGE1Yi00OWZkLThlMzAtNTlhNTU1NzYxYWNi',
         'partner-token': 'dc22f0426ac94a48b7779458ab235e54'
       }).then(data => {
-        console.log('OBDMEDebug: Return: ' + JSON.stringify(JSON.parse(data.data).data.image));
+        console.log('OBDMEDebug: Return: ' + JSON.stringify(data) + 'and: ' + JSON.stringify(JSON.parse(data.data).data.image));
         this.httpNative.downloadFile(JSON.parse(data.data).data.image,
           {}, {}, this.file.cacheDirectory + '/tempProfilePhoto.jpg').then(suc => {
             this.file.resolveDirectoryUrl(this.file.cacheDirectory).then(data => {

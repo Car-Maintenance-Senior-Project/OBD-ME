@@ -1,16 +1,16 @@
 <ion-header>
   <ion-toolbar>
-      <ion-buttons slot="start">
-          <ion-menu-button></ion-menu-button>
-      </ion-buttons>
-      <ion-title>
-          Fuel Economy
-      </ion-title>
-      <ion-buttons slot="end">
-          <ion-button routerLink="/settings" routerDirection="forward">
-              <ion-icon slot="icon-only" name="settings"></ion-icon>
-          </ion-button>
-      </ion-buttons>
+    <ion-buttons slot="start">
+      <ion-menu-button></ion-menu-button>
+    </ion-buttons>
+    <ion-title>
+      Fuel Economy
+    </ion-title>
+    <ion-buttons slot="end">
+      <ion-button routerLink="/settings" routerDirection="forward">
+        <ion-icon slot="icon-only" name="settings"></ion-icon>
+      </ion-button>
+    </ion-buttons>
   </ion-toolbar>
 </ion-header>
 
@@ -27,16 +27,17 @@
   <button ion-button (click)="deleteHistoricRoutes()">
     Clear History
   </button>
- 
+
   <div #map id="map"></div>
 
   <ion-label>Average Fuel Economy: {{this.mpg?.mpgInfo?.mpg}} MPG</ion-label>
- 
+
   <ion-list>
     <ion-list-header>Previous Tracks</ion-list-header>
-    <ion-item *ngFor="let route of previousTracks">
-      {{ route.finished | date }}, {{ route.path.length }} Waypoints
-      <button ion-button clear item-end (click)="showHistoryRoute(route.path, route.colors)">View Route</button>
+    <ion-item *ngFor="let route of mpg.previousTracks">
+      {{ route.finished || date }}, {{ route.path.length }} Waypoints
+      <!-- {{ route.path.length }} Waypoints -->
+      <button ion-button clear itemx-end (click)="showHistoryRoute(route.path, route.colors)">View Route</button>
     </ion-item>
   </ion-list>
 </ion-content>
