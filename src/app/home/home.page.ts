@@ -58,7 +58,7 @@ export class HomePage {
 
   parsePhotos(activeProfile: CarProfile) {
     console.log('OBDMEDebug: Starting Photos');
-    if (activeProfile.pictureSaved === false) {
+    if (activeProfile.pictureSaved === false && activeProfile.nickname !== '-1') {
       this.httpNative.get('https://api.carmd.com/v3.0/image?vin=' + activeProfile.vin, {}, {
         'content-type': 'application/json',
         'authorization': 'Basic NTgyMjhmZGUtNGE1Yi00OWZkLThlMzAtNTlhNTU1NzYxYWNi',
