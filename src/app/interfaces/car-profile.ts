@@ -10,4 +10,5 @@ export interface CarProfile {
     pastRoutes: any;
     maintenanceRecords: MaintenanceRecord[];
     lastProfile: boolean;
+    pictureSaved: boolean;
 }

@@ -85,7 +85,8 @@ export class OBDConnectorService {
             fuelEconomy: null,
             pastRoutes: null,
             maintenanceRecords: null,
-            lastProfile: true
+            lastProfile: true,
+            pictureSaved: false
           };
         } else {
           const lastProfile: CarProfile = allProfiles.find(profiles => profiles.lastProfile === true);
@@ -98,7 +99,8 @@ export class OBDConnectorService {
               fuelEconomy: null,
               pastRoutes: null,
               maintenanceRecords: null,
-              lastProfile: true
+              lastProfile: true,
+              pictureSaved: false
             };
           } else {
             this.currentProfile = lastProfile;
@@ -263,7 +265,8 @@ export class OBDConnectorService {
                       fuelEconomy: null,
                       pastRoutes: null,
                       maintenanceRecords: null,
-                      lastProfile: true
+                      lastProfile: true,
+                      pictureSaved: false
                     };
                   } else {
                     let newNick = '-1';
@@ -280,7 +283,8 @@ export class OBDConnectorService {
                       fuelEconomy: null,
                       pastRoutes: null,
                       maintenanceRecords: null,
-                      lastProfile: true
+                      lastProfile: true,
+                      pictureSaved: false
                     };
                   }
                   allProfiles.push(this.currentProfile);

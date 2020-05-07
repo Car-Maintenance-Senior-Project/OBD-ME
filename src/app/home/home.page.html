@@ -15,7 +15,7 @@
 </ion-header>
 
 <ion-content>
-    <ion-img src="../assets/2006-honda-crv.jpg"></ion-img>
+    <ion-img [src]="this.image" style='height:300px;'></ion-img>
 
     <ion-list>
         <ion-item *ngFor="let e of errors">
