@@ -179,6 +179,7 @@ export class OBDConnectorService {
                 this.connectToBT(MACAddress).then(returnSuc => {
                   console.log('OBDMEDebug: isConnected1: BT Suc');
                   resolve(returnSuc);
+                  this.route.navigate(['vehicle-info']);
                   return;
                 }, returnRej => {
                   console.log('OBDMEDebug: isConnected1: BT failed');
@@ -202,6 +203,7 @@ export class OBDConnectorService {
               this.connectToBT(MACAddress).then(returnSuc => {
                 console.log('OBDMEDebug: isConnected2: BT suc');
                 resolve(returnSuc);
+                this.route.navigate(['vehicle-info']);
                 return;
               }, returnRej => {
                 console.log('OBDMEDebug: isConnected2: BT fail');

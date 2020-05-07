@@ -5,6 +5,8 @@ import { File } from '@ionic-native/file/ngx';
 import { Storage } from '@ionic/storage';
 import { Base64 } from '@ionic-native/base64/ngx';
 import { SafeUrl } from '@angular/platform-browser';
+import { StorageKeys } from '../classes/storage-keys';
+import { CarProfile } from '../interfaces/car-profile';
 
 @Component({
   selector: 'app-home',
@@ -38,20 +40,26 @@ export class HomePage {
 
   ngOnInit() {
     if (!this.OBD.isLoading) {
-      this.parsePhotos();
+      this.parsePhotos(this.OBD.currentProfile);
     } else {
-      this.image = '../../assets/2006-honda-crv.jpg';
+      this.store.get(StorageKeys.CARPROFILES).then(allProfilesTemp => {
+        if (allProfilesTemp === null) {
+          allProfilesTemp = []
+        }
+        const tempActiveProfile: CarProfile = allProfilesTemp.find(profile => profile.lastProfile === true);
+        if (tempActiveProfile !== undefined) {
+          this.parsePhotos(tempActiveProfile);
+        } else {
+          this.image = '../../assets/2006-honda-crv.jpg';
+        }
+      });
     }
   }
 
-  parsePhotos() {
+  parsePhotos(activeProfile: CarProfile) {
     console.log('OBDMEDebug: Starting Photos');
-    if (this.OBD.currentProfile.pictureSaved === undefined) {
-      this.image = '../../assets/2006-honda-crv.jpg';
-      return;
-    }
-    if (this.OBD.currentProfile.pictureSaved === false) {
-      this.httpNative.get('https://api.carmd.com/v3.0/image?vin=' + this.OBD.currentProfile.vin, {}, {
+    if (activeProfile.pictureSaved === false) {
+      this.httpNative.get('https://api.carmd.com/v3.0/image?vin=' + activeProfile.vin, {}, {
         'content-type': 'application/json',
         'authorization': 'Basic NTgyMjhmZGUtNGE1Yi00OWZkLThlMzAtNTlhNTU1NzYxYWNi',
         'partner-token': 'dc22f0426ac94a48b7779458ab235e54'
@@ -62,10 +70,10 @@ export class HomePage {
             this.file.resolveDirectoryUrl(this.file.cacheDirectory).then(data => {
               this.base64.encodeFile(this.file.cacheDirectory + '/tempProfilePhoto.jpg').then(newData => {
                 console.log('OBDMEDebug: PictureJSON: ' + JSON.stringify(newData));
-                this.store.set('img:' + this.OBD.currentProfile.vin, newData).then(next => {
-                  this.OBD.currentProfile.pictureSaved = true;
+                this.store.set('img:' + activeProfile.vin, newData).then(next => {
+                  activeProfile.pictureSaved = true;
                   this.OBD.saveProfiles();
-                  this.displayPhoto();
+                  this.displayPhoto(activeProfile);
                 });
                 this.file.removeFile(this.file.cacheDirectory, 'tempProfilePhoto.jpg');
               }).catch(error => {
@@ -81,15 +89,15 @@ export class HomePage {
       }).catch(error => {
         this.image = '../../assets/2006-honda-crv.jpg';
       });
-    } else if (this.OBD.currentProfile.nickname === '-1') {
+    } else if (activeProfile.nickname === '-1') {
       this.image = '../../assets/2006-honda-crv.jpg';
     } else {
-      this.displayPhoto();
+      this.displayPhoto(activeProfile);
     }
   }
 
-  displayPhoto() {
-    this.store.get('img:' + this.OBD.currentProfile.vin).then(photo => {
+  displayPhoto(activeProfile: CarProfile) {
+    this.store.get('img:' + activeProfile.vin).then(photo => {
       this.image = photo;
     });
   }
