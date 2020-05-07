@@ -1,0 +1,22 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-title>{{errorCodeSelect.code}} Error</ion-title>
+    <ion-buttons slot="end">
+      <ion-button (click)="dismissModal()">Close</ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+  <ion-icon *ngIf="errorCodeSelect.severity === 1" name="alert-circle-outline"
+    style="display: block; margin-left: auto; margin-right: auto; width: 60%; padding-top: 20px; padding-bottom: 20px;" size="large">
+  </ion-icon>
+  <ion-icon *ngIf="errorCodeSelect.severity !== 1" name="warning-outline"
+    style="display: block; margin-left: auto; margin-right: auto; width: 60%; padding-top: 20px; padding-bottom: 20px;" size="large">
+  </ion-icon>
+  <div style='margin-right: 20px; margin-left: 20px;'>
+    <h1>{{errorCodeSelect.techDiscription}}</h1>
+    <div style="padding-top: 15px; padding-bottom: 15px;">Severity: {{errorCodeSelect.severity}}</div>
+    <div>Description: {{errorCodeSelect.longDescription}}</div>
+  </div>
+</ion-content>

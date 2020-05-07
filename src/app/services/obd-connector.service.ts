@@ -90,7 +90,8 @@ export class OBDConnectorService {
             pastRoutes: null,
             maintenanceRecords: null,
             lastProfile: true,
-            pictureSaved: false
+            pictureSaved: false,
+            errorCodes: []
           };
         } else {
           const lastProfile: CarProfile = allProfiles.find(profiles => profiles.lastProfile === true);
@@ -104,7 +105,8 @@ export class OBDConnectorService {
               pastRoutes: null,
               maintenanceRecords: null,
               lastProfile: true,
-              pictureSaved: false
+              pictureSaved: false,
+              errorCodes: []
             };
           } else {
             this.currentProfile = lastProfile;
@@ -120,7 +122,7 @@ export class OBDConnectorService {
           // this.home.parsePhotos();
         }, result2 => {
           console.log('OBDMEDebug: ResultRej: ' + ConnectResult[result2]);
-          this.route.navigate(['settings']);
+          // this.route.navigate(['settings']);
           this.isLoading = false;
         });
       });
@@ -277,7 +279,8 @@ export class OBDConnectorService {
                       pastRoutes: null,
                       maintenanceRecords: null,
                       lastProfile: true,
-                      pictureSaved: false
+                      pictureSaved: false,
+                      errorCodes: []
                     };
                   } else {
                     let newNick = '-1';
@@ -295,7 +298,8 @@ export class OBDConnectorService {
                       pastRoutes: null,
                       maintenanceRecords: null,
                       lastProfile: true,
-                      pictureSaved: false
+                      pictureSaved: false,
+                      errorCodes: []
                     };
                   }
                   allProfiles.push(this.currentProfile);
