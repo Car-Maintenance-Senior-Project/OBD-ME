@@ -144,8 +144,8 @@ export class HomePage {
   }
 
   updateErrorCodes() {
-    this.OBD.callPID(PIDConstants.errors, PIDType.errors).then(newErrorsList => {
-
+    this.OBD.callPID(PIDConstants.errors, PIDType.errors).then(newErrors => {
+      let newErrorsList = newErrors.split(' ');
     }, rejected => {
       this.errors = this.OBD.currentProfile.errorCodes;
     });
