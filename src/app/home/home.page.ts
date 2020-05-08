@@ -25,33 +25,33 @@ import { PIDType } from '../enums/pidtype.enum';
 export class HomePage {
 
   // TODO: don't use this array, instead import/inject a service and use data from that
-  public errorsToGiive: ErrorCode[] = [
-    {
-      code: 'C0300',
-      techDiscription: 'This is a short des',
-      severity: 2,
-      longDescription: 'hfkdjshfkljhdasklfjhlksdjnf sadfh sdakjhf ksjadhfjhsd' +
-        'fhsadjh fkjdshah h hjskafh sadjhfkjsdhjhakfj hhs ahfs' +
-        ' kjhafkjhdsfkh ',
-      effect: 'dsgafhdsgafjhkgsajkhfgkjshdagbf'
-    }, {
-      code: 'C0301',
-      techDiscription: 'This is a short des',
-      severity: 1,
-      longDescription: 'hfkdjshfkljhdasklfjhlksdjnf sadfh sdakjhf ksjadhfjhsd' +
-        'fhsadjh fkjdshah h hjskafh sadjhfkjsdhjhakfj hhs ahfs' +
-        ' kjhafkjhdsfkh ',
-      effect: 'dsgafhdsgafjhkgsajkhfgkjshdagbf'
-    }, {
-      code: 'C0302',
-      techDiscription: 'This is a short des',
-      severity: 2,
-      longDescription: 'hfkdjshfkljhdasklfjhlksdjnf sadfh sdakjhf ksjadhfjhsd' +
-        'fhsadjh fkjdshah h hjskafh sadjhfkjsdhjhakfj hhs ahfs' +
-        ' kjhafkjhdsfkh ',
-      effect: 'dsgafhdsgafjhkgsajkhfgkjshdagbf'
-    }
-  ];
+  // public errorsToGiive: ErrorCode[] = [
+  //   {
+  //     code: 'C0300',
+  //     techDiscription: 'This is a short des',
+  //     severity: 2,
+  //     longDescription: 'hfkdjshfkljhdasklfjhlksdjnf sadfh sdakjhf ksjadhfjhsd' +
+  //       'fhsadjh fkjdshah h hjskafh sadjhfkjsdhjhakfj hhs ahfs' +
+  //       ' kjhafkjhdsfkh ',
+  //     effect: 'dsgafhdsgafjhkgsajkhfgkjshdagbf'
+  //   }, {
+  //     code: 'C0301',
+  //     techDiscription: 'This is a short des',
+  //     severity: 1,
+  //     longDescription: 'hfkdjshfkljhdasklfjhlksdjnf sadfh sdakjhf ksjadhfjhsd' +
+  //       'fhsadjh fkjdshah h hjskafh sadjhfkjsdhjhakfj hhs ahfs' +
+  //       ' kjhafkjhdsfkh ',
+  //     effect: 'dsgafhdsgafjhkgsajkhfgkjshdagbf'
+  //   }, {
+  //     code: 'C0302',
+  //     techDiscription: 'This is a short des',
+  //     severity: 2,
+  //     longDescription: 'hfkdjshfkljhdasklfjhlksdjnf sadfh sdakjhf ksjadhfjhsd' +
+  //       'fhsadjh fkjdshah h hjskafh sadjhfkjsdhjhakfj hhs ahfs' +
+  //       ' kjhafkjhdsfkh ',
+  //     effect: 'dsgafhdsgafjhkgsajkhfgkjshdagbf'
+  //   }
+  // ];
   public image: SafeUrl;
   public errors: ErrorCode[] = [];
   private firstTime = true;
@@ -70,6 +70,7 @@ export class HomePage {
   }
 
   ionViewDidEnter() {
+    this.errors = [];
     if (!this.OBD.isLoading) {
       console.log('OBDMEDebug: Loading Home Page 1');
       this.parsePhotos(this.OBD.currentProfile);
@@ -156,14 +157,15 @@ export class HomePage {
     return await modalToBeShown.present();
   }
 
-  async updateErrorCodes() {
+  updateErrorCodes() {
     this.errors = this.OBD.currentProfile.errorCodes;
-    await this.OBD.callPID(PIDConstants.errors, PIDType.errors).then(newErrors => {
+    this.OBD.callPID(PIDConstants.errors, PIDType.errors).then(newErrors => {
       const newErrorsList = newErrors.split(',');
-      newErrorsList.forEach(async newError => {
+      const newErrorList = ['1', '2', '3'];
+      newErrorList.forEach(newError => {
         if (this.OBD.currentProfile.errorCodes.find(error => error.code === newError) === undefined) {
           // get error and add it
-          await this.httpNative.get('http://api.carmd.com/v3.0/diag?vin=' + this.OBD.currentProfile.vin
+          this.httpNative.get('http://api.carmd.com/v3.0/diag?vin=' + this.OBD.currentProfile.vin
             + '&mileage=50000&dtc=' + 'p0420', {}, {
             'content-type': 'application/json',
             'authorization': 'Basic NTgyMjhmZGUtNGE1Yi00OWZkLThlMzAtNTlhNTU1NzYxYWNi',
@@ -176,13 +178,13 @@ export class HomePage {
               longDescription: JSON.parse(data.data).data.urgency_desc,
               effect: JSON.parse(data.data).data.effect_on_vehicle
             });
+            this.OBD.currentProfile.errorCodes = this.errors;
+            this.OBD.saveProfiles();
           }, reject => {
             // Get call rejected
           });
         }
       });
-      this.OBD.currentProfile.errorCodes = this.errors;
-      this.OBD.saveProfiles();
     }, rejected => {
       // Pid call rejected
     });
