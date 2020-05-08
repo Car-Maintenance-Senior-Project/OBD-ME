@@ -193,4 +193,45 @@ export class HomePage {
     });
   }
 
+
+  /**
+   * Updates error codes sim.  Used to simulate an error code being given
+   */
+  updateErrorCodesSim() {
+    this.errors = this.OBD.currentProfile.errorCodes;
+    // this.OBD.callPID(PIDConstants.errors, PIDType.errors).then(newErrors => {
+    const newErrors = 'p0128,p0300,p0440';
+    const newErrorsList = newErrors.split(',');
+    newErrorsList.forEach(newError => {
+      if (this.OBD.currentProfile.errorCodes.find(error => error.code === newError) === undefined) {
+        // get error and add it
+        console.log('OBDMEDebug: itStart: ');
+        this.httpNative.get('https://api.eu.apiconnect.ibmcloud.com/hella-ventures-car-diagnostic-api/api/v1/dtc', {
+          client_id: '1ca669fe-9fc7-45a5-aec9-8bfad4f7eee4',
+          client_secret: 'jR1fA2cF0wT5jW3pU4gI7nB8dD4eT1cU3pH1yF6jP4lO1sR5tW',
+          code_id: newError,
+          vin: this.OBD.currentProfile.vin.substr(0, 11),
+          language: 'EN'
+        }, {
+          accept: 'application/json'
+        }).then(data => {
+          console.log('OBDMEDebug: it: ' + JSON.stringify(JSON.parse(data.data).dtc_data));
+          this.errors.push({
+            code: newError,
+            techDiscription: JSON.parse(data.data).dtc_data.system,
+            severity: 1,
+            longDescription: JSON.parse(data.data).dtc_data.fault
+          });
+          this.OBD.currentProfile.errorCodes = this.errors;
+          this.OBD.saveProfiles();
+        }, reject => {
+          console.log('OBDMEDebug: it2: ' + JSON.stringify(reject));
+        });
+      }
+    });
+    // }, rejected => {
+    //   // Pid call rejected
+    // });
+  }
+
 }
