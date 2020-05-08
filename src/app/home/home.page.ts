@@ -25,32 +25,35 @@ import { PIDType } from '../enums/pidtype.enum';
 export class HomePage {
 
   // TODO: don't use this array, instead import/inject a service and use data from that
-  // public errors: ErrorCode[] = [
-  //   {
-  //     code: 'C0300',
-  //     techDiscription: 'This is a short des',
-  //     severity: 2,
-  //     longDescription: 'hfkdjshfkljhdasklfjhlksdjnf sadfh sdakjhf ksjadhfjhsd' +
-  //       'fhsadjh fkjdshah h hjskafh sadjhfkjsdhjhakfj hhs ahfs' +
-  //       ' kjhafkjhdsfkh '
-  //   }, {
-  //     code: 'C0301',
-  //     techDiscription: 'This is a short des',
-  //     severity: 1,
-  //     longDescription: 'hfkdjshfkljhdasklfjhlksdjnf sadfh sdakjhf ksjadhfjhsd' +
-  //       'fhsadjh fkjdshah h hjskafh sadjhfkjsdhjhakfj hhs ahfs' +
-  //       ' kjhafkjhdsfkh '
-  //   }, {
-  //     code: 'C0302',
-  //     techDiscription: 'This is a short des',
-  //     severity: 2,
-  //     longDescription: 'hfkdjshfkljhdasklfjhlksdjnf sadfh sdakjhf ksjadhfjhsd' +
-  //       'fhsadjh fkjdshah h hjskafh sadjhfkjsdhjhakfj hhs ahfs' +
-  //       ' kjhafkjhdsfkh '
-  //   }
-  // ];
+  public errorsToGiive: ErrorCode[] = [
+    {
+      code: 'C0300',
+      techDiscription: 'This is a short des',
+      severity: 2,
+      longDescription: 'hfkdjshfkljhdasklfjhlksdjnf sadfh sdakjhf ksjadhfjhsd' +
+        'fhsadjh fkjdshah h hjskafh sadjhfkjsdhjhakfj hhs ahfs' +
+        ' kjhafkjhdsfkh ',
+      effect: 'dsgafhdsgafjhkgsajkhfgkjshdagbf'
+    }, {
+      code: 'C0301',
+      techDiscription: 'This is a short des',
+      severity: 1,
+      longDescription: 'hfkdjshfkljhdasklfjhlksdjnf sadfh sdakjhf ksjadhfjhsd' +
+        'fhsadjh fkjdshah h hjskafh sadjhfkjsdhjhakfj hhs ahfs' +
+        ' kjhafkjhdsfkh ',
+      effect: 'dsgafhdsgafjhkgsajkhfgkjshdagbf'
+    }, {
+      code: 'C0302',
+      techDiscription: 'This is a short des',
+      severity: 2,
+      longDescription: 'hfkdjshfkljhdasklfjhlksdjnf sadfh sdakjhf ksjadhfjhsd' +
+        'fhsadjh fkjdshah h hjskafh sadjhfkjsdhjhakfj hhs ahfs' +
+        ' kjhafkjhdsfkh ',
+      effect: 'dsgafhdsgafjhkgsajkhfgkjshdagbf'
+    }
+  ];
   public image: SafeUrl;
-  public errors: ErrorCode[];
+  public errors: ErrorCode[] = [];
   private firstTime = true;
 
   /**
@@ -67,7 +70,6 @@ export class HomePage {
   }
 
   ionViewDidEnter() {
-    this.errors = [];
     if (!this.OBD.isLoading) {
       console.log('OBDMEDebug: Loading Home Page 1');
       this.parsePhotos(this.OBD.currentProfile);

@@ -456,7 +456,7 @@ export class OBDConnectorService {
                   } else {
                     const hexCall = '4' + callData[1];
                     if (data.includes(hexCall)) {
-                      data = data.slice(data.indexOf(hexCall) + 4);
+                      data = data.slice(data.indexOf(hexCall) + 6);
                       if (data.includes(hexCall)) {
                         data = data.slice(0, data.indexOf(hexCall));
                       }
