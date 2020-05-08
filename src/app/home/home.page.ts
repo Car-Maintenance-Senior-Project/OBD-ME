@@ -133,7 +133,7 @@ export class HomePage {
       }).catch(error => {
         this.image = '../../assets/2006-honda-crv.jpg';
       });
-    } else if (activeProfile.nickname === '-1') {
+    } else if (activeProfile.nickname === '-1' || activeProfile.nickname.includes('CantGetVin')) {
       this.image = '../../assets/2006-honda-crv.jpg';
     } else {
       this.displayPhoto(activeProfile);
