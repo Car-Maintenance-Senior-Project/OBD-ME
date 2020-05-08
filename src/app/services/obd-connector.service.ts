@@ -323,6 +323,44 @@ export class OBDConnectorService {
                 });
               }
             });
+          }, reject3 => {
+            // console.log('OBDMEDebug: connectProcess: Fail');
+            // this.isConnected = false;
+            // // TODO: show error connect failed or let caller handle that
+            // this.loading.dismiss();
+            // this.toast.notConnectedMessage();
+            // reject(ConnectResult.Failure);
+            // return;
+            console.log('OBDMEDebug: connectedButCouldntGetVin');
+
+            this.store.get(StorageKeys.CARPROFILES).then(allProfiles => {
+              if (allProfiles === null) {
+                allProfiles = [];
+              }
+              allProfiles.forEach(profile => {
+                profile.lastProfile = false;
+              });
+              this.currentProfile = {
+                vin: 'CantGetVin' + (allProfiles.length + 1).toString(),
+                vinData: { year: '', make: '', model: '' },
+                nickname: allProfiles.length + 1,
+                fuelEconomy: null,
+                pastRoutes: null,
+                maintenanceRecords: null,
+                lastProfile: true,
+                pictureSaved: false,
+                errorCodes: []
+              };
+              allProfiles.push(this.currentProfile);
+              console.log('OBDMEDebug: connectProcess: Profiles Done: ' + JSON.stringify(allProfiles));
+              this.store.set(StorageKeys.CARPROFILES, allProfiles);
+              this.store.set(StorageKeys.LASTMAC, MACAddress);
+              this.loading.dismiss();
+              this.toast.connectedMessage();
+              console.log('OBDMEDebug: connectProcess: Suc: No vin');
+              resolve(ConnectResult.Success);
+              return;
+            });
           });
         }, reject1 => {
           console.log('OBDMEDebug: connectProcess: Fail');
@@ -358,6 +396,21 @@ export class OBDConnectorService {
         const splicedProfile = allProfiles.splice(allProfiles.findIndex(profile => profile.vin === this.currentProfile.vin), 1);
         console.log('OBDMEDebug: saveProfiles: splicedProfile' + JSON.stringify(splicedProfile));
         console.log('OBDMEDebug: saveProfiles: currentProfile' + JSON.stringify(this.currentProfile));
+        allProfiles.push(this.currentProfile);
+        console.log('OBDMEDebug: saveProfiles: saveProfiles' + JSON.stringify(allProfiles));
+        this.store.set(StorageKeys.CARPROFILES, allProfiles);
+      });
+    });
+  }
+
+  public saveProfilesChangeVin(newVin: string): Promise<boolean> {
+    return new Promise<boolean>((resolve, reject) => {
+      this.store.get(StorageKeys.CARPROFILES).then(allProfiles => {
+        console.log('OBDMEDebug: saveProfiles: initProfiles' + JSON.stringify(allProfiles));
+        const splicedProfile = allProfiles.splice(allProfiles.findIndex(profile => profile.vin === this.currentProfile.vin), 1);
+        console.log('OBDMEDebug: saveProfiles: splicedProfile' + JSON.stringify(splicedProfile));
+        console.log('OBDMEDebug: saveProfiles: currentProfile' + JSON.stringify(this.currentProfile));
+        this.currentProfile.vin = newVin;
         allProfiles.push(this.currentProfile);
         console.log('OBDMEDebug: saveProfiles: saveProfiles' + JSON.stringify(allProfiles));
         this.store.set(StorageKeys.CARPROFILES, allProfiles);
@@ -489,7 +542,7 @@ export class OBDConnectorService {
       // TODO: Get the supported pids to work.  Currently parsing seems to work fine, just doesnt check for them correctly
       // if (this.pidSupported(parseInt(pid.charAt(1), 10), parseInt(pid.slice(2, 4), 10))) {
       this.writeThenRead(pid, type).then(data => {
-        console.log('OBDMEDebug: callPid: dataBack: ' + data);
+        console.log('OBDMEDebug: callPid: dataBack:' + data + 'ehhf');
         if (!data.includes('NO DATA')) {
           console.log('OBDMEDebug: callPid: parsedData: ' + JSON.stringify(this.parseData(data, type)));
           resolve(this.parseData(data, type));
@@ -511,6 +564,10 @@ export class OBDConnectorService {
   parseData(data: string, type: PIDType): Promise<string> {
     return new Promise<string>((resolve) => {
       console.log('OBDMEDebug: parseData: data: ' + data);
+      if (data.length === 1) {
+        resolve('');
+        return;
+      }
       const split = data.split('\r');
       // console.log(split);
       split.forEach((section, index) => {

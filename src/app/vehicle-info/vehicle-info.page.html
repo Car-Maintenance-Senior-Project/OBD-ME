@@ -15,7 +15,12 @@
 </ion-header>
 
 <ion-content>
-    <ion-item>
+    <ion-item *ngIf="vin.includes('CantGetVin')">
+        <ion-label>Vin:</ion-label>
+        <ion-input [(ngModel)]="vin"></ion-input>
+    </ion-item>
+    <ion-button *ngIf="vin.includes('CantGetVin')" (click)="changeVin()">Set Vin</ion-button>
+    <ion-item *ngIf="!vin.includes('CantGetVin')">
         <ion-label>Vin:</ion-label>
         <ion-input [value]="vin" readonly></ion-input>
     </ion-item>
@@ -40,7 +45,7 @@
     </ion-item>
     <ion-item>
         <ion-button expand="block" (click)="changeName()">
-        Change Name
-    </ion-button>
+            Change Name
+        </ion-button>
     </ion-item>
 </ion-content>

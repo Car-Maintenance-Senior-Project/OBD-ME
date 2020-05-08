@@ -5,6 +5,8 @@ import { OBDConnectorService } from '../services/obd-connector.service';
 import { PIDConstants } from '../classes/pidconstants';
 import { PIDType } from '../enums/pidtype.enum';
 import { ToastMasterService } from '../services/toast-master.service';
+import { VINData } from '../interfaces/vindata';
+import { HTTP } from '@ionic-native/http/ngx';
 
 @Component({
   selector: 'app-vehicle-info',
@@ -21,7 +23,12 @@ export class VehicleInfoPage implements OnInit {
   // private testVin = 'WBA3N5C55FK484549';
   // private vinNum: string;
 
-  constructor(private ngZone: NgZone, private bs: BluetoothSerial, private obd: OBDConnectorService, private toast: ToastMasterService) {
+  constructor(
+    private ngZone: NgZone,
+    private bs: BluetoothSerial,
+    private obd: OBDConnectorService,
+    private toast: ToastMasterService,
+    private http: HTTP) {
   }
 
   ngOnInit() {
@@ -44,5 +51,28 @@ export class VehicleInfoPage implements OnInit {
       }
 
     }
+  }
+
+  changeVin() {
+    this.http.get('https://api.carmd.com/v3.0/decode?vin=' + this.vin, {}, {
+      'content-type': 'application/json',
+      'authorization': 'Basic NTgyMjhmZGUtNGE1Yi00OWZkLThlMzAtNTlhNTU1NzYxYWNi',
+      'partner-token': 'dc22f0426ac94a48b7779458ab235e54'
+    }).then(dataBack => {
+      console.log('OBDMEDebug: connectProcess: dataBack: ' + JSON.stringify(dataBack));
+      const parsedVin: VINData = {
+        year: JSON.parse(dataBack.data).data.year,
+        make: JSON.parse(dataBack.data).data.make,
+        model: JSON.parse(dataBack.data).data.model
+      };
+      console.log('OBDMEDebug: connectProcess: Parsed Vin: ' + JSON.stringify(parsedVin));
+      this.obd.saveProfilesChangeVin(this.vin);
+      this.obd.currentProfile.vinData = parsedVin;
+      this.obd.saveProfiles();
+      return;
+    }, webError => {
+      this.toast.errorMessage('Invalid Vin');
+      return;
+    });
   }
 }
