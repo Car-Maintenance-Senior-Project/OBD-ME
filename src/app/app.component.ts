@@ -71,13 +71,14 @@ export class AppComponent {
   initializeApp() {
     this.platform.ready().then(() => {
       this.statusBar.styleDefault();
-      this.store.get(StorageKeys.CARPROFILES).then(allProfilesTemp2 => {
-        if (allProfilesTemp2 === null) {
-          console.log('OBDMEDebug: mock startup');
-        } else {
-          this.OBD.onStartUp();
-        }
-      });
+      // this.store.get(StorageKeys.CARPROFILES).then(allProfilesTemp2 => {
+      //   if (allProfilesTemp2 === null) {
+      //     console.log('OBDMEDebug: mock startup');
+      //   } else {
+      //     this.OBD.onStartUp();
+      //   }
+      // });
+      this.OBD.onStartUp();
       this.splashScreen.hide();
     });
   }

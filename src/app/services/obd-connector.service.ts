@@ -118,6 +118,7 @@ export class OBDConnectorService {
           }
         }
         console.log('OBDMEDebug: this.currentProfile: ' + JSON.stringify(this.currentProfile));
+        this.isLoading = false;
       }).then(initConnect => {
         this.connect().then(result1 => {
           console.log('OBDMEDebug: ResultSuc: ' + ConnectResult[result1]);
@@ -210,7 +211,7 @@ export class OBDConnectorService {
               this.connectToBT(MACAddress).then(returnSuc => {
                 console.log('OBDMEDebug: isConnected2: BT suc');
                 resolve(returnSuc);
-                this.route.navigate(['vehicle-info']);
+                // this.route.navigate(['vehicle-info']);
                 return;
               }, returnRej => {
                 console.log('OBDMEDebug: isConnected2: BT fail');
@@ -430,7 +431,7 @@ export class OBDConnectorService {
                 if (data.includes('NO DATA')) {
                   console.log('OBDMEDebug: Connector: NO DATA');
                   // promReject('NO DATA');
-                  promSuccess('NO DATA');
+                  promReject('NO DATA');
                 } else if (data.includes('OK')) {
                   promSuccess('OK');
                 } else if (data.includes('?')) {
@@ -481,14 +482,22 @@ export class OBDConnectorService {
     });
   }
 
+  // !!TODO: Needs to deal with nodata
+  // Create own car call type that is the only one that can respond be reponded to by no data/ok
   callPID(pid: string, type: PIDType): Promise<string> {
     return new Promise<string>((resolve, reject) => {
       // TODO: Get the supported pids to work.  Currently parsing seems to work fine, just doesnt check for them correctly
       // if (this.pidSupported(parseInt(pid.charAt(1), 10), parseInt(pid.slice(2, 4), 10))) {
       this.writeThenRead(pid, type).then(data => {
         console.log('OBDMEDebug: callPid: dataBack: ' + data);
-        console.log('OBDMEDebug: callPid: parsedData: ' + JSON.stringify(this.parseData(data, type)));
-        resolve(this.parseData(data, type));
+        if (!data.includes('NO DATA')) {
+          console.log('OBDMEDebug: callPid: parsedData: ' + JSON.stringify(this.parseData(data, type)));
+          resolve(this.parseData(data, type));
+        } else {
+          console.log('OBDMEDebug: callPid: RejectNoData');
+          reject('NO DATA');
+        }
+
       }, error => {
         reject(error);
       });
