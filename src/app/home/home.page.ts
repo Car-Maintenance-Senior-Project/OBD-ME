@@ -161,27 +161,30 @@ export class HomePage {
     this.errors = this.OBD.currentProfile.errorCodes;
     this.OBD.callPID(PIDConstants.errors, PIDType.errors).then(newErrors => {
       const newErrorsList = newErrors.split(',');
-      const newErrorList = ['1', '2', '3'];
-      newErrorList.forEach(newError => {
+      newErrorsList.forEach(newError => {
         if (this.OBD.currentProfile.errorCodes.find(error => error.code === newError) === undefined) {
           // get error and add it
-          this.httpNative.get('http://api.carmd.com/v3.0/diag?vin=' + this.OBD.currentProfile.vin
-            + '&mileage=50000&dtc=' + 'p0420', {}, {
-            'content-type': 'application/json',
-            'authorization': 'Basic NTgyMjhmZGUtNGE1Yi00OWZkLThlMzAtNTlhNTU1NzYxYWNi',
-            'partner-token': 'dc22f0426ac94a48b7779458ab235e54'
+          console.log('OBDMEDebug: itStart: ');
+          this.httpNative.get('https://api.eu.apiconnect.ibmcloud.com/hella-ventures-car-diagnostic-api/api/v1/dtc', {
+            client_id: '1ca669fe-9fc7-45a5-aec9-8bfad4f7eee4',
+            client_secret: 'jR1fA2cF0wT5jW3pU4gI7nB8dD4eT1cU3pH1yF6jP4lO1sR5tW',
+            code_id: newError,
+            vin: this.OBD.currentProfile.vin.substr(0, 11),
+            language: 'EN'
+          }, {
+            accept: 'application/json'
           }).then(data => {
+            console.log('OBDMEDebug: it: ' + JSON.stringify(JSON.parse(data.data).dtc_data));
             this.errors.push({
-              code: JSON.parse(data.data).data.code,
-              techDiscription: JSON.parse(data.data).data.tech_definition,
-              severity: JSON.parse(data.data).data.urgency,
-              longDescription: JSON.parse(data.data).data.urgency_desc,
-              effect: JSON.parse(data.data).data.effect_on_vehicle
+              code: newError,
+              techDiscription: JSON.parse(data.data).dtc_data.system,
+              severity: 1,
+              longDescription: JSON.parse(data.data).dtc_data.fault
             });
             this.OBD.currentProfile.errorCodes = this.errors;
             this.OBD.saveProfiles();
           }, reject => {
-            // Get call rejected
+            console.log('OBDMEDebug: it2: ' + JSON.stringify(reject));
           });
         }
       });
