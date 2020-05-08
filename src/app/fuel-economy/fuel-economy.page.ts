@@ -93,6 +93,8 @@ export class FuelEconomyPage implements OnInit {
         this.pathColors.push(nextColor);
         this.currentMapTrack.push(pathSeg);
         this.lastCoords = coords;
+      }, reject => {
+        this.stopTracking();
       });
     } else {
       this.lastCoords = coords;

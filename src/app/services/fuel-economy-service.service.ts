@@ -34,7 +34,7 @@ export class FuelEconomyService {
   }
 
   calcMPG(coords1, coords2): Promise<string> {
-    return new Promise<string>((resolve) => {
+    return new Promise<string>((resolve, reject) => {
       let distTraveled = this.distance(coords1, coords2);
 
       var maf: number;
@@ -62,8 +62,8 @@ export class FuelEconomyService {
         }
 
         resolve(colorString);
-      }, reject => {
-        // Die gracfully
+      }, rejectPid => {
+        reject(rejectPid);
       });
     });
   }

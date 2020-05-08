@@ -3,4 +3,5 @@ export interface ErrorCode {
     techDiscription: string;
     severity: number;
     longDescription: string;
+    effect: string;
 }

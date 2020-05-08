@@ -70,7 +70,9 @@ export class HomePage {
     console.log('OBDMEDebug: Loading Home Page');
     if (!this.OBD.isLoading) {
       this.parsePhotos(this.OBD.currentProfile);
-      this.updateErrorCodes();
+      if (this.OBD.currentProfile.nickname !== '-1') {
+        this.updateErrorCodes();
+      }
     } else {
       this.store.get(StorageKeys.CARPROFILES).then(allProfilesTemp => {
         if (allProfilesTemp === null) {
@@ -149,12 +151,36 @@ export class HomePage {
     return await modalToBeShown.present();
   }
 
-  updateErrorCodes() {
-    // this.OBD.callPID(PIDConstants.errors, PIDType.errors).then(newErrors => {
-    //   const newErrorsList = newErrors.split(' ');
-    // }, rejected => {
-    //   this.errors = this.OBD.currentProfile.errorCodes;
-    // });
+  async updateErrorCodes() {
+    this.errors = this.OBD.currentProfile.errorCodes;
+    await this.OBD.callPID(PIDConstants.errors, PIDType.errors).then(newErrors => {
+      const newErrorsList = newErrors.split(',');
+      newErrorsList.forEach(async newError => {
+        if (this.OBD.currentProfile.errorCodes.find(error => error.code === newError) === undefined) {
+          // get error and add it
+          await this.httpNative.get('http://api.carmd.com/v3.0/diag?vin=' + this.OBD.currentProfile.vin
+            + '&mileage=50000&dtc=' + 'p0420', {}, {
+            'content-type': 'application/json',
+            'authorization': 'Basic NTgyMjhmZGUtNGE1Yi00OWZkLThlMzAtNTlhNTU1NzYxYWNi',
+            'partner-token': 'dc22f0426ac94a48b7779458ab235e54'
+          }).then(data => {
+            this.errors.push({
+              code: JSON.parse(data.data).data.code,
+              techDiscription: JSON.parse(data.data).data.tech_definition,
+              severity: JSON.parse(data.data).data.urgency,
+              longDescription: JSON.parse(data.data).data.urgency_desc,
+              effect: JSON.parse(data.data).data.effect_on_vehicle
+            });
+          }, reject => {
+            // Get call rejected
+          });
+        }
+      });
+      this.OBD.currentProfile.errorCodes = this.errors;
+      this.OBD.saveProfiles();
+    }, rejected => {
+      // Pid call rejected
+    });
   }
 
 }

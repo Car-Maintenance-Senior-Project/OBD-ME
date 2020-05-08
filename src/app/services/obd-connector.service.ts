@@ -311,6 +311,14 @@ export class OBDConnectorService {
                   console.log('OBDMEDebug: connectProcess: Suc');
                   resolve(ConnectResult.Success);
                   return;
+                }, webError => {
+                  // TODO: Have this still save the vin, and get the data later in vehicle info
+                  console.log('OBDMEDebug: connectProcess: Fail');
+                  this.isConnected = false;
+                  this.loading.dismiss();
+                  this.toast.notConnectedMessage();
+                  reject(ConnectResult.Failure);
+                  return;
                 });
               }
             });
@@ -406,7 +414,7 @@ export class OBDConnectorService {
    * @returns Promise with the response or rejection
    * TODO: Mannage duplicats that also are more than one message long or set the OBD device to only listen to the main responder
    */
-  writeThenRead(callData: string): Promise<string> {
+  writeThenRead(callData: string, type: PIDType): Promise<string> {
     console.log('OBDMEDebug: Connector: start');
     return new Promise((promSuccess, promReject) => {
       this.isConnectedFun().then(isConnect => {
@@ -427,22 +435,35 @@ export class OBDConnectorService {
                   promSuccess('OK');
                 } else if (data.includes('?')) {
                   console.log('OBDMEDebug: Connector: Needs Rerun');
-                  this.writeThenRead(callData).then(yes => {
+                  this.writeThenRead(callData, type).then(yes => {
                     promSuccess(yes);
                   }, no => {
                     promReject(no);
                   });
                 } else {
                   console.log('OBDMEDebug: Connector: HAS DATA');
-                  const hexCall = '4' + callData[1] + ' ' + callData.slice(2, 4) + ' ';
-                  if (data.includes(hexCall)) {
-                    data = data.slice(data.indexOf(hexCall) + 6);
+                  if (type !== PIDType.errors) {
+                    const hexCall = '4' + callData[1] + ' ' + callData.slice(2, 4) + ' ';
                     if (data.includes(hexCall)) {
-                      data = data.slice(0, data.indexOf(hexCall));
+                      data = data.slice(data.indexOf(hexCall) + 6);
+                      if (data.includes(hexCall)) {
+                        data = data.slice(0, data.indexOf(hexCall));
+                      }
+                      console.log('OBDMEDebug: Connector: return: ' + data);
+                      promSuccess(data);
                     }
-                    console.log('OBDMEDebug: Connector: return: ' + data);
-                    promSuccess(data);
+                  } else {
+                    const hexCall = '4' + callData[1];
+                    if (data.includes(hexCall)) {
+                      data = data.slice(data.indexOf(hexCall) + 4);
+                      if (data.includes(hexCall)) {
+                        data = data.slice(0, data.indexOf(hexCall));
+                      }
+                      console.log('OBDMEDebug: Connector: return: ' + data);
+                      promSuccess(data);
+                    }
                   }
+
                 }
               }
             });
@@ -460,34 +481,11 @@ export class OBDConnectorService {
     });
   }
 
-  // private writeThenRead(pid: string): Promise<string> {
-  //   return new Promise<string>((resolve, reject) => {
-  //     console.log('OBDMEDebug: writeThenRead: start');
-  //     if (this.bluetoothEnabled && this.isConnected) {
-  //       console.log('OBDMEDebug: writeThenRead: writeStart');
-  //       this.blueSerial.write(pid).then(success => {
-  //         this.blueSerial.readUntil('\r\r').then(receivedData => {
-  //           resolve(receivedData);
-  //         }, error => {
-  //           // TODO: error message
-  //           reject('Error on data read');
-  //         });
-  //       }, error => {
-  //         // TODO: error message
-  //         reject('Error on data write');
-  //       });
-  //     } else {
-  //       // TODO: show error that call can't happen yet because connection isn't established
-  //       reject('Proper connection not established');
-  //     }
-  //   });
-  // }
-
   callPID(pid: string, type: PIDType): Promise<string> {
     return new Promise<string>((resolve, reject) => {
       // TODO: Get the supported pids to work.  Currently parsing seems to work fine, just doesnt check for them correctly
       // if (this.pidSupported(parseInt(pid.charAt(1), 10), parseInt(pid.slice(2, 4), 10))) {
-      this.writeThenRead(pid).then(data => {
+      this.writeThenRead(pid, type).then(data => {
         console.log('OBDMEDebug: callPid: dataBack: ' + data);
         console.log('OBDMEDebug: callPid: parsedData: ' + JSON.stringify(this.parseData(data, type)));
         resolve(this.parseData(data, type));
@@ -503,7 +501,7 @@ export class OBDConnectorService {
   //private parseData(data: string, type: PIDType): Promise<string> {
   parseData(data: string, type: PIDType): Promise<string> {
     return new Promise<string>((resolve) => {
-      // console.log(data);
+      console.log('OBDMEDebug: parseData: data: ' + data);
       const split = data.split('\r');
       // console.log(split);
       split.forEach((section, index) => {
@@ -511,43 +509,86 @@ export class OBDConnectorService {
           split[index] = section.slice(3);
         }
       });
-      // console.log(split);
+      console.log('OBDMEDebug: parseData: split: ' + split);
       const hexArray = split.join('').trim().split(' ');
       console.log(hexArray);
       const finalArray = [];
       let nextChar: string;
+      let currentPlace = 0;
+      let nextError = '';
 
       hexArray.forEach((splitData, index) => {
-        switch (type) {
-          case PIDType.String: {
-            nextChar = String.fromCharCode(parseInt(splitData, 16));
-            break;
+        if (type !== PIDType.errors) {
+          switch (type) {
+            case PIDType.String: {
+              nextChar = String.fromCharCode(parseInt(splitData, 16));
+              break;
+            }
+            case PIDType.Binary: {
+              nextChar = (parseInt(splitData, 16).toString(2)).padStart(8, '0');
+              break;
+            }
+            case PIDType.Number: {
+              nextChar = parseInt(splitData, 16).toString();
+              break;
+            }
+            case PIDType.MAF: {
+              nextChar = parseInt(splitData, 16).toString();
+              break;
+            }
           }
-          case PIDType.Binary: {
-            nextChar = (parseInt(splitData, 16).toString(2)).padStart(8, '0');
-            break;
+          // console.log(nextChar);
+          if (nextChar === '\u0001') {
+            nextChar = '';
           }
-          case PIDType.Number: {
-            nextChar = parseInt(splitData, 16).toString();
-            break;
-          }
-          case PIDType.MAF: {
-            nextChar = parseInt(splitData, 16).toString();
-            break;
+          finalArray[index] = nextChar;
+        } else {
+          switch (currentPlace) {
+            case 0: {
+              const binary = (parseInt(splitData, 16).toString(2)).padStart(8, '0');
+              switch (binary.substr(0, 2)) {
+                case '00': {
+                  nextError += 'p';
+                  break;
+                }
+                case '01': {
+                  nextError += 'c';
+                  break;
+                }
+                case '10': {
+                  nextError += 'b';
+                  break;
+                }
+                case '11': {
+                  nextError += 'u';
+                  break;
+                }
+              }
+              nextError += parseInt(binary.substr(2, 2), 2).toString();
+              nextError += splitData.substr(1, 1);
+              currentPlace = 1;
+              console.log('OBDMEDebug: parseData: halfError: ' + nextError);
+              break;
+            } case 1: {
+              nextError += splitData;
+              finalArray.push(nextError);
+              console.log('OBDMEDebug: parseData: nextError: ' + nextError);
+              nextError = '';
+              currentPlace = 0;
+              break;
+            }
           }
         }
-        // console.log(nextChar);
-        if (nextChar === '\u0001') {
-          nextChar = '';
-        }
-        finalArray[index] = nextChar;
+
       });
 
-      console.log(JSON.stringify(finalArray));
-      if (PIDType.MAF !== type) {
-        resolve(finalArray.join(''));
-      } else {
+      console.log('OBDMEDebug: parseData: finalArray: ' + JSON.stringify(finalArray));
+      if (PIDType.MAF === type) {
         resolve((((256 * parseFloat(finalArray[0])) + parseFloat(finalArray[1])) / 100).toString());
+      } else if (type === PIDType.errors) {
+        resolve(finalArray.join(','));
+      } else {
+        resolve(finalArray.join(''));
       }
 
     });
