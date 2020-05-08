@@ -51,6 +51,7 @@ export class HomePage {
   // ];
   public image: SafeUrl;
   public errors: ErrorCode[];
+  private firstTime = true;
 
   /**
    * Creates an instance of home page. Runs startup from OBD service
@@ -65,7 +66,8 @@ export class HomePage {
     public modalCon: ModalController) {
   }
 
-  ngOnInit() {
+  ionViewDidEnter() {
+    console.log('OBDMEDebug: Loading Home Page');
     if (!this.OBD.isLoading) {
       this.parsePhotos(this.OBD.currentProfile);
       this.updateErrorCodes();
@@ -82,9 +84,11 @@ export class HomePage {
           this.image = '../../assets/2006-honda-crv.jpg';
           this.errors = [];
         }
-
       });
     }
+  }
+
+  ngOnInit() {
   }
 
   parsePhotos(activeProfile: CarProfile) {
@@ -146,11 +150,11 @@ export class HomePage {
   }
 
   updateErrorCodes() {
-    this.OBD.callPID(PIDConstants.errors, PIDType.errors).then(newErrors => {
-      let newErrorsList = newErrors.split(' ');
-    }, rejected => {
-      this.errors = this.OBD.currentProfile.errorCodes;
-    });
+    // this.OBD.callPID(PIDConstants.errors, PIDType.errors).then(newErrors => {
+    //   const newErrorsList = newErrors.split(' ');
+    // }, rejected => {
+    //   this.errors = this.OBD.currentProfile.errorCodes;
+    // });
   }
 
 }

@@ -186,7 +186,7 @@ export class OBDConnectorService {
                 this.connectToBT(MACAddress).then(returnSuc => {
                   console.log('OBDMEDebug: isConnected1: BT Suc');
                   resolve(returnSuc);
-                  this.route.navigate(['vehicle-info']);
+                  // this.route.navigate(['vehicle-info']);
                   return;
                 }, returnRej => {
                   console.log('OBDMEDebug: isConnected1: BT failed');
@@ -259,54 +259,38 @@ export class OBDConnectorService {
           this.isConnected = true;
           this.callPID(PIDConstants.VIN, PIDType.String).then(vinRaw => {
             console.log('OBDMEDebug: connectProcess: Got Vin: ' + vinRaw);
-            // this.vinParser.ParseVIN(vinRaw).then(parsedVin => {
-            this.http.get('https://api.carmd.com/v3.0/decode?vin=' + vinRaw, {}, {
-              'content-type': 'application/json',
-              'authorization': 'Basic NTgyMjhmZGUtNGE1Yi00OWZkLThlMzAtNTlhNTU1NzYxYWNi',
-              'partner-token': 'dc22f0426ac94a48b7779458ab235e54'
-            }).then(dataBack => {
-              console.log('OBDMEDebug: connectProcess: dataBack: ' + JSON.stringify(dataBack));
-              const parsedVin: VINData = {
-                year: JSON.parse(dataBack.data).data.year,
-                make: JSON.parse(dataBack.data).data.make,
-                model: JSON.parse(dataBack.data).data.model
-              };
-              console.log('OBDMEDebug: connectProcess: Parsed Vin: ' + JSON.stringify(parsedVin));
-              this.store.get(StorageKeys.CARPROFILES).then(allProfiles => {
-                console.log('OBDMEDebug: connectProcess: allProfiles: ' + JSON.stringify(allProfiles));
-                if (allProfiles === null) {
-                  allProfiles = [];
-                }
-                allProfiles.forEach(profile => {
-                  profile.lastProfile = false;
-                });
-                const profileSearch: CarProfile = allProfiles.find(profile => profile.vin === vinRaw);
-                console.log('OBDMEDebug: connectProcess: profileSearch: ' + JSON.stringify(profileSearch));
-                if (profileSearch !== undefined) {
-                  profileSearch.lastProfile = true;
-                  this.currentProfile = profileSearch;
-                } else {
-                  // if (allProfiles.length === 0) {
-                  //   this.currentProfile = {
-                  //     vin: vinRaw,
-                  //     vinData: parsedVin,
-                  //     nickname: '1',
-                  //     fuelEconomy: null,
-                  //     pastRoutes: null,
-                  //     maintenanceRecords: null,
-                  //     lastProfile: true,
-                  //     pictureSaved: false,
-                  //     errorCodes: []
-                  //   };
-                  // } else {
-                  // let newNick = '-1';
-                  // for (let i = 1; i < 1000; i++) {
-                  //   console.log('OBDMEDebug: AHHHHHH: ' + allProfiles.findIndex(profile => profile.nickname === i.toString));
-                  //   if (allProfiles.findIndex(profile => profile.nickname === i.toString) === '-1') {
-                  //     newNick = i.toString();
-                  //     break;
-                  //   }
-                  // }
+            this.store.get(StorageKeys.CARPROFILES).then(allProfiles => {
+              console.log('OBDMEDebug: connectProcess: allProfiles: ' + JSON.stringify(allProfiles));
+              if (allProfiles === null) {
+                allProfiles = [];
+              }
+              allProfiles.forEach(profile => {
+                profile.lastProfile = false;
+              });
+              const profileSearch: CarProfile = allProfiles.find(profile => profile.vin === vinRaw);
+              console.log('OBDMEDebug: connectProcess: profileSearch: ' + JSON.stringify(profileSearch));
+              if (profileSearch !== undefined) {
+                profileSearch.lastProfile = true;
+                this.currentProfile = profileSearch;
+                this.store.set(StorageKeys.LASTMAC, MACAddress);
+                this.loading.dismiss();
+                this.toast.connectedMessage();
+                console.log('OBDMEDebug: connectProcess: Suc');
+                resolve(ConnectResult.Success);
+                return;
+              } else {
+                this.http.get('https://api.carmd.com/v3.0/decode?vin=' + vinRaw, {}, {
+                  'content-type': 'application/json',
+                  'authorization': 'Basic NTgyMjhmZGUtNGE1Yi00OWZkLThlMzAtNTlhNTU1NzYxYWNi',
+                  'partner-token': 'dc22f0426ac94a48b7779458ab235e54'
+                }).then(dataBack => {
+                  console.log('OBDMEDebug: connectProcess: dataBack: ' + JSON.stringify(dataBack));
+                  const parsedVin: VINData = {
+                    year: JSON.parse(dataBack.data).data.year,
+                    make: JSON.parse(dataBack.data).data.make,
+                    model: JSON.parse(dataBack.data).data.model
+                  };
+                  console.log('OBDMEDebug: connectProcess: Parsed Vin: ' + JSON.stringify(parsedVin));
                   this.currentProfile = {
                     vin: vinRaw,
                     vinData: parsedVin,
@@ -318,18 +302,17 @@ export class OBDConnectorService {
                     pictureSaved: false,
                     errorCodes: []
                   };
-                  // }
                   allProfiles.push(this.currentProfile);
                   console.log('OBDMEDebug: connectProcess: Profiles Done: ' + JSON.stringify(allProfiles));
                   this.store.set(StorageKeys.CARPROFILES, allProfiles);
-                }
-                this.store.set(StorageKeys.LASTMAC, MACAddress);
-                this.loading.dismiss();
-                this.toast.connectedMessage();
-                console.log('OBDMEDebug: connectProcess: Suc');
-                resolve(ConnectResult.Success);
-                return;
-              });
+                  this.store.set(StorageKeys.LASTMAC, MACAddress);
+                  this.loading.dismiss();
+                  this.toast.connectedMessage();
+                  console.log('OBDMEDebug: connectProcess: Suc');
+                  resolve(ConnectResult.Success);
+                  return;
+                });
+              }
             });
           });
         }, reject1 => {
@@ -352,71 +335,6 @@ export class OBDConnectorService {
       });
     });
   }
-
-  // runATCodes(): Promise<string> {
-  //   return new Promise((promSuccess, promReject) => {
-  //     this.isConnected().then(isConnect => {
-  //       if (isConnect) {
-  //         console.log('OBDMEDebug: Connector: isconnected');
-  //         this.blueSerial.write('Z').then(success => {
-  //           console.log('OBDMEDebug: Connector: write data');
-  //           this.blueSerial.subscribe('\r\r').subscribe(data => {
-  //             console.log('OBDMEDebug: Connector: EVENT: ' + data);
-  //             if (data !== '') {
-  //               console.log(data);
-  //               // if (data === 'NO DATA\r\r') {
-  //               if (data.includes('NO DATA')) {
-  //                 console.log('OBDMEDebug: Connector: NO DATA');
-  //                 // promReject('NO DATA');
-  //                 promSuccess('NO DATA');
-  //               } else if (data.includes('ELM327')) {
-  //                 this.blueSerial.write('SP0').then(success => {
-  //                   this.blueSerial.write('0100').then(success => {
-  //                     console.log('OBDMEDebug: Connector: write data');
-  //                     this.blueSerial.subscribe('\r\r').subscribe(data => {
-  //                       console.log('OBDMEDebug: Connector: EVENT: ' + data);
-  //                       if (data !== '') {
-  //                         console.log(data);
-  //                         // if (data === 'NO DATA\r\r') {
-  //                         if (data.includes('NO DATA')) {
-  //                           console.log('OBDMEDebug: Connector: NO DATA');
-  //                           // promReject('NO DATA');
-  //                           promSuccess('NO DATA');
-  //                           // } else if (data.includes('ELM327')) {
-
-  //                           //   promSuccess('OK');
-  //                         } else {
-  //                           promSuccess(data);
-  //                         }
-  //                       }
-  //                     });
-  //                   }, failure => {
-  //                     this.toast.errorMessage('Couldnt write data!');
-  //                     promReject('Couldnt write');
-  //                   });
-  //                 }, failure => {
-  //                   this.toast.errorMessage('Couldnt write data!');
-  //                   promReject('Couldnt write');
-  //                 });
-  //                 promSuccess('OK');
-  //               } else {
-  //                 promReject('No Response');
-  //               }
-  //             }
-  //           });
-
-  //         }, failure => {
-  //           this.toast.errorMessage('Couldnt write data!');
-  //           promReject('Couldnt write');
-  //         });
-  //       } else {
-  //         console.log('OBDMEDebug: Connector: not connected');
-  //         this.toast.connectToBluetooth();
-  //         promReject('Not connected to bluetooth');
-  //       }
-  //     });
-  //   });
-  // }
 
   changeCurrentName(newName: string): void {
     console.log('OBDMEDebug: saveProfiles: NewNick: ' + newName);

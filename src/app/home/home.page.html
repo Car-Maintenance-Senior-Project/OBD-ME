@@ -18,7 +18,6 @@
     <ion-img [src]="this.image" style='height:300px;' id='base64image'></ion-img>
 
     <ion-title style='padding-top: 10px; padding-bottom: 10px;'>Errors: </ion-title>
-
     <ion-card *ngIf="errors !== []">
         <ion-item *ngFor="let e of errors" (click)='popUp(e.code)'>
             <ion-icon *ngIf="e.severity === 1" name='alert-circle' slot="start"></ion-icon>

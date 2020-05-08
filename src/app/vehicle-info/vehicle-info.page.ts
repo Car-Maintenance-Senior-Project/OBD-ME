@@ -4,6 +4,7 @@ import { BluetoothSerial } from '@ionic-native/bluetooth-serial/ngx';
 import { OBDConnectorService } from '../services/obd-connector.service';
 import { PIDConstants } from '../classes/pidconstants';
 import { PIDType } from '../enums/pidtype.enum';
+import { ToastMasterService } from '../services/toast-master.service';
 
 @Component({
   selector: 'app-vehicle-info',
@@ -20,7 +21,7 @@ export class VehicleInfoPage implements OnInit {
   // private testVin = 'WBA3N5C55FK484549';
   // private vinNum: string;
 
-  constructor(private ngZone: NgZone, private bs: BluetoothSerial, private obd: OBDConnectorService) {
+  constructor(private ngZone: NgZone, private bs: BluetoothSerial, private obd: OBDConnectorService, private toast: ToastMasterService) {
   }
 
   ngOnInit() {
@@ -34,8 +35,14 @@ export class VehicleInfoPage implements OnInit {
   }
 
   changeName() {
+    var regEx = RegExp(/^[0-9]*$/);
     if (this.obd.currentProfile.nickname !== '-1') {
-      this.obd.changeCurrentName(this.name);
+      if (!regEx.test(this.name)) {
+        this.obd.changeCurrentName(this.name);
+      } else {
+        this.toast.errorMessage('Username must have more than numbers');
+      }
+
     }
   }
 }
