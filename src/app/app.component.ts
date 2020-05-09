@@ -6,6 +6,9 @@ import { StatusBar } from '@ionic-native/status-bar/ngx';
 
 import { DarkThemeSwitcherService } from './services/dark-theme-switcher.service';
 import { OBDConnectorService } from './services/obd-connector.service';
+import { Storage } from '@ionic/storage';
+import { StorageKeys } from './classes/storage-keys';
+
 
 @Component({
   selector: 'app-root',
@@ -42,7 +45,8 @@ export class AppComponent {
     private splashScreen: SplashScreen,
     private statusBar: StatusBar,
     private OBD: OBDConnectorService,
-    private darkTheme: DarkThemeSwitcherService
+    private darkTheme: DarkThemeSwitcherService,
+    private store: Storage
   ) { }
 
   ngOnInit() {
@@ -67,6 +71,13 @@ export class AppComponent {
   initializeApp() {
     this.platform.ready().then(() => {
       this.statusBar.styleDefault();
+      // this.store.get(StorageKeys.CARPROFILES).then(allProfilesTemp2 => {
+      //   if (allProfilesTemp2 === null) {
+      //     console.log('OBDMEDebug: mock startup');
+      //   } else {
+      //     this.OBD.onStartUp();
+      //   }
+      // });
       this.OBD.onStartUp();
       this.splashScreen.hide();
     });

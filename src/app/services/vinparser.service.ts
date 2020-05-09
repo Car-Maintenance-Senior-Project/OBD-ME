@@ -15,7 +15,7 @@ export class VINParserService {
   }
 
   async ParseVIN(vin: string): Promise<VINData> {
-    const response = await this.nhtsaParser.DecodeVin(vin).catch(error => error);
+    const response = await this.nhtsaParser.DecodeVin(vin);
 
     let vinData: VINData = {
       year: response.Results[9].Value,

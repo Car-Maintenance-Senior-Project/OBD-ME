@@ -12,7 +12,8 @@
 <ion-content>
     <ion-item>
         <ion-label>Bluetooth Connected</ion-label>
-        <ion-chip [color]="bluetoothChipColor"></ion-chip>
+        <ion-icon *ngIf="bluetoothConnected" name="checkmark-circle-outline" color="sucsess"></ion-icon>
+        <ion-icon *ngIf="!bluetoothConnected" name="close-circle-outline" color="danger"></ion-icon>
         <ion-select [(ngModel)]="chosenMac" (ionChange)="onChangeOfMac()">
             <ion-select-option *ngFor="let device of devices" [value]="device.id">{{device.name}}</ion-select-option>
         </ion-select>

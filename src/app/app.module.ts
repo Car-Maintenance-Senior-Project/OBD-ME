@@ -12,17 +12,25 @@ import { Geolocation } from '@ionic-native/geolocation/ngx';
 import { AppComponent } from './app.component';
 import { AppRoutingModule } from './app-routing.module';
 
+import { HTTP } from '@ionic-native/http/ngx';
+import { File } from '@ionic-native/file/ngx';
+import { Base64 } from '@ionic-native/base64/ngx';
+import { ErrorModalPageModule } from './error-modal/error-modal.module';
+
 @NgModule({
   declarations: [AppComponent],
   entryComponents: [],
   imports: [BrowserModule, IonicModule.forRoot(),
-    AppRoutingModule, IonicStorageModule.forRoot()],
+    AppRoutingModule, IonicStorageModule.forRoot(), ErrorModalPageModule],
   providers: [
     BluetoothSerial,
     StatusBar,
     SplashScreen,
     { provide: RouteReuseStrategy, useClass: IonicRouteStrategy },
-    Geolocation
+    Geolocation,
+    HTTP,
+    File,
+    Base64
   ],
   bootstrap: [AppComponent]
 })
