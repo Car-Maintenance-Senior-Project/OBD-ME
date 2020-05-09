@@ -19,6 +19,7 @@ export class VehicleInfoPage implements OnInit {
   public make: string;
   public model: string;
   private vin: string;
+  private vinMock: string;
   private name: string;
   // private testVin = 'WBA3N5C55FK484549';
   // private vinNum: string;
@@ -38,6 +39,7 @@ export class VehicleInfoPage implements OnInit {
       this.model = this.obd.currentProfile.vinData.model;
       this.make = this.obd.currentProfile.vinData.make;
       this.vin = this.obd.currentProfile.vin;
+      this.vinMock = this.obd.currentProfile.vin;
     }
   }
 

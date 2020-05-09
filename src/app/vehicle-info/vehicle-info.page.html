@@ -15,12 +15,12 @@
 </ion-header>
 
 <ion-content>
-    <ion-item *ngIf="vin.includes('CantGetVin')">
+    <ion-item *ngIf="vinMock.toString().includes('CantGetVin')">
         <ion-label>Vin:</ion-label>
         <ion-input [(ngModel)]="vin"></ion-input>
     </ion-item>
-    <ion-button *ngIf="vin.includes('CantGetVin')" (click)="changeVin()">Set Vin</ion-button>
-    <ion-item *ngIf="!vin.includes('CantGetVin')">
+    <ion-button *ngIf="vinMock.toString().includes('CantGetVin')" (click)="changeVin()">Set Vin</ion-button>
+    <ion-item *ngIf="!vinMock.toString().includes('CantGetVin')">
         <ion-label>Vin:</ion-label>
         <ion-input [value]="vin" readonly></ion-input>
     </ion-item>

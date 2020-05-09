@@ -295,7 +295,7 @@ export class OBDConnectorService {
                   this.currentProfile = {
                     vin: vinRaw,
                     vinData: parsedVin,
-                    nickname: allProfiles.length + 1,
+                    nickname: (allProfiles.length + 1).toString(),
                     fuelEconomy: null,
                     pastRoutes: null,
                     maintenanceRecords: null,
@@ -343,7 +343,7 @@ export class OBDConnectorService {
               this.currentProfile = {
                 vin: 'CantGetVin' + (allProfiles.length + 1).toString(),
                 vinData: { year: '', make: '', model: '' },
-                nickname: allProfiles.length + 1,
+                nickname: (allProfiles.length + 1).toString(),
                 fuelEconomy: null,
                 pastRoutes: null,
                 maintenanceRecords: null,

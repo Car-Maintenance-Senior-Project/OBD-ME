@@ -100,8 +100,10 @@ export class HomePage {
   }
 
   parsePhotos(activeProfile: CarProfile) {
-    console.log('OBDMEDebug: Starting Photos');
-    if (activeProfile.pictureSaved === false && activeProfile.nickname !== '-1' && !activeProfile.nickname.includes('CantGetVin')) {
+    console.log('OBDMEDebug: Starting Photos: ' + activeProfile.vin.toString().includes('CantGetVin'));
+    if (activeProfile.pictureSaved === false &&
+      activeProfile.nickname !== '-1' &&
+      !activeProfile.vin.toString().includes('CantGetVin')) {
       console.log('OBDMEDebug: Command: ' + 'https://api.carmd.com/v3.0/image?vin=' + activeProfile.vin);
       this.httpNative.get('https://api.carmd.com/v3.0/image?vin=' + activeProfile.vin, {}, {
         'content-type': 'application/json',
@@ -133,9 +135,10 @@ export class HomePage {
       }).catch(error => {
         this.image = '../../assets/2006-honda-crv.jpg';
       });
-    } else if (activeProfile.nickname === '-1' || activeProfile.nickname.includes('CantGetVin')) {
+    } else if (activeProfile.nickname === '-1' || activeProfile.vin.toString().includes('CantGetVin')) {
       this.image = '../../assets/2006-honda-crv.jpg';
     } else {
+      console.log('OBDMEDebug: KILL IT');
       this.displayPhoto(activeProfile);
     }
   }
@@ -169,27 +172,30 @@ export class HomePage {
         if (this.OBD.currentProfile.errorCodes.find(error => error.code === newError) === undefined) {
           // get error and add it
           console.log('OBDMEDebug: itStart: ' + newError);
-          this.httpNative.get('https://api.eu.apiconnect.ibmcloud.com/hella-ventures-car-diagnostic-api/api/v1/dtc', {
-            client_id: '1ca669fe-9fc7-45a5-aec9-8bfad4f7eee4',
-            client_secret: 'jR1fA2cF0wT5jW3pU4gI7nB8dD4eT1cU3pH1yF6jP4lO1sR5tW',
-            code_id: newError,
-            vin: 'WBA3N5C55FK',
-            language: 'EN'
-          }, {
-            accept: 'application/json'
-          }).then(data => {
-            console.log('OBDMEDebug: it: ' + JSON.stringify(JSON.parse(data.data).dtc_data));
-            this.errors.push({
-              code: newError,
-              techDiscription: JSON.parse(data.data).dtc_data.system,
-              severity: 1,
-              longDescription: JSON.parse(data.data).dtc_data.fault
+          if (newError !== 'p0000') {
+            this.httpNative.get('https://api.eu.apiconnect.ibmcloud.com/hella-ventures-car-diagnostic-api/api/v1/dtc', {
+              client_id: '1ca669fe-9fc7-45a5-aec9-8bfad4f7eee4',
+              client_secret: 'jR1fA2cF0wT5jW3pU4gI7nB8dD4eT1cU3pH1yF6jP4lO1sR5tW',
+              code_id: newError,
+              vin: 'WBA3N5C55FK',
+              language: 'EN'
+            }, {
+              accept: 'application/json'
+            }).then(data => {
+              console.log('OBDMEDebug: it: ' + JSON.stringify(JSON.parse(data.data).dtc_data));
+              this.errors.push({
+                code: newError,
+                techDiscription: JSON.parse(data.data).dtc_data.system,
+                severity: 1,
+                longDescription: JSON.parse(data.data).dtc_data.fault
+              });
+              this.OBD.currentProfile.errorCodes = this.errors;
+              this.OBD.saveProfiles();
+            }, reject => {
+              console.log('OBDMEDebug: it2: ' + JSON.stringify(reject));
             });
-            this.OBD.currentProfile.errorCodes = this.errors;
-            this.OBD.saveProfiles();
-          }, reject => {
-            console.log('OBDMEDebug: it2: ' + JSON.stringify(reject));
-          });
+          }
+
         }
       });
     }, rejected => {
