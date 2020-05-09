@@ -1,42 +1,51 @@
 <ion-header>
   <ion-toolbar>
-      <ion-buttons slot="start">
-          <ion-menu-button></ion-menu-button>
-      </ion-buttons>
-      <ion-title>
-          Fuel Economy
-      </ion-title>
-      <ion-buttons slot="end">
-          <ion-button routerLink="/settings" routerDirection="forward">
-              <ion-icon slot="icon-only" name="settings"></ion-icon>
-          </ion-button>
-      </ion-buttons>
+    <ion-buttons slot="start">
+      <ion-menu-button></ion-menu-button>
+    </ion-buttons>
+    <ion-title>
+      Fuel Economy
+    </ion-title>
+    <ion-buttons slot="end">
+      <ion-button routerLink="/settings" routerDirection="forward">
+        <ion-icon slot="icon-only" name="settings"></ion-icon>
+      </ion-button>
+    </ion-buttons>
   </ion-toolbar>
 </ion-header>
 
 <ion-content [fullscreen]="true">
-  <button ion-button full icon-left (click)="startTracking()" *ngIf="!isTracking">
-    <ion-icon name="locate"></ion-icon>
-    Start Tracking
-  </button>
-  <button ion-button full color="danger" icon-left (click)="stopTracking()" *ngIf="isTracking">
-    <ion-icon name="hand-left-outline"></ion-icon>
-    Stop Tracking
-  </button>
-
-  <button ion-button (click)="deleteHistoricRoutes()">
-    Clear History
-  </button>
- 
   <div #map id="map"></div>
 
-  <ion-label>Average Fuel Economy: {{this.mpg?.mpgInfo?.mpg}} MPG</ion-label>
- 
-  <ion-list>
+  <div style="padding-left: 5%; padding-right: 5%;">
+
+    <div style="padding-top: 3%; padding-bottom: 3%; padding-left: 5px">
+      <ion-label>Average Fuel Economy: {{this.mpg?.mpgInfo?.mpg}} MPG</ion-label>
+    </div>
+
+    <div>
+      <ion-button size="small" style="width: 50%;" (click)="startTracking()" *ngIf="!isTracking">
+        <ion-icon name="locate"></ion-icon>
+        Start Tracking
+      </ion-button>
+      <ion-button size="small" style="width: 50%;" color="danger" (click)="stopTracking()" *ngIf="isTracking">
+        <ion-icon name="hand-left-outline"></ion-icon>
+        Stop Tracking
+      </ion-button>
+
+      <ion-button size="small" style="width: 40%;" (click)="deleteHistoricRoutes()">
+        Clear History
+      </ion-button>
+    </div>
+  </div>
+
+  <ion-card>
     <ion-list-header>Previous Tracks</ion-list-header>
-    <ion-item *ngFor="let route of previousTracks">
+    <ion-item *ngFor="let route of mpg.previousTracks" (click)="showHistoryRoute(route.path, route.colors)">
       {{ route.finished | date }}, {{ route.path.length }} Waypoints
-      <button ion-button clear item-end (click)="showHistoryRoute(route.path, route.colors)">View Route</button>
+      <!-- {{ route.path.length }} Waypoints -->
+      <!-- <button ion-button clear itemx-end (click)="showHistoryRoute(route.path, route.colors)">View Route</button> -->
     </ion-item>
-  </ion-list>
+  </ion-card>
+
 </ion-content>

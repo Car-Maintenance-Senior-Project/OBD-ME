@@ -15,13 +15,27 @@
 </ion-header>
 
 <ion-content>
-    <ion-img src="../assets/2006-honda-crv.jpg"></ion-img>
+    <ion-img [src]="this.image" style='height:300px;' id='base64image'></ion-img>
 
-    <ion-list>
-        <ion-item *ngFor="let e of errors">
+    <ion-item>
+        <ion-title style='padding-top: 10px; padding-bottom: 10px;'>Errors: </ion-title>
+        <!-- <ion-button *ngIf="OBD.isConnected === true" (click)="updateErrorCodesSim()">HELP</ion-button> -->
+    </ion-item>
+
+    <ion-card *ngIf="errors.length !== 0">
+        <ion-item *ngFor="let e of errors" (click)='popUp(e.code)'>
+            <ion-icon *ngIf="e.severity === 1" name='alert-circle' slot="start"></ion-icon>
+            <ion-icon *ngIf="e.severity !== 1" name='warning' slot="start"></ion-icon>
             <ion-label>
-                {{e.name}}
+                <h2>{{e.code}}</h2>
+                <h3>{{e.techDiscription}}</h3>
             </ion-label>
         </ion-item>
-    </ion-list>
+    </ion-card>
+    <ion-card *ngIf="errors.length === 0">
+        <ion-item>
+            <ion-icon name="checkmark-done-circle" slot="start"></ion-icon>
+            <ion-label>You have no errors yet!</ion-label>
+        </ion-item>
+    </ion-card>
 </ion-content>

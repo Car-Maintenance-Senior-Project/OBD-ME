@@ -6,4 +6,5 @@ export class PIDConstants {
     public static Group9SupportedPIDs: string = '09001\r';
     public static VIN: string = '09023\r';
     public static MAF: string = '01101\r';
+    public static errors: string = '03\r';
 }
