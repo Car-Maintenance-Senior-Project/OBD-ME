@@ -8,7 +8,6 @@ import { BluetoothSerial } from '@ionic-native/bluetooth-serial/ngx';
 import { Storage } from '@ionic/storage';
 import { LoadingController } from '@ionic/angular';
 import { ToastMasterService } from '../services/toast-master.service';
-import { VINParserService } from '../services/vinparser.service';
 
 import { Device } from '../interfaces/device-struct';
 
@@ -47,7 +46,6 @@ export class OBDConnectorService {
     private loader: LoadingController,
     private toast: ToastMasterService,
     // private pids: PidsServiceService
-    private vinParser: VINParserService,
     private route: Router,
     // private home: HomePage
     private http: HTTP

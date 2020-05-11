@@ -13,6 +13,7 @@ export class FuelEconomyService {
   public mpgInfo: FuelEconomyInfo;
   private previousTracks = [];
 
+  // constants for fuel economy calculations
   private readonly AIR_FUEL_RATIO: number = 14.7;          // good A/F ratio is 14.7 grams air to 1 gram fuel
   private readonly GASOLINE_DENSITY: number = 6.17;        // gasoline is typically 6.17 lb/gal
   private readonly GRAMS_PER_POUND: number = 454;
@@ -27,27 +28,37 @@ export class FuelEconomyService {
 
   constructor(private obd: OBDConnectorService) { }
 
+  // keeps running average of the fuel economy for the current car profile
   updateAverage(newValue: number) {
     this.mpgInfo.count++;
     let diff = (newValue - this.mpgInfo.mpg) / this.mpgInfo.count;
     this.mpgInfo.mpg += diff;
   }
 
-  calcMPG(coords1, coords2): Promise<string> {
+  // receives 2 coordinates and determines the fuel economy over the given distance
+  calcMPG(coords1, coords2, lastTime): Promise<string> {
     return new Promise<string>((resolve, reject) => {
-      let distTraveled = this.distance(coords1, coords2);
+      let distTraveled = this.distance(coords1, coords2); // calculate distance between coordinates (miles)
 
       var maf: number;
+
+      // retrieve MAF (Mass Air Flow - g/s)
       this.obd.callPID(PIDConstants.MAF, PIDType.MAF).then(data => {
         maf = parseFloat(data);
 
-        let fuelGals = maf / this.AIR_FUEL_RATIO / this.GASOLINE_DENSITY / this.GRAMS_PER_POUND;
+        let currentTime = new Date();
+        let time = (currentTime.getTime() - lastTime.getTime()) / 1000 // get time since last calculation to determine total air flow
+
+        let airMass = maf * time; // g/s * sec -> just grams of air
+
+        let fuelGals = airMass / this.AIR_FUEL_RATIO / this.GASOLINE_DENSITY / this.GRAMS_PER_POUND;
         let currentMPG = distTraveled / fuelGals;
 
         this.updateAverage(currentMPG);
 
         let x = currentMPG / this.mpgInfo.mpg;
 
+        // arbitrary judgement system - can be refined if desired
         var colorString: string;
         if (x < 0.85) {
           colorString = this.GREAT;
@@ -68,6 +79,7 @@ export class FuelEconomyService {
     });
   }
 
+  // determines distance between two coordinates on earth
   distance(coords1, coords2): number {
     let lat1: number = coords1.lat;
     let lat2: number = coords2.lat;
@@ -80,6 +92,7 @@ export class FuelEconomyService {
     return distance * this.MILES_PER_KM; // convert to miles
   }
 
+  // load in the historic information from the current profile; if none is present, initialize it with default values
   loadHistoricInfo() {
     if (this.obd.currentProfile.pastRoutes != null) {
       this.previousTracks = this.obd.currentProfile.pastRoutes;
