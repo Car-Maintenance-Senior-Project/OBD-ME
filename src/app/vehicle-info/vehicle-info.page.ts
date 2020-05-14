@@ -1,9 +1,11 @@
+/**This page shows data about the current car profile.  It shows the vin, make, year,
+ * and model along with name of the cars profile.  It also allows you to input a vin if
+ * there isnt one, and change the name of the profile.
+ */
 import { Component, OnInit, NgZone } from '@angular/core';
 import { BluetoothSerial } from '@ionic-native/bluetooth-serial/ngx';
 
 import { OBDConnectorService } from '../services/obd-connector.service';
-import { PIDConstants } from '../classes/pidconstants';
-import { PIDType } from '../enums/pidtype.enum';
 import { ToastMasterService } from '../services/toast-master.service';
 import { VINData } from '../interfaces/vindata';
 import { HTTP } from '@ionic-native/http/ngx';
@@ -21,8 +23,6 @@ export class VehicleInfoPage implements OnInit {
   private vin: string;
   private vinMock: string;
   private name: string;
-  // private testVin = 'WBA3N5C55FK484549';
-  // private vinNum: string;
 
   constructor(
     private ngZone: NgZone,
@@ -32,6 +32,9 @@ export class VehicleInfoPage implements OnInit {
     private http: HTTP) {
   }
 
+  /**
+   * On init, set the variables if there is a valid profile
+   */
   ngOnInit() {
     if (this.obd.currentProfile.nickname !== '-1') {
       this.name = this.obd.currentProfile.nickname;
@@ -43,18 +46,24 @@ export class VehicleInfoPage implements OnInit {
     }
   }
 
+  /**
+   * Changes name of current profile as long as its valid
+   */
   changeName() {
-    var regEx = RegExp(/^[0-9]*$/);
+    const regEx = RegExp(/^[0-9]*$/);
     if (this.obd.currentProfile.nickname !== '-1') {
       if (!regEx.test(this.name)) {
         this.obd.changeCurrentName(this.name);
       } else {
         this.toast.errorMessage('Username must have more than numbers');
       }
-
     }
   }
 
+  /**
+   * Changes vin, parses it, and then saves the new profile to the current profile
+   * TODO: If the vin matches a saved profile, switch to that instead and make it the active profile
+   */
   changeVin() {
     this.http.get('https://api.carmd.com/v3.0/decode?vin=' + this.vin, {}, {
       'content-type': 'application/json',

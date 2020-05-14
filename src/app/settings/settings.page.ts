@@ -1,3 +1,4 @@
+/** This settings page handles dark made and connecting */
 import { Component, OnInit } from '@angular/core';
 import { Device } from '../interfaces/device-struct';
 

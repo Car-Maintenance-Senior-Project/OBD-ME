@@ -16,9 +16,10 @@ export class EditMaintenanceRecordPage implements OnInit {
   private record: MaintenanceRecord;
 
 
-  constructor(private route: ActivatedRoute, 
-              private storage: MaintenanceRecordStorageService,
-              private navController: NavController) { }
+  constructor(
+    private route: ActivatedRoute,
+    private storage: MaintenanceRecordStorageService,
+    private navController: NavController) { }
 
   ngOnInit() {
     this.id = this.route.snapshot.paramMap.get('id');

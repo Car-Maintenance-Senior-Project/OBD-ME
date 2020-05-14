@@ -23,35 +23,6 @@ import { PIDType } from '../enums/pidtype.enum';
   styleUrls: ['home.page.scss'],
 })
 export class HomePage {
-
-  // TODO: don't use this array, instead import/inject a service and use data from that
-  // public errorsToGiive: ErrorCode[] = [
-  //   {
-  //     code: 'C0300',
-  //     techDiscription: 'This is a short des',
-  //     severity: 2,
-  //     longDescription: 'hfkdjshfkljhdasklfjhlksdjnf sadfh sdakjhf ksjadhfjhsd' +
-  //       'fhsadjh fkjdshah h hjskafh sadjhfkjsdhjhakfj hhs ahfs' +
-  //       ' kjhafkjhdsfkh ',
-  //     effect: 'dsgafhdsgafjhkgsajkhfgkjshdagbf'
-  //   }, {
-  //     code: 'C0301',
-  //     techDiscription: 'This is a short des',
-  //     severity: 1,
-  //     longDescription: 'hfkdjshfkljhdasklfjhlksdjnf sadfh sdakjhf ksjadhfjhsd' +
-  //       'fhsadjh fkjdshah h hjskafh sadjhfkjsdhjhakfj hhs ahfs' +
-  //       ' kjhafkjhdsfkh ',
-  //     effect: 'dsgafhdsgafjhkgsajkhfgkjshdagbf'
-  //   }, {
-  //     code: 'C0302',
-  //     techDiscription: 'This is a short des',
-  //     severity: 2,
-  //     longDescription: 'hfkdjshfkljhdasklfjhlksdjnf sadfh sdakjhf ksjadhfjhsd' +
-  //       'fhsadjh fkjdshah h hjskafh sadjhfkjsdhjhakfj hhs ahfs' +
-  //       ' kjhafkjhdsfkh ',
-  //     effect: 'dsgafhdsgafjhkgsajkhfgkjshdagbf'
-  //   }
-  // ];
   public image: SafeUrl;
   public errors: ErrorCode[] = [];
   private firstTime = true;
@@ -94,9 +65,6 @@ export class HomePage {
       });
     }
     console.log('OBDMEDebug: errors: ' + JSON.stringify(this.errors));
-  }
-
-  ngOnInit() {
   }
 
   parsePhotos(activeProfile: CarProfile) {

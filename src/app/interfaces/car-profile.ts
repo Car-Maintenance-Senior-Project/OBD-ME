@@ -1,3 +1,6 @@
+/**
+ * Structure for a car profile
+ */
 import { VINData } from '../interfaces/vindata';
 import { FuelEconomyInfo } from '../interfaces/fuel-economy-info';
 import { MaintenanceRecord } from '../interfaces/maintenance-record';

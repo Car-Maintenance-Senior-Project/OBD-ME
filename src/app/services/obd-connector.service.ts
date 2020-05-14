@@ -7,20 +7,18 @@ import { NgZone, Injectable } from '@angular/core';
 import { BluetoothSerial } from '@ionic-native/bluetooth-serial/ngx';
 import { Storage } from '@ionic/storage';
 import { LoadingController } from '@ionic/angular';
+import { HTTP } from '@ionic-native/http/ngx';
+import { Router } from '@angular/router';
+
 import { ToastMasterService } from '../services/toast-master.service';
 import { VINParserService } from '../services/vinparser.service';
 
 import { Device } from '../interfaces/device-struct';
-
 import { ConnectResult } from '../enums/connect-result.enum';
 import { PIDType } from '../enums/pidtype.enum';
 import { StorageKeys } from '../classes/storage-keys';
 import { PIDConstants } from '../classes/pidconstants';
 import { CarProfile } from '../interfaces/car-profile';
-import { Router } from '@angular/router';
-
-// import { HomePage } from '../home/home.page';
-import { HTTP } from '@ionic-native/http/ngx';
 import { VINData } from '../interfaces/vindata';
 
 // example of long hex 09023\r014 \r0: 49 02 01 57 42 41 \r1: 33 4E 35 43 35 35 46 \r2: 4B 34 38 34 35 34 39 \r\r
@@ -46,10 +44,8 @@ export class OBDConnectorService {
     private store: Storage,
     private loader: LoadingController,
     private toast: ToastMasterService,
-    // private pids: PidsServiceService
     private vinParser: VINParserService,
     private route: Router,
-    // private home: HomePage
     private http: HTTP
   ) { }
 
@@ -78,13 +74,14 @@ export class OBDConnectorService {
    */
   onStartUp(): Promise<boolean> {
     return new Promise((resolve, reject) => {
+      // Get all the paired BT devices
       this.getPaired();
 
-
+      // Load in the save profiles and check if any of them are the correct ones
       this.store.get(StorageKeys.CARPROFILES).then(allProfiles => {
-        console.log('OBDMEDebug: allProfiles: ' + JSON.stringify(allProfiles));
+
+        // If there are no profiles, set a default one
         if (allProfiles === null) {
-          console.log('OBDMEDebug: null');
           this.currentProfile = {
             vin: '',
             vinData: null,
@@ -97,8 +94,8 @@ export class OBDConnectorService {
             errorCodes: []
           };
         } else {
+          // If there are profiles, find which one was the last profile if applicable
           const lastProfile: CarProfile = allProfiles.find(profiles => profiles.lastProfile === true);
-          console.log('OBDMEDebug: lastProfile: ' + JSON.stringify(lastProfile));
           if (lastProfile === undefined) {
             this.currentProfile = {
               vin: '',
@@ -113,22 +110,16 @@ export class OBDConnectorService {
             };
           } else {
             this.currentProfile = lastProfile;
-            // this.currentProfile.pictureSaved = false;
-            // this.saveProfiles();
           }
         }
-        console.log('OBDMEDebug: this.currentProfile: ' + JSON.stringify(this.currentProfile));
         this.isLoading = false;
+
+        // After the profile is loaded, try to connect to the bluetooth
       }).then(initConnect => {
         this.connect().then(result1 => {
-          console.log('OBDMEDebug: ResultSuc: ' + ConnectResult[result1]);
           this.isLoading = false;
-          console.log('OBDMEDebug: this.currentProfile: ' + JSON.stringify(this.currentProfile));
-          // this.home.parsePhotos();
         }, result2 => {
-          console.log('OBDMEDebug: ResultRej: ' + ConnectResult[result2]);
           this.route.navigate(['settings']);
-          console.log('OBDMEDebug: this.currentProfile: ' + JSON.stringify(this.currentProfile));
           this.isLoading = false;
         });
       });
@@ -136,97 +127,74 @@ export class OBDConnectorService {
   }
 
   /**
-   * Attempts to connect via bluetooth to the OBD
+   * Attempts to connect via bluetooth to the OBD.  Uses the last connect MAC if none
+   * is given when its called.
    * TODO: Run usefull AT codes
    * TODO: Get the PIDs that are supported
-   * @param MacAddress - Mac address of the OBD to connect to
-   * @returns Promise when it has tried to connect
+   * @param [MacAddress] - Optional mac address of the OBD to connect to, defaults to the last used MAC
+   * @returns Promise of the connection result of the BT
    */
   connect(MACAddress?: string): Promise<ConnectResult> {
     return new Promise<ConnectResult>((resolve, reject) => {
       this.loader.create({
         message: 'Connecting to bluetooth'
-      }).then(overlay => {
+      }).then(overlay => { // Creates a overlay so the user cant do anything while its connecting
         this.loading = overlay;
         this.loading.present();
         // initialize conditions to false when a connection is attempted
         this.bluetoothEnabled = false;
         this.isConnected = false;
-        // this.currentProfile = {
-        //   vin: '',
-        //   vinData: null,
-        //   nickname: '-1',
-        //   fuelEconomy: null,
-        //   pastRoutes: null,
-        //   maintenanceRecords: null,
-        //   lastProfile: false
-        // };
 
+        // Check to see if BT is enabled
         this.blueSerial.isEnabled().then(enabled => {
-
           this.bluetoothEnabled = true;
+
+          // Decide which MAC to use
           this.store.get(StorageKeys.LASTMAC).then(value => {
-            console.log('OBDMEDebug: LASTMAC: ' + value);
             if (MACAddress === undefined) {
               if (value !== null) {
                 MACAddress = value;
               } else {
-                console.log('OBDMEDebug: LASTMAC: No Value saved/given');
                 this.loading.dismiss();
                 this.toast.notConnectedMessage();
                 reject(ConnectResult.NoGivenOrStoredMAC);
                 return;
               }
             }
-            console.log('OBDMEDebug: MACAddress: ' + MACAddress);
+
+            // Check to see if the BT is connected already
             this.blueSerial.isConnected().then(async data => {
-              console.log('OBDMEDebug: isConnected1: BT is connected');
-              // for (let i = 0; i < 4; i++) {
+
+              // If it is, disconnect first, then attempt to connect
               await this.blueSerial.disconnect().then(sucsess => {
-                console.log('OBDMEDebug: isConnected1: BT got disconnected');
                 this.connectToBT(MACAddress).then(returnSuc => {
-                  console.log('OBDMEDebug: isConnected1: BT Suc');
                   resolve(returnSuc);
-                  // this.route.navigate(['vehicle-info']);
                   return;
                 }, returnRej => {
-                  console.log('OBDMEDebug: isConnected1: BT failed');
                   reject(returnRej);
                   return;
                 });
-                console.log('OBDMEDebug: isConnected1: BT ??????????');
               }, fail => {
-                console.log('OBDMEDebug: isConnected1: BT failed Dis');
                 this.isConnected = false;
                 this.loading.dismiss();
                 this.toast.notDisconnectedMessage();
                 reject(ConnectResult.DisconnectFail);
                 return;
               });
-              // }
 
             }, data2 => {
-              console.log('OBDMEDebug: isConnected2: BT is disconnected');
-              // for (let i = 0; i < 4; i++) {
+              // If not connected, just connect
               this.connectToBT(MACAddress).then(returnSuc => {
-                console.log('OBDMEDebug: isConnected2: BT suc');
                 resolve(returnSuc);
-                // this.route.navigate(['vehicle-info']);
                 return;
               }, returnRej => {
-                console.log('OBDMEDebug: isConnected2: BT fail');
                 reject(returnRej);
                 return;
               });
-              console.log('OBDMEDebug: isConnected2: BT ?????????');
-              // }
-              // this.loading.dismiss();
-              // this.toast.notDisconnectedMessage();
-              // reject(ConnectResult.DisconnectFail);
-              // return;
             });
+
+            // Reject if errors occur, or Bluetooth is disabled
           }, error => {
-            console.log('OBDMEDebug: LASTMAC: GetFail');
             this.isConnected = false;
             // TODO: show error connect failed or let caller handle that
             this.loading.dismiss();
@@ -235,7 +203,6 @@ export class OBDConnectorService {
             return;
           });
         }, disabled => {
-          console.log('OBDMEDebug: BlueNotEnabled');
           this.bluetoothEnabled = false;
           this.isConnected = false;
           // TODO: show error Bluetooth disabled or let caller handle that
@@ -244,54 +211,54 @@ export class OBDConnectorService {
           reject(ConnectResult.BluetoothDisabledFail);
           return;
         });
-        // this.loading.dismiss();
-        // this.toast.errorMessage('Total Failure: This should not happen');
-        // reject(ConnectResult.Failure);
       });
     });
   }
 
+
+  /**
+   * Connects to bluetooth and depending on what happens, sets the profile accordingly
+   * @param MACAddress - MAC of the bluetooth to connect to
+   * @returns Promise of the connection result of the BT
+   */
   private connectToBT(MACAddress: string): Promise<ConnectResult> {
     return new Promise<ConnectResult>((resolve, reject) => {
-      console.log('OBDMEDebug: connectProcess: Start: ' + MACAddress);
       this.blueSerial.disconnect().then(disconnected => {
+        // Attempt to connect to the MAC given
         this.blueSerial.connect(MACAddress).subscribe(success => {
-          console.log('OBDMEDebug: connectProcess: Connected');
           this.isConnected = true;
+
+          // If connected, attempt to get the vin from the car
           this.callPID(PIDConstants.VIN, PIDType.String).then(vinRaw => {
-            console.log('OBDMEDebug: connectProcess: Got Vin: ' + vinRaw);
+
+            // Use the vin to either grab a profile from storage or parse a new profile
             this.store.get(StorageKeys.CARPROFILES).then(allProfiles => {
-              console.log('OBDMEDebug: connectProcess: allProfiles: ' + JSON.stringify(allProfiles));
               if (allProfiles === null) {
                 allProfiles = [];
               }
-              allProfiles.forEach(profile => {
+              allProfiles.forEach(profile => { // Set all profiles to not be the last one
                 profile.lastProfile = false;
               });
               const profileSearch: CarProfile = allProfiles.find(profile => profile.vin === vinRaw);
-              console.log('OBDMEDebug: connectProcess: profileSearch: ' + JSON.stringify(profileSearch));
-              if (profileSearch !== undefined) {
+              if (profileSearch !== undefined) { // If is in storage, set the profile accordingly
                 profileSearch.lastProfile = true;
                 this.currentProfile = profileSearch;
                 this.store.set(StorageKeys.LASTMAC, MACAddress);
                 this.loading.dismiss();
                 this.toast.connectedMessage();
-                console.log('OBDMEDebug: connectProcess: Suc');
                 resolve(ConnectResult.Success);
                 return;
-              } else {
+              } else { // Else use an API request to get the VIN data and create and set a new profile
                 this.http.get('https://api.carmd.com/v3.0/decode?vin=' + vinRaw, {}, {
                   'content-type': 'application/json',
                   'authorization': 'Basic NTgyMjhmZGUtNGE1Yi00OWZkLThlMzAtNTlhNTU1NzYxYWNi',
                   'partner-token': 'dc22f0426ac94a48b7779458ab235e54'
                 }).then(dataBack => {
-                  console.log('OBDMEDebug: connectProcess: dataBack: ' + JSON.stringify(dataBack));
                   const parsedVin: VINData = {
                     year: JSON.parse(dataBack.data).data.year,
                     make: JSON.parse(dataBack.data).data.make,
                     model: JSON.parse(dataBack.data).data.model
                   };
-                  console.log('OBDMEDebug: connectProcess: Parsed Vin: ' + JSON.stringify(parsedVin));
                   this.currentProfile = {
                     vin: vinRaw,
                     vinData: parsedVin,
@@ -303,18 +270,20 @@ export class OBDConnectorService {
                     pictureSaved: false,
                     errorCodes: []
                   };
+
+                  // Store profiles and last mac to be used when needed
                   allProfiles.push(this.currentProfile);
-                  console.log('OBDMEDebug: connectProcess: Profiles Done: ' + JSON.stringify(allProfiles));
                   this.store.set(StorageKeys.CARPROFILES, allProfiles);
                   this.store.set(StorageKeys.LASTMAC, MACAddress);
+
+                  // Return that we connected and dismiss the loading screen
                   this.loading.dismiss();
                   this.toast.connectedMessage();
-                  console.log('OBDMEDebug: connectProcess: Suc');
                   resolve(ConnectResult.Success);
                   return;
+
                 }, webError => {
                   // TODO: Have this still save the vin, and get the data later in vehicle info
-                  console.log('OBDMEDebug: connectProcess: Fail');
                   this.isConnected = false;
                   this.loading.dismiss();
                   this.toast.notConnectedMessage();
@@ -324,15 +293,7 @@ export class OBDConnectorService {
               }
             });
           }, reject3 => {
-            // console.log('OBDMEDebug: connectProcess: Fail');
-            // this.isConnected = false;
-            // // TODO: show error connect failed or let caller handle that
-            // this.loading.dismiss();
-            // this.toast.notConnectedMessage();
-            // reject(ConnectResult.Failure);
-            // return;
-            console.log('OBDMEDebug: connectedButCouldntGetVin');
-
+            // If you cant grab the vin from the car, then create a dummy vin and tell the user to input the vin manually on the info page
             this.store.get(StorageKeys.CARPROFILES).then(allProfiles => {
               if (allProfiles === null) {
                 allProfiles = [];
@@ -351,30 +312,25 @@ export class OBDConnectorService {
                 pictureSaved: false,
                 errorCodes: []
               };
-              allProfiles.push(this.currentProfile);
-              console.log('OBDMEDebug: connectProcess: Profiles Done: ' + JSON.stringify(allProfiles));
-              this.store.set(StorageKeys.CARPROFILES, allProfiles);
               this.store.set(StorageKeys.LASTMAC, MACAddress);
               this.loading.dismiss();
-              this.toast.connectedMessage();
-              console.log('OBDMEDebug: connectProcess: Suc: No vin');
+              this.toast.errorMessage('Please input your vin on the Vehicle info page');
               resolve(ConnectResult.Success);
               return;
             });
           });
+
         }, reject1 => {
-          console.log('OBDMEDebug: connectProcess: Fail');
+          // If you can't connect, reject with a failure status
           this.isConnected = false;
-          // TODO: show error connect failed or let caller handle that
           this.loading.dismiss();
           this.toast.notConnectedMessage();
           reject(ConnectResult.Failure);
           return;
         });
       }, notDis => {
-        console.log('OBDMEDebug: connectProcess: Fail');
+        // If you can't disconnect, reject with a failure status
         this.isConnected = false;
-        // TODO: show error connect failed or let caller handle that
         this.loading.dismiss();
         this.toast.notConnectedMessage();
         reject(ConnectResult.Failure);
@@ -383,36 +339,41 @@ export class OBDConnectorService {
     });
   }
 
+  /**
+   * Changes current name of the profile and saves it
+   * @param newName - New name for profile
+   */
   changeCurrentName(newName: string): void {
-    console.log('OBDMEDebug: saveProfiles: NewNick: ' + newName);
     this.currentProfile.nickname = newName;
     this.saveProfiles();
   }
 
+  /**
+   * Saves profiles and update the current loaded one
+   * @returns profiles
+   */
   public saveProfiles(): Promise<boolean> {
     return new Promise<boolean>((resolve, reject) => {
       this.store.get(StorageKeys.CARPROFILES).then(allProfiles => {
-        console.log('OBDMEDebug: saveProfiles: initProfiles' + JSON.stringify(allProfiles));
         const splicedProfile = allProfiles.splice(allProfiles.findIndex(profile => profile.vin === this.currentProfile.vin), 1);
-        console.log('OBDMEDebug: saveProfiles: splicedProfile' + JSON.stringify(splicedProfile));
-        console.log('OBDMEDebug: saveProfiles: currentProfile' + JSON.stringify(this.currentProfile));
         allProfiles.push(this.currentProfile);
-        console.log('OBDMEDebug: saveProfiles: saveProfiles' + JSON.stringify(allProfiles));
         this.store.set(StorageKeys.CARPROFILES, allProfiles);
       });
     });
   }
 
+  /**
+   * TODO: Change how this works so it looks for the vin first
+   * Saves profiles and change the vin on the current profile
+   * @param newVin - New vin to be updated
+   * @returns profiles change vin
+   */
   public saveProfilesChangeVin(newVin: string): Promise<boolean> {
     return new Promise<boolean>((resolve, reject) => {
       this.store.get(StorageKeys.CARPROFILES).then(allProfiles => {
-        console.log('OBDMEDebug: saveProfiles: initProfiles' + JSON.stringify(allProfiles));
         const splicedProfile = allProfiles.splice(allProfiles.findIndex(profile => profile.vin === this.currentProfile.vin), 1);
-        console.log('OBDMEDebug: saveProfiles: splicedProfile' + JSON.stringify(splicedProfile));
-        console.log('OBDMEDebug: saveProfiles: currentProfile' + JSON.stringify(this.currentProfile));
         this.currentProfile.vin = newVin;
         allProfiles.push(this.currentProfile);
-        console.log('OBDMEDebug: saveProfiles: saveProfiles' + JSON.stringify(allProfiles));
         this.store.set(StorageKeys.CARPROFILES, allProfiles);
       });
     });
@@ -466,36 +427,27 @@ export class OBDConnectorService {
    * @param callData - Data to be written to the OBD
    * @param type - What it should be parsed as
    * @returns Promise with the response or rejection
-   * TODO: Mannage duplicats that also are more than one message long or set the OBD device to only listen to the main responder
+   * TODO: Manage duplicates that also are more than one message long or set the OBD device to only listen to the main responder
    */
   writeThenRead(callData: string, type: PIDType): Promise<string> {
-    console.log('OBDMEDebug: Connector: start');
     return new Promise((promSuccess, promReject) => {
       this.isConnectedFun().then(isConnect => {
         if (isConnect) {
-          console.log('OBDMEDebug: Connector: isconnected');
           this.blueSerial.write(callData).then(success => {
-            console.log('OBDMEDebug: Connector: write data');
             this.blueSerial.subscribe('\r\r').subscribe(data => {
-              console.log('OBDMEDebug: Connector: EVENT: ' + data);
               if (data !== '') {
                 console.log(data);
-                // if (data === 'NO DATA\r\r') {
                 if (data.includes('NO DATA')) {
-                  console.log('OBDMEDebug: Connector: NO DATA');
-                  // promReject('NO DATA');
                   promReject('NO DATA');
                 } else if (data.includes('OK')) {
                   promSuccess('OK');
                 } else if (data.includes('?')) {
-                  console.log('OBDMEDebug: Connector: Needs Rerun');
                   this.writeThenRead(callData, type).then(yes => {
                     promSuccess(yes);
                   }, no => {
                     promReject(no);
                   });
                 } else {
-                  console.log('OBDMEDebug: Connector: HAS DATA');
                   if (type !== PIDType.errors) {
                     const hexCall = '4' + callData[1] + ' ' + callData.slice(2, 4) + ' ';
                     if (data.includes(hexCall)) {
@@ -503,7 +455,7 @@ export class OBDConnectorService {
                       if (data.includes(hexCall)) {
                         data = data.slice(0, data.indexOf(hexCall));
                       }
-                      console.log('OBDMEDebug: Connector: return: ' + data);
+                      // console.log('OBDMEDebug: Connector: return: ' + data);
                       promSuccess(data);
                     }
                   } else {
@@ -513,7 +465,7 @@ export class OBDConnectorService {
                       if (data.includes(hexCall)) {
                         data = data.slice(0, data.indexOf(hexCall));
                       }
-                      console.log('OBDMEDebug: Connector: return: ' + data);
+                      // console.log('OBDMEDebug: Connector: return: ' + data);
                       promSuccess(data);
                     }
                   }
@@ -527,7 +479,7 @@ export class OBDConnectorService {
             promReject('Couldnt write');
           });
         } else {
-          console.log('OBDMEDebug: Connector: not connected');
+          // console.log('OBDMEDebug: Connector: not connected');
           this.toast.notConnectedMessage();
           promReject('Not connected to bluetooth');
         }
@@ -542,12 +494,12 @@ export class OBDConnectorService {
       // TODO: Get the supported pids to work.  Currently parsing seems to work fine, just doesnt check for them correctly
       // if (this.pidSupported(parseInt(pid.charAt(1), 10), parseInt(pid.slice(2, 4), 10))) {
       this.writeThenRead(pid, type).then(data => {
-        console.log('OBDMEDebug: callPid: dataBack:' + data + 'ehhf');
+        // console.log('OBDMEDebug: callPid: dataBack:' + data + 'ehhf');
         if (!data.includes('NO DATA')) {
-          console.log('OBDMEDebug: callPid: parsedData: ' + JSON.stringify(this.parseData(data, type)));
+          // console.log('OBDMEDebug: callPid: parsedData: ' + JSON.stringify(this.parseData(data, type)));
           resolve(this.parseData(data, type));
         } else {
-          console.log('OBDMEDebug: callPid: RejectNoData');
+          // console.log('OBDMEDebug: callPid: RejectNoData');
           reject('NO DATA');
         }
 
@@ -563,7 +515,7 @@ export class OBDConnectorService {
   //private parseData(data: string, type: PIDType): Promise<string> {
   parseData(data: string, type: PIDType): Promise<string> {
     return new Promise<string>((resolve) => {
-      console.log('OBDMEDebug: parseData: data: ' + data);
+      // console.log('OBDMEDebug: parseData: data: ' + data);
       if (data.length === 1) {
         resolve('');
         return;
@@ -575,7 +527,7 @@ export class OBDConnectorService {
           split[index] = section.slice(3);
         }
       });
-      console.log('OBDMEDebug: parseData: split: ' + split);
+      // console.log('OBDMEDebug: parseData: split: ' + split);
       const hexArray = split.join('').trim().split(' ');
       console.log(hexArray);
       const finalArray = [];
@@ -633,12 +585,12 @@ export class OBDConnectorService {
               nextError += parseInt(binary.substr(2, 2), 2).toString();
               nextError += splitData.substr(1, 1);
               currentPlace = 1;
-              console.log('OBDMEDebug: parseData: halfError: ' + nextError);
+              // console.log('OBDMEDebug: parseData: halfError: ' + nextError);
               break;
             } case 1: {
               nextError += splitData;
               finalArray.push(nextError);
-              console.log('OBDMEDebug: parseData: nextError: ' + nextError);
+              // console.log('OBDMEDebug: parseData: nextError: ' + nextError);
               nextError = '';
               currentPlace = 0;
               break;
@@ -648,7 +600,7 @@ export class OBDConnectorService {
 
       });
 
-      console.log('OBDMEDebug: parseData: finalArray: ' + JSON.stringify(finalArray));
+      // console.log('OBDMEDebug: parseData: finalArray: ' + JSON.stringify(finalArray));
       if (PIDType.MAF === type) {
         resolve((((256 * parseFloat(finalArray[0])) + parseFloat(finalArray[1])) / 100).toString());
       } else if (type === PIDType.errors) {
