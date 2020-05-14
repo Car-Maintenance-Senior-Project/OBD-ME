@@ -26,11 +26,13 @@ export class EditMaintenanceRecordPage implements OnInit {
     this.loadRecord();
   }
 
+  // load all records from storage and select the desired one to edit
   loadRecord(): void {
     this.storage.loadRecords();
     this.record = Object.assign({}, this.storage.getRecord(this.id));
   }
 
+  // update a given record, save it, and return to the main maintenance record page
   updateRecord(): void {
     this.storage.setRecord(this.record);
     this.navController.navigateRoot("/maintenance-record");

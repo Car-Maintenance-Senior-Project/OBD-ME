@@ -12,7 +12,7 @@ export class MaintenanceRecordStorageService {
   public records: MaintenanceRecord[] = [];
   public loaded: boolean = false;
 
-  constructor(private storage: Storage, private obd: OBDConnectorService) { }
+  constructor(private obd: OBDConnectorService) { }
 
   deleteRecord(record: MaintenanceRecord): void {
     let index = this.records.indexOf(record);
@@ -44,6 +44,7 @@ export class MaintenanceRecordStorageService {
     this.obd.saveProfiles();
   }
 
+  // loads records for currently used car profile, initializes records if profile does not have any
   loadRecords() {
     if (this.obd.currentProfile.maintenanceRecords != null) {
       this.records = this.obd.currentProfile.maintenanceRecords
@@ -65,6 +66,7 @@ export class MaintenanceRecordStorageService {
     this.saveRecords();
   }
 
+  // generates a slug to be used for the id of a maintenance record
   generateSlug(title: string): string {
     // NOTE: This is a simplistic slug generator and will
     // not handle things like special characters

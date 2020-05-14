@@ -11,7 +11,6 @@ import { HTTP } from '@ionic-native/http/ngx';
 import { Router } from '@angular/router';
 
 import { ToastMasterService } from '../services/toast-master.service';
-import { VINParserService } from '../services/vinparser.service';
 
 import { Device } from '../interfaces/device-struct';
 import { ConnectResult } from '../enums/connect-result.enum';
@@ -44,7 +43,6 @@ export class OBDConnectorService {
     private store: Storage,
     private loader: LoadingController,
     private toast: ToastMasterService,
-    private vinParser: VINParserService,
     private route: Router,
     private http: HTTP
   ) { }

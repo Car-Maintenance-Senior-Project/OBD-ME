@@ -49,6 +49,7 @@ export class SettingsPage implements OnInit {
 
   }
 
+  // enables dark mode if disabled, or disables it if enabled
   toggleDarkTheme(): void {
     this.darkThemeSwitcher.enableDarkTheme(this.darkModeChecked);
   }
