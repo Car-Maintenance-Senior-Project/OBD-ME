@@ -1,3 +1,4 @@
+/** This page shows the maintenance records using the maintenance records service */
 import { Component, OnInit, ViewChild } from '@angular/core';
 import { AlertController, NavController } from '@ionic/angular';
 
@@ -10,47 +11,47 @@ import { IonList } from '@ionic/angular';
   styleUrls: ['./maintenance-record.page.scss'],
 })
 export class MaintenanceRecordPage implements OnInit {
-
   @ViewChild(IonList, null) recordList: IonList;
 
   constructor(
     public recordStorage: MaintenanceRecordStorageService,
     private alertController: AlertController,
-    private navController: NavController) {
-  }
+    private navController: NavController
+  ) { }
 
   ngOnInit() {
     this.recordStorage.loadRecords();
   }
 
   deleteRecord(record): void {
-    this.alertController.create({
-      header: 'Delete Record?',
-      buttons: [
-        {
-          text: 'Cancel',
-          handler: (data) => {
-            this.recordList.closeSlidingItems();
-          }
-        },
-        {
-          text: 'Delete',
-          handler: (data) => {
-            this.recordList.closeSlidingItems().then(() => {
-              this.recordStorage.deleteRecord(record);
-            });
-          }
-        }
-      ]
-    }).then((prompt) => {
-      prompt.present();
-    });
+    this.alertController
+      .create({
+        header: 'Delete Record?',
+        buttons: [
+          {
+            text: 'Cancel',
+            handler: (data) => {
+              this.recordList.closeSlidingItems();
+            },
+          },
+          {
+            text: 'Delete',
+            handler: (data) => {
+              this.recordList.closeSlidingItems().then(() => {
+                this.recordStorage.deleteRecord(record);
+              });
+            },
+          },
+        ],
+      })
+      .then((prompt) => {
+        prompt.present();
+      });
   }
 
   editRecord(id: string): void {
     this.recordList.closeSlidingItems().then(() => {
-      this.navController.navigateForward("/maintenance-record/" + id);
+      this.navController.navigateForward('/maintenance-record/' + id);
     });
   }
-
 }

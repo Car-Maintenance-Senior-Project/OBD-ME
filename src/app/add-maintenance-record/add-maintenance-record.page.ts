@@ -1,5 +1,6 @@
+/** This page is used for adding maintenance records */
 import { Component, OnInit } from '@angular/core';
-import { NavController, ToastController } from '@ionic/angular';
+import { NavController } from '@ionic/angular';
 
 import { MaintenanceRecordStorageService } from '../services/maintenance-record-storage.service';
 import { ToastMasterService } from '../services/toast-master.service';
@@ -10,7 +11,6 @@ import { ToastMasterService } from '../services/toast-master.service';
   styleUrls: ['./add-maintenance-record.page.scss'],
 })
 export class AddMaintenanceRecordPage implements OnInit {
-
   type: string;
   date: any;
   cost: number;
@@ -22,8 +22,7 @@ export class AddMaintenanceRecordPage implements OnInit {
     private toastMaster: ToastMasterService
   ) { }
 
-  ngOnInit() {
-  }
+  ngOnInit() { }
 
   // create, initialize, and add record with given parameters
   addRecord(): void {
@@ -33,7 +32,7 @@ export class AddMaintenanceRecordPage implements OnInit {
         date: this.date,
         cost: this.cost,
         notes: this.notes,
-        id: ''
+        id: '',
       });
       this.navController.navigateRoot('/maintenance-record');
     } else {

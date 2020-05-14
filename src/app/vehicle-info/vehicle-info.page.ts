@@ -16,7 +16,6 @@ import { HTTP } from '@ionic-native/http/ngx';
   styleUrls: ['./vehicle-info.page.scss'],
 })
 export class VehicleInfoPage implements OnInit {
-
   public year: string;
   public make: string;
   public model: string;
@@ -29,8 +28,8 @@ export class VehicleInfoPage implements OnInit {
     private bs: BluetoothSerial,
     private obd: OBDConnectorService,
     private toast: ToastMasterService,
-    private http: HTTP) {
-  }
+    private http: HTTP
+  ) { }
 
   /**
    * On init, set the variables if there is a valid profile
@@ -65,25 +64,34 @@ export class VehicleInfoPage implements OnInit {
    * TODO: If the vin matches a saved profile, switch to that instead and make it the active profile
    */
   changeVin() {
-    this.http.get('https://api.carmd.com/v3.0/decode?vin=' + this.vin, {}, {
-      'content-type': 'application/json',
-      'authorization': 'Basic NTgyMjhmZGUtNGE1Yi00OWZkLThlMzAtNTlhNTU1NzYxYWNi',
-      'partner-token': 'dc22f0426ac94a48b7779458ab235e54'
-    }).then(dataBack => {
-      console.log('OBDMEDebug: connectProcess: dataBack: ' + JSON.stringify(dataBack));
-      const parsedVin: VINData = {
-        year: JSON.parse(dataBack.data).data.year,
-        make: JSON.parse(dataBack.data).data.make,
-        model: JSON.parse(dataBack.data).data.model
-      };
-      console.log('OBDMEDebug: connectProcess: Parsed Vin: ' + JSON.stringify(parsedVin));
-      this.obd.saveProfilesChangeVin(this.vin);
-      this.obd.currentProfile.vinData = parsedVin;
-      this.obd.saveProfiles();
-      return;
-    }, webError => {
-      this.toast.errorMessage('Invalid Vin');
-      return;
-    });
+    this.http
+      .get(
+        'https://api.carmd.com/v3.0/decode?vin=' + this.vin,
+        {},
+        {
+          'content-type': 'application/json',
+          'authorization': 'Basic NTgyMjhmZGUtNGE1Yi00OWZkLThlMzAtNTlhNTU1NzYxYWNi',
+          'partner-token': 'dc22f0426ac94a48b7779458ab235e54',
+        }
+      )
+      .then(
+        (dataBack) => {
+          console.log('OBDMEDebug: connectProcess: dataBack: ' + JSON.stringify(dataBack));
+          const parsedVin: VINData = {
+            year: JSON.parse(dataBack.data).data.year,
+            make: JSON.parse(dataBack.data).data.make,
+            model: JSON.parse(dataBack.data).data.model,
+          };
+          console.log('OBDMEDebug: connectProcess: Parsed Vin: ' + JSON.stringify(parsedVin));
+          this.obd.saveProfilesChangeVin(this.vin);
+          this.obd.currentProfile.vinData = parsedVin;
+          this.obd.saveProfiles();
+          return;
+        },
+        (webError) => {
+          this.toast.errorMessage('Invalid Vin');
+          return;
+        }
+      );
   }
 }

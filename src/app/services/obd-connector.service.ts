@@ -1,9 +1,14 @@
 /**
  * OBD connector service is a service that allows an app to connect, read, and write to and OBD scanner that is using
- * an ELM327 chip device (possibly others but havent tested).
+ * an ELM327 chip device (possibly others but havent tested).  It manages all the bluetooth functions, all parsing
+ * for the OBD, and managing the profiles for the app.  Two examples of responses from the OBD are:
+ * example of long hex: 09023\r014 \r0: 49 02 01 57 42 41 \r1: 33 4E 35 43 35 35 46 \r2: 4B 34 38 34 35 34 39 \r\r
+ * example of short hex: 09001\r49 00 55 40 00 00 \r\r
+ * All interactions to the OBD and Profiles should go through this.
+ * TODO: Seperate OBD and Profile functions into 2 different Services
  */
 
-import { NgZone, Injectable } from '@angular/core';
+import { Injectable } from '@angular/core';
 import { BluetoothSerial } from '@ionic-native/bluetooth-serial/ngx';
 import { Storage } from '@ionic/storage';
 import { LoadingController } from '@ionic/angular';
@@ -20,25 +25,11 @@ import { PIDConstants } from '../classes/pidconstants';
 import { CarProfile } from '../interfaces/car-profile';
 import { VINData } from '../interfaces/vindata';
 
-// example of long hex 09023\r014 \r0: 49 02 01 57 42 41 \r1: 33 4E 35 43 35 35 46 \r2: 4B 34 38 34 35 34 39 \r\r
-// example of short hex 09001\r49 00 55 40 00 00 \r\r
-
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
-
 export class OBDConnectorService {
-
-  /**
-   * Creates an instance of obdconnector service.
-   * @param ngZone - Imports NGZone
-   * @param blueSerial - Imports the bluetooth serial class
-   * @param store - Imports storage controller
-   * @param loader - Imports loading screen controller
-   * @param toast - Imports toast class
-   */
   constructor(
-    private ngZone: NgZone,
     private blueSerial: BluetoothSerial,
     private store: Storage,
     private loader: LoadingController,
@@ -47,11 +38,8 @@ export class OBDConnectorService {
     private http: HTTP
   ) { }
 
-
-  private macAddress: string;
   private devices: Device[];
   public processing: boolean;
-  private started = false;
   private loading: HTMLIonLoadingElement;
   public isConnected: boolean;
   private bluetoothEnabled: boolean;
@@ -62,13 +50,11 @@ export class OBDConnectorService {
   private service1and2SupportedPIDs: boolean[];
   private service9SupportedPIDs: boolean[];
 
-
   /**
    * To be run when the app is started.
-   * Connects to the bluetooth device if one is connected.
+   * Connects to the bluetooth device if one is connected, and either grabs the last connected
+   * profile, the profile for the care that is connected, or creates a default profile.
    * @returns Promise<boolean> when it finishes
-   *    -Resolve if running for the first time and boolean if it connected or not
-   *    -Reject if not running for the first time
    */
   onStartUp(): Promise<boolean> {
     return new Promise((resolve, reject) => {
@@ -76,25 +62,11 @@ export class OBDConnectorService {
       this.getPaired();
 
       // Load in the save profiles and check if any of them are the correct ones
-      this.store.get(StorageKeys.CARPROFILES).then(allProfiles => {
-
-        // If there are no profiles, set a default one
-        if (allProfiles === null) {
-          this.currentProfile = {
-            vin: '',
-            vinData: null,
-            nickname: '-1',
-            fuelEconomy: null,
-            pastRoutes: null,
-            maintenanceRecords: null,
-            lastProfile: true,
-            pictureSaved: false,
-            errorCodes: []
-          };
-        } else {
-          // If there are profiles, find which one was the last profile if applicable
-          const lastProfile: CarProfile = allProfiles.find(profiles => profiles.lastProfile === true);
-          if (lastProfile === undefined) {
+      this.store
+        .get(StorageKeys.CARPROFILES)
+        .then((allProfiles) => {
+          // If there are no profiles, set a default one
+          if (allProfiles === null) {
             this.currentProfile = {
               vin: '',
               vinData: null,
@@ -104,23 +76,42 @@ export class OBDConnectorService {
               maintenanceRecords: null,
               lastProfile: true,
               pictureSaved: false,
-              errorCodes: []
+              errorCodes: [],
             };
           } else {
-            this.currentProfile = lastProfile;
+            // If there are profiles, find which one was the last profile if applicable
+            const lastProfile: CarProfile = allProfiles.find((profiles) => profiles.lastProfile === true);
+            if (lastProfile === undefined) {
+              this.currentProfile = {
+                vin: '',
+                vinData: null,
+                nickname: '-1',
+                fuelEconomy: null,
+                pastRoutes: null,
+                maintenanceRecords: null,
+                lastProfile: true,
+                pictureSaved: false,
+                errorCodes: [],
+              };
+            } else {
+              this.currentProfile = lastProfile;
+            }
           }
-        }
-        this.isLoading = false;
+          this.isLoading = false;
 
-        // After the profile is loaded, try to connect to the bluetooth
-      }).then(initConnect => {
-        this.connect().then(result1 => {
-          this.isLoading = false;
-        }, result2 => {
-          this.route.navigate(['settings']);
-          this.isLoading = false;
+          // After the profile is loaded, try to connect to the bluetooth
+        })
+        .then((initConnect) => {
+          this.connect().then(
+            (result1) => {
+              this.isLoading = false;
+            },
+            (result2) => {
+              this.route.navigate(['settings']);
+              this.isLoading = false;
+            }
+          );
         });
-      });
     });
   }
 
@@ -134,85 +125,103 @@ export class OBDConnectorService {
    */
   connect(MACAddress?: string): Promise<ConnectResult> {
     return new Promise<ConnectResult>((resolve, reject) => {
-      this.loader.create({
-        message: 'Connecting to bluetooth'
-      }).then(overlay => { // Creates a overlay so the user cant do anything while its connecting
-        this.loading = overlay;
-        this.loading.present();
-        // initialize conditions to false when a connection is attempted
-        this.bluetoothEnabled = false;
-        this.isConnected = false;
-
-        // Check to see if BT is enabled
-        this.blueSerial.isEnabled().then(enabled => {
-          this.bluetoothEnabled = true;
-
-          // Decide which MAC to use
-          this.store.get(StorageKeys.LASTMAC).then(value => {
-            if (MACAddress === undefined) {
-              if (value !== null) {
-                MACAddress = value;
-              } else {
-                this.loading.dismiss();
-                this.toast.notConnectedMessage();
-                reject(ConnectResult.NoGivenOrStoredMAC);
-                return;
-              }
-            }
-
-            // Check to see if the BT is connected already
-            this.blueSerial.isConnected().then(async data => {
-
-              // If it is, disconnect first, then attempt to connect
-              await this.blueSerial.disconnect().then(sucsess => {
-                this.connectToBT(MACAddress).then(returnSuc => {
-                  resolve(returnSuc);
-                  return;
-                }, returnRej => {
-                  reject(returnRej);
-                  return;
-                });
-              }, fail => {
-                this.isConnected = false;
-                this.loading.dismiss();
-                this.toast.notDisconnectedMessage();
-                reject(ConnectResult.DisconnectFail);
-                return;
-              });
-
-            }, data2 => {
-              // If not connected, just connect
-              this.connectToBT(MACAddress).then(returnSuc => {
-                resolve(returnSuc);
-                return;
-              }, returnRej => {
-                reject(returnRej);
-                return;
-              });
-            });
-
-            // Reject if errors occur, or Bluetooth is disabled
-          }, error => {
-            this.isConnected = false;
-            // TODO: show error connect failed or let caller handle that
-            this.loading.dismiss();
-            this.toast.notConnectedMessage();
-            reject(ConnectResult.Failure);
-            return;
-          });
-        }, disabled => {
+      this.loader
+        .create({
+          message: 'Connecting to bluetooth',
+        })
+        .then((overlay) => {
+          // Creates a overlay so the user cant do anything while its connecting
+          this.loading = overlay;
+          this.loading.present();
+          // initialize conditions to false when a connection is attempted
           this.bluetoothEnabled = false;
           this.isConnected = false;
-          // TODO: show error Bluetooth disabled or let caller handle that
-          this.loading.dismiss();
-          this.toast.errorMessage('Please turn on Bluetooth');
-          reject(ConnectResult.BluetoothDisabledFail);
-          return;
+
+          // Check to see if BT is enabled
+          this.blueSerial.isEnabled().then(
+            (enabled) => {
+              this.bluetoothEnabled = true;
+
+              // Decide which MAC to use
+              this.store.get(StorageKeys.LASTMAC).then(
+                (value) => {
+                  if (MACAddress === undefined) {
+                    if (value !== null) {
+                      MACAddress = value;
+                    } else {
+                      this.loading.dismiss();
+                      this.toast.notConnectedMessage();
+                      reject(ConnectResult.NoGivenOrStoredMAC);
+                      return;
+                    }
+                  }
+
+                  // Check to see if the BT is connected already
+                  this.blueSerial.isConnected().then(
+                    async (data) => {
+                      // If it is, disconnect first, then attempt to connect
+                      await this.blueSerial.disconnect().then(
+                        (sucsess) => {
+                          this.connectToBT(MACAddress).then(
+                            (returnSuc) => {
+                              resolve(returnSuc);
+                              return;
+                            },
+                            (returnRej) => {
+                              reject(returnRej);
+                              return;
+                            }
+                          );
+                        },
+                        (fail) => {
+                          this.isConnected = false;
+                          this.loading.dismiss();
+                          this.toast.notDisconnectedMessage();
+                          reject(ConnectResult.DisconnectFail);
+                          return;
+                        }
+                      );
+                    },
+                    (data2) => {
+                      // If not connected, just connect
+                      this.connectToBT(MACAddress).then(
+                        (returnSuc) => {
+                          resolve(returnSuc);
+                          return;
+                        },
+                        (returnRej) => {
+                          reject(returnRej);
+                          return;
+                        }
+                      );
+                    }
+                  );
+
+                  // Reject if errors occur, or Bluetooth is disabled
+                },
+                (error) => {
+                  this.isConnected = false;
+                  // TODO: show error connect failed or let caller handle that
+                  this.loading.dismiss();
+                  this.toast.notConnectedMessage();
+                  reject(ConnectResult.Failure);
+                  return;
+                }
+              );
+            },
+            (disabled) => {
+              this.bluetoothEnabled = false;
+              this.isConnected = false;
+              // TODO: show error Bluetooth disabled or let caller handle that
+              this.loading.dismiss();
+              this.toast.errorMessage('Please turn on Bluetooth');
+              reject(ConnectResult.BluetoothDisabledFail);
+              return;
+            }
+          );
         });
-      });
     });
   }
-
 
   /**
    * Connects to bluetooth and depending on what happens, sets the profile accordingly
@@ -221,162 +230,140 @@ export class OBDConnectorService {
    */
   private connectToBT(MACAddress: string): Promise<ConnectResult> {
     return new Promise<ConnectResult>((resolve, reject) => {
-      this.blueSerial.disconnect().then(disconnected => {
-        // Attempt to connect to the MAC given
-        this.blueSerial.connect(MACAddress).subscribe(success => {
-          this.isConnected = true;
+      this.blueSerial.disconnect().then(
+        (disconnected) => {
+          // Attempt to connect to the MAC given
+          this.blueSerial.connect(MACAddress).subscribe(
+            (success) => {
+              this.isConnected = true;
 
-          // If connected, attempt to get the vin from the car
-          this.callPID(PIDConstants.VIN, PIDType.String).then(vinRaw => {
+              // If connected, attempt to get the vin from the car
+              this.callPID(PIDConstants.VIN, PIDType.String).then(
+                (vinRaw) => {
+                  // Use the vin to either grab a profile from storage or parse a new profile
+                  this.store.get(StorageKeys.CARPROFILES).then((allProfiles) => {
+                    if (allProfiles === null) {
+                      allProfiles = [];
+                    }
+                    allProfiles.forEach((profile) => {
+                      // Set all profiles to not be the last one
+                      profile.lastProfile = false;
+                    });
+                    const profileSearch: CarProfile = allProfiles.find((profile) => profile.vin === vinRaw);
+                    if (profileSearch !== undefined) {
+                      // If is in storage, set the profile accordingly
+                      profileSearch.lastProfile = true;
+                      this.currentProfile = profileSearch;
+                      this.store.set(StorageKeys.LASTMAC, MACAddress);
+                      this.loading.dismiss();
+                      this.toast.connectedMessage();
+                      resolve(ConnectResult.Success);
+                      return;
+                    } else {
+                      // Else use an API request to get the VIN data and create and set a new profile
+                      this.http
+                        .get(
+                          'https://api.carmd.com/v3.0/decode?vin=' + vinRaw,
+                          {},
+                          {
+                            'content-type': 'application/json',
+                            'authorization': 'Basic NTgyMjhmZGUtNGE1Yi00OWZkLThlMzAtNTlhNTU1NzYxYWNi',
+                            'partner-token': 'dc22f0426ac94a48b7779458ab235e54',
+                          }
+                        )
+                        .then(
+                          (dataBack) => {
+                            const parsedVin: VINData = {
+                              year: JSON.parse(dataBack.data).data.year,
+                              make: JSON.parse(dataBack.data).data.make,
+                              model: JSON.parse(dataBack.data).data.model,
+                            };
+                            this.currentProfile = {
+                              vin: vinRaw,
+                              vinData: parsedVin,
+                              nickname: (allProfiles.length + 1).toString(),
+                              fuelEconomy: null,
+                              pastRoutes: null,
+                              maintenanceRecords: null,
+                              lastProfile: true,
+                              pictureSaved: false,
+                              errorCodes: [],
+                            };
 
-            // Use the vin to either grab a profile from storage or parse a new profile
-            this.store.get(StorageKeys.CARPROFILES).then(allProfiles => {
-              if (allProfiles === null) {
-                allProfiles = [];
-              }
-              allProfiles.forEach(profile => { // Set all profiles to not be the last one
-                profile.lastProfile = false;
-              });
-              const profileSearch: CarProfile = allProfiles.find(profile => profile.vin === vinRaw);
-              if (profileSearch !== undefined) { // If is in storage, set the profile accordingly
-                profileSearch.lastProfile = true;
-                this.currentProfile = profileSearch;
-                this.store.set(StorageKeys.LASTMAC, MACAddress);
-                this.loading.dismiss();
-                this.toast.connectedMessage();
-                resolve(ConnectResult.Success);
-                return;
-              } else { // Else use an API request to get the VIN data and create and set a new profile
-                this.http.get('https://api.carmd.com/v3.0/decode?vin=' + vinRaw, {}, {
-                  'content-type': 'application/json',
-                  'authorization': 'Basic NTgyMjhmZGUtNGE1Yi00OWZkLThlMzAtNTlhNTU1NzYxYWNi',
-                  'partner-token': 'dc22f0426ac94a48b7779458ab235e54'
-                }).then(dataBack => {
-                  const parsedVin: VINData = {
-                    year: JSON.parse(dataBack.data).data.year,
-                    make: JSON.parse(dataBack.data).data.make,
-                    model: JSON.parse(dataBack.data).data.model
-                  };
-                  this.currentProfile = {
-                    vin: vinRaw,
-                    vinData: parsedVin,
-                    nickname: (allProfiles.length + 1).toString(),
-                    fuelEconomy: null,
-                    pastRoutes: null,
-                    maintenanceRecords: null,
-                    lastProfile: true,
-                    pictureSaved: false,
-                    errorCodes: []
-                  };
+                            // Store profiles and last mac to be used when needed
+                            allProfiles.push(this.currentProfile);
+                            this.store.set(StorageKeys.CARPROFILES, allProfiles);
+                            this.store.set(StorageKeys.LASTMAC, MACAddress);
 
-                  // Store profiles and last mac to be used when needed
-                  allProfiles.push(this.currentProfile);
-                  this.store.set(StorageKeys.CARPROFILES, allProfiles);
-                  this.store.set(StorageKeys.LASTMAC, MACAddress);
-
-                  // Return that we connected and dismiss the loading screen
-                  this.loading.dismiss();
-                  this.toast.connectedMessage();
-                  resolve(ConnectResult.Success);
-                  return;
-
-                }, webError => {
-                  // TODO: Have this still save the vin, and get the data later in vehicle info
-                  this.isConnected = false;
-                  this.loading.dismiss();
-                  this.toast.notConnectedMessage();
-                  reject(ConnectResult.Failure);
-                  return;
-                });
-              }
-            });
-          }, reject3 => {
-            // If you cant grab the vin from the car, then create a dummy vin and tell the user to input the vin manually on the info page
-            this.store.get(StorageKeys.CARPROFILES).then(allProfiles => {
-              if (allProfiles === null) {
-                allProfiles = [];
-              }
-              allProfiles.forEach(profile => {
-                profile.lastProfile = false;
-              });
-              this.currentProfile = {
-                vin: 'CantGetVin' + (allProfiles.length + 1).toString(),
-                vinData: { year: '', make: '', model: '' },
-                nickname: (allProfiles.length + 1).toString(),
-                fuelEconomy: null,
-                pastRoutes: null,
-                maintenanceRecords: null,
-                lastProfile: true,
-                pictureSaved: false,
-                errorCodes: []
-              };
-              this.store.set(StorageKeys.LASTMAC, MACAddress);
+                            // Return that we connected and dismiss the loading screen
+                            this.loading.dismiss();
+                            this.toast.connectedMessage();
+                            resolve(ConnectResult.Success);
+                            return;
+                          },
+                          (webError) => {
+                            // TODO: Have this still save the vin, and get the data later in vehicle info
+                            this.isConnected = false;
+                            this.loading.dismiss();
+                            this.toast.notConnectedMessage();
+                            reject(ConnectResult.Failure);
+                            return;
+                          }
+                        );
+                    }
+                  });
+                },
+                (reject3) => {
+                  // If you cant grab the vin from the car, then create a dummy vin
+                  // and tell the user to input the vin manually on the info page
+                  this.store.get(StorageKeys.CARPROFILES).then((allProfiles) => {
+                    if (allProfiles === null) {
+                      allProfiles = [];
+                    }
+                    allProfiles.forEach((profile) => {
+                      profile.lastProfile = false;
+                    });
+                    this.currentProfile = {
+                      vin: 'CantGetVin' + (allProfiles.length + 1).toString(),
+                      vinData: { year: '', make: '', model: '' },
+                      nickname: (allProfiles.length + 1).toString(),
+                      fuelEconomy: null,
+                      pastRoutes: null,
+                      maintenanceRecords: null,
+                      lastProfile: true,
+                      pictureSaved: false,
+                      errorCodes: [],
+                    };
+                    this.store.set(StorageKeys.LASTMAC, MACAddress);
+                    this.loading.dismiss();
+                    this.toast.errorMessage('Please input your vin on the Vehicle info page');
+                    resolve(ConnectResult.Success);
+                    return;
+                  });
+                }
+              );
+            },
+            (reject1) => {
+              // If you can't connect, reject with a failure status
+              this.isConnected = false;
               this.loading.dismiss();
-              this.toast.errorMessage('Please input your vin on the Vehicle info page');
-              resolve(ConnectResult.Success);
+              this.toast.notConnectedMessage();
+              reject(ConnectResult.Failure);
               return;
-            });
-          });
-
-        }, reject1 => {
-          // If you can't connect, reject with a failure status
+            }
+          );
+        },
+        (notDis) => {
+          // If you can't disconnect, reject with a failure status
           this.isConnected = false;
           this.loading.dismiss();
           this.toast.notConnectedMessage();
           reject(ConnectResult.Failure);
           return;
-        });
-      }, notDis => {
-        // If you can't disconnect, reject with a failure status
-        this.isConnected = false;
-        this.loading.dismiss();
-        this.toast.notConnectedMessage();
-        reject(ConnectResult.Failure);
-        return;
-      });
+        }
+      );
     });
   }
-
-  /**
-   * Changes current name of the profile and saves it
-   * @param newName - New name for profile
-   */
-  changeCurrentName(newName: string): void {
-    this.currentProfile.nickname = newName;
-    this.saveProfiles();
-  }
-
-  /**
-   * Saves profiles and update the current loaded one
-   * @returns profiles
-   */
-  public saveProfiles(): Promise<boolean> {
-    return new Promise<boolean>((resolve, reject) => {
-      this.store.get(StorageKeys.CARPROFILES).then(allProfiles => {
-        const splicedProfile = allProfiles.splice(allProfiles.findIndex(profile => profile.vin === this.currentProfile.vin), 1);
-        allProfiles.push(this.currentProfile);
-        this.store.set(StorageKeys.CARPROFILES, allProfiles);
-      });
-    });
-  }
-
-  /**
-   * TODO: Change how this works so it looks for the vin first
-   * Saves profiles and change the vin on the current profile
-   * @param newVin - New vin to be updated
-   * @returns profiles change vin
-   */
-  public saveProfilesChangeVin(newVin: string): Promise<boolean> {
-    return new Promise<boolean>((resolve, reject) => {
-      this.store.get(StorageKeys.CARPROFILES).then(allProfiles => {
-        const splicedProfile = allProfiles.splice(allProfiles.findIndex(profile => profile.vin === this.currentProfile.vin), 1);
-        this.currentProfile.vin = newVin;
-        allProfiles.push(this.currentProfile);
-        this.store.set(StorageKeys.CARPROFILES, allProfiles);
-      });
-    });
-  }
-
 
   /**
    * Gets device list
@@ -394,18 +381,14 @@ export class OBDConnectorService {
   getPaired(): Promise<string> {
     return new Promise((resolve) => {
       this.devices = [];
-      this.blueSerial.list().then(
-        deviceList => {
-          deviceList.forEach(device => {
-            // tslint:disable-next-line: object-literal-key-quotes tslint:disable-next-line: quotemark
-            this.devices.push({ "name": device.name, "id": device.id, "rssi": device.class });
-          });
-          resolve('Ok');
-        }
-      );
+      this.blueSerial.list().then((deviceList) => {
+        deviceList.forEach((device) => {
+          this.devices.push({ name: device.name, id: device.id, rssi: device.class });
+        });
+        resolve('Ok');
+      });
     });
   }
-
 
   /**
    * Returns if phone is connected.  For use outside of class for data hiding
@@ -414,8 +397,12 @@ export class OBDConnectorService {
   isConnectedFun(): Promise<boolean> {
     return new Promise((resolve) => {
       this.blueSerial.isConnected().then(
-        is => { resolve(true); },
-        not => { resolve(false); }
+        (is) => {
+          resolve(true);
+        },
+        (not) => {
+          resolve(false);
+        }
       );
     });
   }
@@ -425,59 +412,67 @@ export class OBDConnectorService {
    * @param callData - Data to be written to the OBD
    * @param type - What it should be parsed as
    * @returns Promise with the response or rejection
-   * TODO: Manage duplicates that also are more than one message long or set the OBD device to only listen to the main responder
    */
   writeThenRead(callData: string, type: PIDType): Promise<string> {
     return new Promise((promSuccess, promReject) => {
-      this.isConnectedFun().then(isConnect => {
+      this.isConnectedFun().then((isConnect) => {
+
+        // If the OBD is connected write the data to it
         if (isConnect) {
-          this.blueSerial.write(callData).then(success => {
-            this.blueSerial.subscribe('\r\r').subscribe(data => {
-              if (data !== '') {
-                console.log(data);
-                if (data.includes('NO DATA')) {
-                  promReject('NO DATA');
-                } else if (data.includes('OK')) {
-                  promSuccess('OK');
-                } else if (data.includes('?')) {
-                  this.writeThenRead(callData, type).then(yes => {
-                    promSuccess(yes);
-                  }, no => {
-                    promReject(no);
-                  });
-                } else {
-                  if (type !== PIDType.errors) {
-                    const hexCall = '4' + callData[1] + ' ' + callData.slice(2, 4) + ' ';
-                    if (data.includes(hexCall)) {
-                      data = data.slice(data.indexOf(hexCall) + 6);
-                      if (data.includes(hexCall)) {
-                        data = data.slice(0, data.indexOf(hexCall));
+          this.blueSerial.write(callData).then(
+            (success) => {
+
+              // If the write is successful, then wait for it to return something ending in
+              // '\r\r' which is always at the end of the responses.
+              this.blueSerial.subscribe('\r\r').subscribe((data) => {
+
+                if (data !== '') {
+                  if (data.includes('NO DATA')) { // The car has NO DATA for the pid
+                    promReject('NO DATA');
+                  } else if (data.includes('OK')) { // Usual response to Can Bus Settings codes
+                    promSuccess('OK');
+                  } else if (data.includes('?')) { // Bad call or response so run the call again
+                    this.writeThenRead(callData, type).then(
+                      (yes) => {
+                        promSuccess(yes);
+                      },
+                      (no) => {
+                        promReject(no);
                       }
-                      // console.log('OBDMEDebug: Connector: return: ' + data);
-                      promSuccess(data);
-                    }
+                    );
+
                   } else {
-                    const hexCall = '4' + callData[1];
-                    if (data.includes(hexCall)) {
-                      data = data.slice(data.indexOf(hexCall) + 6);
+                    // Else there is actual data so parse it and return it
+                    if (type !== PIDType.errors) {
+                      const hexCall = '4' + callData[1] + ' ' + callData.slice(2, 4) + ' ';
                       if (data.includes(hexCall)) {
-                        data = data.slice(0, data.indexOf(hexCall));
+                        data = data.slice(data.indexOf(hexCall) + 6);
+                        if (data.includes(hexCall)) {
+                          data = data.slice(0, data.indexOf(hexCall));
+                        }
+                        promSuccess(data);
                       }
-                      // console.log('OBDMEDebug: Connector: return: ' + data);
-                      promSuccess(data);
+                    } else {
+                      const hexCall = '4' + callData[1];
+                      if (data.includes(hexCall)) {
+                        data = data.slice(data.indexOf(hexCall) + 6);
+                        if (data.includes(hexCall)) {
+                          data = data.slice(0, data.indexOf(hexCall));
+                        }
+                        promSuccess(data);
+                      }
                     }
                   }
-
                 }
-              }
-            });
-
-          }, failure => {
-            this.toast.errorMessage('Couldnt write data!');
-            promReject('Couldnt write');
-          });
+              });
+            },
+            (failure) => {
+              this.toast.errorMessage('Couldnt write data!');
+              promReject('Couldnt write');
+            }
+          );
         } else {
-          // console.log('OBDMEDebug: Connector: not connected');
+          console.log('OBDMEDebug: Connector: not connected');
           this.toast.notConnectedMessage();
           promReject('Not connected to bluetooth');
         }
@@ -485,54 +480,64 @@ export class OBDConnectorService {
     });
   }
 
-  // !!TODO: Needs to deal with nodata
-  // Create own car call type that is the only one that can respond be reponded to by no data/ok
+  /**
+   * Public function used to call pids via the OBD.  It will call the pid, read the data, and then parse
+   * the data.  To add pids you may also need to add a PIDType and edit parseData to support that type
+   * @param pid - An OBD Pid that will be used to call data from the OBD
+   * @param type - A PIDType that will be used to parse the data gotten back
+   * @returns The parsed data from the pid if resolved, or an error or no data if a failure
+   */
   callPID(pid: string, type: PIDType): Promise<string> {
     return new Promise<string>((resolve, reject) => {
       // TODO: Get the supported pids to work.  Currently parsing seems to work fine, just doesnt check for them correctly
       // if (this.pidSupported(parseInt(pid.charAt(1), 10), parseInt(pid.slice(2, 4), 10))) {
-      this.writeThenRead(pid, type).then(data => {
-        // console.log('OBDMEDebug: callPid: dataBack:' + data + 'ehhf');
-        if (!data.includes('NO DATA')) {
-          // console.log('OBDMEDebug: callPid: parsedData: ' + JSON.stringify(this.parseData(data, type)));
-          resolve(this.parseData(data, type));
-        } else {
-          // console.log('OBDMEDebug: callPid: RejectNoData');
-          reject('NO DATA');
+      this.writeThenRead(pid, type).then(
+        (data) => {
+          if (!data.includes('NO DATA')) {
+            resolve(this.parseData(data, type));
+          } else {
+            reject('NO DATA');
+          }
+        },
+        (error) => {
+          reject(error);
         }
-
-      }, error => {
-        reject(error);
-      });
+      );
       // } else {
       //   reject('PID not supported');
       // }
     });
   }
 
-  //private parseData(data: string, type: PIDType): Promise<string> {
+
+  /**
+   * Parses data based on the PID type provided
+   * @param data - Hex data gotten from writeThenRead function
+   * @param type - PIDType to parse data to
+   * @returns parsed data
+   */
   parseData(data: string, type: PIDType): Promise<string> {
     return new Promise<string>((resolve) => {
-      // console.log('OBDMEDebug: parseData: data: ' + data);
+      // If there is no data, then return that
       if (data.length === 1) {
         resolve('');
         return;
       }
+
+      // If there are separate messages, then parse them into one
       const split = data.split('\r');
-      // console.log(split);
       split.forEach((section, index) => {
         if (section.indexOf(':') === 1) {
           split[index] = section.slice(3);
         }
       });
-      // console.log('OBDMEDebug: parseData: split: ' + split);
       const hexArray = split.join('').trim().split(' ');
-      console.log(hexArray);
       const finalArray = [];
       let nextChar: string;
       let currentPlace = 0;
       let nextError = '';
 
+      // For each hex pair, based in its type, add something different to the final array
       hexArray.forEach((splitData, index) => {
         if (type !== PIDType.errors) {
           switch (type) {
@@ -541,7 +546,7 @@ export class OBDConnectorService {
               break;
             }
             case PIDType.Binary: {
-              nextChar = (parseInt(splitData, 16).toString(2)).padStart(8, '0');
+              nextChar = parseInt(splitData, 16).toString(2).padStart(8, '0');
               break;
             }
             case PIDType.Number: {
@@ -553,15 +558,15 @@ export class OBDConnectorService {
               break;
             }
           }
-          // console.log(nextChar);
           if (nextChar === '\u0001') {
             nextChar = '';
           }
           finalArray[index] = nextChar;
         } else {
+          // If its an error, parse the first letter into binary and a number, and the rest into strings
           switch (currentPlace) {
             case 0: {
-              const binary = (parseInt(splitData, 16).toString(2)).padStart(8, '0');
+              const binary = parseInt(splitData, 16).toString(2).padStart(8, '0');
               switch (binary.substr(0, 2)) {
                 case '00': {
                   nextError += 'p';
@@ -583,85 +588,104 @@ export class OBDConnectorService {
               nextError += parseInt(binary.substr(2, 2), 2).toString();
               nextError += splitData.substr(1, 1);
               currentPlace = 1;
-              // console.log('OBDMEDebug: parseData: halfError: ' + nextError);
               break;
-            } case 1: {
+            }
+            case 1: {
               nextError += splitData;
               finalArray.push(nextError);
-              // console.log('OBDMEDebug: parseData: nextError: ' + nextError);
               nextError = '';
               currentPlace = 0;
               break;
             }
           }
         }
-
       });
 
-      // console.log('OBDMEDebug: parseData: finalArray: ' + JSON.stringify(finalArray));
+      // If mass air flow, do the equation, else, join the final array and pass that back
       if (PIDType.MAF === type) {
-        resolve((((256 * parseFloat(finalArray[0])) + parseFloat(finalArray[1])) / 100).toString());
+        resolve(((256 * parseFloat(finalArray[0]) + parseFloat(finalArray[1])) / 100).toString());
       } else if (type === PIDType.errors) {
         resolve(finalArray.join(','));
       } else {
         resolve(finalArray.join(''));
       }
-
     });
   }
 
+  /**
+   * TODO: Make this work
+   * In theory how supported pids should work.  Needs testing
+   * @returns supported pids
+   */
   private getSupportedPIDs(): Promise<any> {
     return new Promise<any>((resolve, reject) => {
       let PIDs1and2String: string;
 
-      this.callPID(PIDConstants.Group1SupportedPIDs1, PIDType.Binary).then(group1Data1 => {
-        PIDs1and2String += group1Data1;
-        if (PIDs1and2String.charAt(PIDs1and2String.length - 1) === '1') {
-          this.callPID(PIDConstants.Group1SupportedPIDs2, PIDType.Binary).then(group1Data2 => {
-            PIDs1and2String += group1Data2;
+      this.callPID(PIDConstants.Group1SupportedPIDs1, PIDType.Binary)
+        .then(
+          (group1Data1) => {
+            PIDs1and2String += group1Data1;
             if (PIDs1and2String.charAt(PIDs1and2String.length - 1) === '1') {
-              this.callPID(PIDConstants.Group1SupportedPIDs3, PIDType.Binary).then(group1Data3 => {
-                PIDs1and2String += group1Data3;
-                if (PIDs1and2String.charAt(PIDs1and2String.length - 1) === '1') {
-                  this.callPID(PIDConstants.Group1SupportedPIDs4, PIDType.Binary).then(group1Data4 => {
-                    PIDs1and2String += group1Data4;
-                  }, group1Error4 => {
-                    // TODO: figure out what to do when it fails
-                    reject(group1Error4);
-                  });
+              this.callPID(PIDConstants.Group1SupportedPIDs2, PIDType.Binary).then(
+                (group1Data2) => {
+                  PIDs1and2String += group1Data2;
+                  if (PIDs1and2String.charAt(PIDs1and2String.length - 1) === '1') {
+                    this.callPID(PIDConstants.Group1SupportedPIDs3, PIDType.Binary).then(
+                      (group1Data3) => {
+                        PIDs1and2String += group1Data3;
+                        if (PIDs1and2String.charAt(PIDs1and2String.length - 1) === '1') {
+                          this.callPID(PIDConstants.Group1SupportedPIDs4, PIDType.Binary).then(
+                            (group1Data4) => {
+                              PIDs1and2String += group1Data4;
+                            },
+                            (group1Error4) => {
+                              reject(group1Error4);
+                            }
+                          );
+                        }
+                      },
+                      (group1Error3) => {
+                        reject(group1Error3);
+                      }
+                    );
+                  }
+                },
+                (group1Error2) => {
+                  reject(group1Error2);
                 }
-              }, group1Error3 => {
-                // TODO: figure out what to do when it fails
-                reject(group1Error3);
-              });
+              );
             }
-          }, group1Error2 => {
-            // TODO: figure out what to do when it fails
-            reject(group1Error2);
-          });
-        }
-      }, group1Error1 => {
-        // TODO: figure out what to do when it fails
-        reject(group1Error1);
-      }).then(ehhhhhh => {
-        for (let c = 0; c < PIDs1and2String.length; c++) {
-          this.service1and2SupportedPIDs[c] = (PIDs1and2String[c] === '1');
-        }
-
-        this.callPID(PIDConstants.Group9SupportedPIDs, PIDType.Binary).then(group9Data => {
-          for (let c = 0; c < group9Data.length; c++) {
-            this.service9SupportedPIDs[c] = (group9Data[c] === '1');
+          },
+          (group1Error1) => {
+            reject(group1Error1);
           }
-          resolve('success');
+        )
+        .then((ehhhhhh) => {
+          for (let c = 0; c < PIDs1and2String.length; c++) {
+            this.service1and2SupportedPIDs[c] = PIDs1and2String[c] === '1';
+          }
 
-        }, group9Error => {
-          // TODO: figure out what to do when it fails
-          reject(group9Error);
+          this.callPID(PIDConstants.Group9SupportedPIDs, PIDType.Binary).then(
+            (group9Data) => {
+              for (let c = 0; c < group9Data.length; c++) {
+                this.service9SupportedPIDs[c] = group9Data[c] === '1';
+              }
+              resolve('success');
+            },
+            (group9Error) => {
+              reject(group9Error);
+            }
+          );
         });
-      });
     });
   }
 
+  /**
+   * Checks to see if the pid is supported
+   * @param group - Group of the pid
+   * @param call - Number in that group that the pid is
+   * @returns true if supported
+   */
   private pidSupported(group: number, call: number): boolean {
     if (group === 1) {
       return this.service1and2SupportedPIDs[call];
@@ -674,72 +698,48 @@ export class OBDConnectorService {
     }
   }
 
-  // Format data group code ammount of messages recieved \r
-  // Parse data idk
-  // Parse to string
-  // parse to number
-  // parse bitwise
-
-
   /**
-   * Parses OBD data to just the useful hex
-   * @param data - Raw data gotten from OBD
-   * @param type - What were supposed to be parsing it into
-   * @returns The parsed data
+   * Changes current name of the profile and saves it
+   * @param newName - New name for profile
    */
-  parseHex(data: string, type: string): string {
-    const split = data.split('\r');
-    split.forEach((section, index) => {
-      if (section.indexOf(':') === 1) {
-        split[index] = section.slice(3);
-      }
-    });
-    const hexArray = split.join('').trim().split(' ');
-    if (type === 'string') {
-      return this.hexToString(hexArray);
-    } else if (type === 'binary') {
-      return this.hexToBinary(hexArray);
-    } else if (type === 'number') {
-      return this.hexToDecimal(hexArray);
-    }
+  changeCurrentName(newName: string): void {
+    this.currentProfile.nickname = newName;
+    this.saveProfiles();
   }
 
   /**
-   * Turns hex to string
-   * @param hexArray - Array of hex codes
-   * @returns Decoded string
+   * Saves profiles and update the current loaded one
+   * @returns profiles
    */
-  hexToString(hexArray: string[]): string {
-    const finalArray = [];
-    hexArray.forEach((data, index) => {
-      finalArray[index] = String.fromCharCode(parseInt(data, 16));
-      if (finalArray[index] === '\u0001') {
-        finalArray[index] = '';
-      }
+  public saveProfiles(): Promise<boolean> {
+    return new Promise<boolean>((resolve, reject) => {
+      this.store.get(StorageKeys.CARPROFILES).then((allProfiles) => {
+        const splicedProfile = allProfiles.splice(
+          allProfiles.findIndex((profile) => profile.vin === this.currentProfile.vin),
+          1
+        );
+        allProfiles.push(this.currentProfile);
+        this.store.set(StorageKeys.CARPROFILES, allProfiles);
+      });
     });
-    return finalArray.join('');
   }
 
-  hexToBinary(hexArray: string[]): string {
-    const finalArray = [];
-    hexArray.forEach((data, index) => {
-      finalArray[index] = (parseInt(data, 16).toString(2)).padStart(8, '0');
-      if (finalArray[index] === '\u0001') {
-        finalArray[index] = '';
-      }
+  /**
+   * Saves profiles and change the vin on the current profile
+   * @param newVin - New vin to be updated
+   * @returns profiles change vin
+   */
+  public saveProfilesChangeVin(newVin: string): Promise<boolean> {
+    return new Promise<boolean>((resolve, reject) => {
+      this.store.get(StorageKeys.CARPROFILES).then((allProfiles) => {
+        const splicedProfile = allProfiles.splice(
+          allProfiles.findIndex((profile) => profile.vin === this.currentProfile.vin),
+          1
+        );
+        this.currentProfile.vin = newVin;
+        allProfiles.push(this.currentProfile);
+        this.store.set(StorageKeys.CARPROFILES, allProfiles);
+      });
     });
-    return finalArray.join('');
   }
-
-  hexToDecimal(hexArray: string[]): string {
-    const finalArray = [];
-    hexArray.forEach((data, index) => {
-      finalArray[index] = parseInt(data, 16).toString();
-      if (finalArray[index] === '\u0001') {
-        finalArray[index] = '';
-      }
-    });
-    return finalArray.join('');
-  }
-
 }
