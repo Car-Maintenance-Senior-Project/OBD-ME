@@ -4,6 +4,7 @@ import { Device } from '../interfaces/device-struct';
 
 import { DarkThemeSwitcherService } from '../services/dark-theme-switcher.service';
 import { OBDConnectorService } from '../services/obd-connector.service';
+import { Storage } from '@ionic/storage';
 
 @Component({
   selector: 'app-settings',
@@ -17,7 +18,7 @@ export class SettingsPage implements OnInit {
   private devices: Device[];
   private chosenMac: string;
 
-  constructor(private darkThemeSwitcher: DarkThemeSwitcherService, private OBD: OBDConnectorService) { }
+  constructor(private darkThemeSwitcher: DarkThemeSwitcherService, private OBD: OBDConnectorService, private store: Storage) { }
 
   /**
    * on init - checks dark mode, bluetooth status, and get device list
@@ -46,6 +47,10 @@ export class SettingsPage implements OnInit {
         }
       );
     }
+  }
+
+  deleteAll() {
+    this.store.clear();
   }
 
   // enables dark mode if disabled, or disables it if enabled

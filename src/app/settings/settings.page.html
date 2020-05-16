@@ -22,4 +22,7 @@
         <ion-label>Dark Theme</ion-label>
         <ion-toggle [(ngModel)]="darkModeChecked" (ionChange)="toggleDarkTheme()"></ion-toggle>
     </ion-item>
+    <ion-item>
+        <ion-button (click)="deleteAll()">Delete Saved Data</ion-button>
+    </ion-item>
 </ion-content>

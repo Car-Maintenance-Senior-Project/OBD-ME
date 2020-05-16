@@ -61,7 +61,13 @@ export class FuelEconomyService {
 
           const airMass = maf * time; // g/s * sec -> just grams of air
 
-          const fuelGals = airMass / this.AIR_FUEL_RATIO / this.GASOLINE_DENSITY / this.GRAMS_PER_POUND;
+          let fuelGals = airMass / this.AIR_FUEL_RATIO / this.GASOLINE_DENSITY / this.GRAMS_PER_POUND;
+
+          // Make sure you aren't div by 0
+          if (fuelGals === 0) {
+            fuelGals = 0.1;
+          }
+
           const currentMPG = distTraveled / fuelGals;
 
           this.updateAverage(currentMPG);

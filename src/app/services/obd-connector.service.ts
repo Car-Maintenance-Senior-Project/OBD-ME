@@ -105,6 +105,7 @@ export class OBDConnectorService {
           this.connect().then(
             (result1) => {
               this.isLoading = false;
+              this.route.navigate(['settings']);
             },
             (result2) => {
               this.route.navigate(['settings']);
@@ -617,26 +618,32 @@ export class OBDConnectorService {
    * In theory how supported pids should work.  Needs testing
    * @returns supported pids
    */
-  private getSupportedPIDs(): Promise<any> {
+  getSupportedPIDs(): Promise<any> {
     return new Promise<any>((resolve, reject) => {
-      let PIDs1and2String: string;
+      let PIDs1and2String = '';
 
       this.callPID(PIDConstants.Group1SupportedPIDs1, PIDType.Binary)
         .then(
           (group1Data1) => {
             PIDs1and2String += group1Data1;
+            console.log('Supported start: ' + PIDs1and2String + ': ' + group1Data1);
+            console.log('Supported start: ' + (PIDs1and2String.charAt(PIDs1and2String.length - 1) === '1'));
             if (PIDs1and2String.charAt(PIDs1and2String.length - 1) === '1') {
+              console.log('Supported start');
               this.callPID(PIDConstants.Group1SupportedPIDs2, PIDType.Binary).then(
                 (group1Data2) => {
                   PIDs1and2String += group1Data2;
+                  console.log('Supported start: ' + PIDs1and2String + ': ' + group1Data2);
                   if (PIDs1and2String.charAt(PIDs1and2String.length - 1) === '1') {
                     this.callPID(PIDConstants.Group1SupportedPIDs3, PIDType.Binary).then(
                       (group1Data3) => {
                         PIDs1and2String += group1Data3;
+                        console.log('Supported start: ' + PIDs1and2String + ': ' + group1Data3);
                         if (PIDs1and2String.charAt(PIDs1and2String.length - 1) === '1') {
                           this.callPID(PIDConstants.Group1SupportedPIDs4, PIDType.Binary).then(
                             (group1Data4) => {
                               PIDs1and2String += group1Data4;
+                              console.log('Supported start: ' + PIDs1and2String + ': ' + group1Data4);
                             },
                             (group1Error4) => {
                               reject(group1Error4);
@@ -661,12 +668,14 @@ export class OBDConnectorService {
           }
         )
         .then((ehhhhhh) => {
+          console.log('Supported: ' + PIDs1and2String);
           for (let c = 0; c < PIDs1and2String.length; c++) {
             this.service1and2SupportedPIDs[c] = PIDs1and2String[c] === '1';
           }
 
           this.callPID(PIDConstants.Group9SupportedPIDs, PIDType.Binary).then(
             (group9Data) => {
+              console.log('Supported: ' + group9Data);
               for (let c = 0; c < group9Data.length; c++) {
                 this.service9SupportedPIDs[c] = group9Data[c] === '1';
               }
@@ -714,11 +723,10 @@ export class OBDConnectorService {
   public saveProfiles(): Promise<boolean> {
     return new Promise<boolean>((resolve, reject) => {
       this.store.get(StorageKeys.CARPROFILES).then((allProfiles) => {
-        const splicedProfile = allProfiles.splice(
+        allProfiles.splice(
           allProfiles.findIndex((profile) => profile.vin === this.currentProfile.vin),
-          1
+          1, this.currentProfile
         );
-        allProfiles.push(this.currentProfile);
         this.store.set(StorageKeys.CARPROFILES, allProfiles);
       });
     });

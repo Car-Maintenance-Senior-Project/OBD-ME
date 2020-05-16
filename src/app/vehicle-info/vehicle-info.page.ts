@@ -42,6 +42,13 @@ export class VehicleInfoPage implements OnInit {
       this.make = this.obd.currentProfile.vinData.make;
       this.vin = this.obd.currentProfile.vin;
       this.vinMock = this.obd.currentProfile.vin;
+    } else {
+      this.name = '';
+      this.year = '';
+      this.model = '';
+      this.make = '';
+      this.vin = '';
+      this.vinMock = '';
     }
   }
 
@@ -64,6 +71,7 @@ export class VehicleInfoPage implements OnInit {
    * TODO: If the vin matches a saved profile, switch to that instead and make it the active profile
    */
   changeVin() {
+    this.vin = this.vin.trim();
     this.obd.checkAndChangeVin(this.vin).then(isChanged => {
       if (!isChanged) {
         this.http
