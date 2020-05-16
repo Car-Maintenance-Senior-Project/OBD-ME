@@ -64,34 +64,49 @@ export class VehicleInfoPage implements OnInit {
    * TODO: If the vin matches a saved profile, switch to that instead and make it the active profile
    */
   changeVin() {
-    this.http
-      .get(
-        'https://api.carmd.com/v3.0/decode?vin=' + this.vin,
-        {},
-        {
-          'content-type': 'application/json',
-          'authorization': 'Basic NTgyMjhmZGUtNGE1Yi00OWZkLThlMzAtNTlhNTU1NzYxYWNi',
-          'partner-token': 'dc22f0426ac94a48b7779458ab235e54',
-        }
-      )
-      .then(
-        (dataBack) => {
-          console.log('OBDMEDebug: connectProcess: dataBack: ' + JSON.stringify(dataBack));
-          const parsedVin: VINData = {
-            year: JSON.parse(dataBack.data).data.year,
-            make: JSON.parse(dataBack.data).data.make,
-            model: JSON.parse(dataBack.data).data.model,
-          };
-          console.log('OBDMEDebug: connectProcess: Parsed Vin: ' + JSON.stringify(parsedVin));
-          this.obd.saveProfilesChangeVin(this.vin);
-          this.obd.currentProfile.vinData = parsedVin;
-          this.obd.saveProfiles();
-          return;
-        },
-        (webError) => {
-          this.toast.errorMessage('Invalid Vin');
-          return;
-        }
-      );
+    this.obd.checkAndChangeVin(this.vin).then(isChanged => {
+      if (!isChanged) {
+        this.http
+          .get(
+            'https://api.carmd.com/v3.0/decode?vin=' + this.vin,
+            {},
+            {
+              'content-type': 'application/json',
+              'authorization': 'Basic NTgyMjhmZGUtNGE1Yi00OWZkLThlMzAtNTlhNTU1NzYxYWNi',
+              'partner-token': 'dc22f0426ac94a48b7779458ab235e54',
+            }
+          )
+          .then(
+            (dataBack) => {
+              console.log('OBDMEDebug: connectProcess: dataBack: ' + JSON.stringify(dataBack));
+              const parsedVin: VINData = {
+                year: JSON.parse(dataBack.data).data.year,
+                make: JSON.parse(dataBack.data).data.make,
+                model: JSON.parse(dataBack.data).data.model,
+              };
+              console.log('OBDMEDebug: connectProcess: Parsed Vin: ' + JSON.stringify(parsedVin));
+              this.obd.saveProfilesChangeVin(this.vin);
+              this.obd.currentProfile.vinData = parsedVin;
+              this.obd.saveProfiles();
+              this.name = this.obd.currentProfile.nickname;
+              this.year = this.obd.currentProfile.vinData.year;
+              this.model = this.obd.currentProfile.vinData.model;
+              this.make = this.obd.currentProfile.vinData.make;
+              this.vinMock = this.obd.currentProfile.vin;
+              return;
+            },
+            (webError) => {
+              this.toast.errorMessage('Invalid Vin');
+              return;
+            }
+          );
+      } else {
+        this.name = this.obd.currentProfile.nickname;
+        this.year = this.obd.currentProfile.vinData.year;
+        this.model = this.obd.currentProfile.vinData.model;
+        this.make = this.obd.currentProfile.vinData.make;
+        this.vinMock = this.obd.currentProfile.vin;
+      }
+    });
   }
 }

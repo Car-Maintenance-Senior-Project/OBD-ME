@@ -732,13 +732,42 @@ export class OBDConnectorService {
   public saveProfilesChangeVin(newVin: string): Promise<boolean> {
     return new Promise<boolean>((resolve, reject) => {
       this.store.get(StorageKeys.CARPROFILES).then((allProfiles) => {
-        const splicedProfile = allProfiles.splice(
-          allProfiles.findIndex((profile) => profile.vin === this.currentProfile.vin),
-          1
-        );
+        const oldVin = this.currentProfile.vin;
         this.currentProfile.vin = newVin;
-        allProfiles.push(this.currentProfile);
+        allProfiles.splice(
+          allProfiles.findIndex((profile) => profile.vin === oldVin),
+          1, this.currentProfile
+        );
         this.store.set(StorageKeys.CARPROFILES, allProfiles);
+      });
+    });
+  }
+
+  /**
+   * Checks if there is a saved profile with the correct vin and change vin to it if there is
+   * @param vinToCheck - The vin you are looking to check
+   * @returns A boolean if the vin is found and loaded
+   */
+  checkAndChangeVin(vinToCheck: string): Promise<boolean> {
+    return new Promise<boolean>((resolve) => {
+      this.store.get(StorageKeys.CARPROFILES).then(allProfiles => {
+        const gottenProfile: CarProfile = allProfiles.find(profile => profile.vin === vinToCheck);
+        if (gottenProfile === undefined) {
+          resolve(false);
+        } else {
+          allProfiles.splice(
+            allProfiles.findIndex((profile) => profile.vin === this.currentProfile.vin),
+            1
+          );
+          allProfiles.forEach((profile) => {
+            // Set all profiles to not be the last one
+            profile.lastProfile = false;
+          });
+          gottenProfile.lastProfile = true;
+          this.currentProfile = gottenProfile;
+          this.store.set(StorageKeys.CARPROFILES, allProfiles);
+          resolve(true);
+        }
       });
     });
   }
