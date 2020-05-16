@@ -1,3 +1,4 @@
+// various data types the OBD returns; used in OBD Connector service
 export enum PIDType {
     String = 0,
     Binary = 1,

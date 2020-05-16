@@ -46,10 +46,10 @@ export class AppComponent {
     private statusBar: StatusBar,
     private OBD: OBDConnectorService,
     private darkTheme: DarkThemeSwitcherService,
-    private store: Storage
   ) { }
 
   ngOnInit() {
+    // find out which page is currently selected - accounts for opening the app to a page other than 'home'
     const path = window.location.pathname;
     if (path !== undefined) {
       this.selectedIndex = this.appPages.findIndex(page => page.url === path);
