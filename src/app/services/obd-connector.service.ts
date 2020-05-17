@@ -53,10 +53,10 @@ export class OBDConnectorService {
   /**
    * To be run when the app is started.
    * Connects to the bluetooth device if one is connected, and either grabs the last connected
-   * profile, the profile for the care that is connected, or creates a default profile.
-   * @returns Promise<boolean> when it finishes
+   * profile, or the profile for the car that is connected, or creates a default profile.
+   * @returns Nothing, doesn't actually return anything
    */
-  onStartUp(): Promise<boolean> {
+  public onStartUp(): Promise<boolean> {
     return new Promise((resolve, reject) => {
       // Get all the paired BT devices
       this.getPaired();
@@ -119,12 +119,12 @@ export class OBDConnectorService {
   /**
    * Attempts to connect via bluetooth to the OBD.  Uses the last connect MAC if none
    * is given when its called.
-   * TODO: Run usefull AT codes
+   * TODO: Run useful AT codes
    * TODO: Get the PIDs that are supported
    * @param [MacAddress] - Optional mac address of the OBD to connect to, defaults to the last used MAC
    * @returns Promise of the connection result of the BT
    */
-  connect(MACAddress?: string): Promise<ConnectResult> {
+  public connect(MACAddress?: string): Promise<ConnectResult> {
     return new Promise<ConnectResult>((resolve, reject) => {
       this.loader
         .create({
@@ -371,7 +371,7 @@ export class OBDConnectorService {
    * getPaired() to be run first
    * @returns device list - list of devices paired to device
    */
-  getDeviceList(): Device[] {
+  public getDeviceList(): Device[] {
     return this.devices;
   }
 
@@ -379,7 +379,7 @@ export class OBDConnectorService {
    * Gets paired devices on phone
    * @returns Promise when it has gotten all the devices
    */
-  getPaired(): Promise<string> {
+  public getPaired(): Promise<string> {
     return new Promise((resolve) => {
       this.devices = [];
       this.blueSerial.list().then((deviceList) => {
@@ -395,7 +395,7 @@ export class OBDConnectorService {
    * Returns if phone is connected.  For use outside of class for data hiding
    * @returns Promise with boolean if the phone is connected
    */
-  isConnectedFun(): Promise<boolean> {
+  private isConnectedFun(): Promise<boolean> {
     return new Promise((resolve) => {
       this.blueSerial.isConnected().then(
         (is) => {
@@ -414,7 +414,7 @@ export class OBDConnectorService {
    * @param type - What it should be parsed as
    * @returns Promise with the response or rejection
    */
-  writeThenRead(callData: string, type: PIDType): Promise<string> {
+  private writeThenRead(callData: string, type: PIDType): Promise<string> {
     return new Promise((promSuccess, promReject) => {
       this.isConnectedFun().then((isConnect) => {
 
@@ -484,11 +484,11 @@ export class OBDConnectorService {
   /**
    * Public function used to call pids via the OBD.  It will call the pid, read the data, and then parse
    * the data.  To add pids you may also need to add a PIDType and edit parseData to support that type
-   * @param pid - An OBD Pid that will be used to call data from the OBD
+   * @param pid - An OBD Pid that will be used to call data from the OBD.  An example is '0902\r'.
    * @param type - A PIDType that will be used to parse the data gotten back
    * @returns The parsed data from the pid if resolved, or an error or no data if a failure
    */
-  callPID(pid: string, type: PIDType): Promise<string> {
+  public callPID(pid: string, type: PIDType): Promise<string> {
     return new Promise<string>((resolve, reject) => {
       // TODO: Get the supported pids to work.  Currently parsing seems to work fine, just doesnt check for them correctly
       // if (this.pidSupported(parseInt(pid.charAt(1), 10), parseInt(pid.slice(2, 4), 10))) {
@@ -517,7 +517,7 @@ export class OBDConnectorService {
    * @param type - PIDType to parse data to
    * @returns parsed data
    */
-  parseData(data: string, type: PIDType): Promise<string> {
+  private parseData(data: string, type: PIDType): Promise<string> {
     return new Promise<string>((resolve) => {
       // If there is no data, then return that
       if (data.length === 1) {
@@ -695,7 +695,7 @@ export class OBDConnectorService {
    * @param call - Number in that group that the pid is
    * @returns true if supported
    */
-  private pidSupported(group: number, call: number): boolean {
+  pidSupported(group: number, call: number): boolean {
     if (group === 1) {
       return this.service1and2SupportedPIDs[call];
     } else if (group === 2) {
@@ -711,14 +711,14 @@ export class OBDConnectorService {
    * Changes current name of the profile and saves it
    * @param newName - New name for profile
    */
-  changeCurrentName(newName: string): void {
+  public changeCurrentName(newName: string): void {
     this.currentProfile.nickname = newName;
     this.saveProfiles();
   }
 
   /**
    * Saves profiles and update the current loaded one
-   * @returns profiles
+   * @returns Doesn't actually return anything
    */
   public saveProfiles(): Promise<boolean> {
     return new Promise<boolean>((resolve, reject) => {
@@ -735,7 +735,7 @@ export class OBDConnectorService {
   /**
    * Saves profiles and change the vin on the current profile
    * @param newVin - New vin to be updated
-   * @returns profiles change vin
+   * @returns Doesn't actually return anything
    */
   public saveProfilesChangeVin(newVin: string): Promise<boolean> {
     return new Promise<boolean>((resolve, reject) => {
@@ -756,7 +756,7 @@ export class OBDConnectorService {
    * @param vinToCheck - The vin you are looking to check
    * @returns A boolean if the vin is found and loaded
    */
-  checkAndChangeVin(vinToCheck: string): Promise<boolean> {
+  public checkAndChangeVin(vinToCheck: string): Promise<boolean> {
     return new Promise<boolean>((resolve) => {
       this.store.get(StorageKeys.CARPROFILES).then(allProfiles => {
         const gottenProfile: CarProfile = allProfiles.find(profile => profile.vin === vinToCheck);
