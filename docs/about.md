@@ -1,8 +1,9 @@
-### [Home](https://car-maintenance-senior-project.github.io/OBD-ME/index)		||		[Security](https://car-maintenance-senior-project.github.io/OBD-ME/security)		||		[About](https://car-maintenance-senior-project.github.io/OBD-ME/about)
+# About Us
+## [Home](https://car-maintenance-senior-project.github.io/OBD-ME/index)		||		[Security](https://car-maintenance-senior-project.github.io/OBD-ME/security)		||		[Materials/References](https://car-maintenance-senior-project.github.io/OBD-ME/materials)		||		[About Us](https://car-maintenance-senior-project.github.io/OBD-ME/about)
 
 ![Ty Photo](https://car-maintenance-senior-project.github.io/OBD-ME/ty.jpg)
 # Ty Vredeveld
-Ty is a senior CS student at Calvin University
+Ty is a senior CS student at Calvin University.
   - Email: ty.vredeveld@gmail.com
 
 ![Quentin Photo](https://car-maintenance-senior-project.github.io/OBD-ME/Quentin.jpg)
