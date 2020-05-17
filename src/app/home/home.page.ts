@@ -1,6 +1,8 @@
 /** This page handles the home screen along with getting and showing errors, getting and
  * showing a stock photo of the car, and it uses 2 APIs to do this.  It also allows the user to
  * click on an error code and another page will display more info about the error.
+ *
+ * TODO: Parsing photos and getting error codes should probably be in obd connector service instead
  */
 import { Component } from '@angular/core';
 import { ModalController } from '@ionic/angular';
@@ -80,7 +82,7 @@ export class HomePage {
 
   /**
    * Try to grab a photo from the api, download and save it.  If its not in the API
-   * then just show a stock photo.
+   * then just show a stock photo.  If the photo is already saved, get the photo and display it.
    * @param activeProfile - The car profile to be used when showing a photo
    *
    * API used is https://www.carmd.com/api/ and its used to get the photo of the car
@@ -249,7 +251,7 @@ export class HomePage {
 
   /**
    * Updates error codes sim.  Used to simulate an error code being given from the car
-   * and then uses the API to parse it
+   * and then uses the API to parse it.  Mainly used for testing and demo.
    */
   updateErrorCodesSim() {
     // Set the local errors to match the current profiles errors

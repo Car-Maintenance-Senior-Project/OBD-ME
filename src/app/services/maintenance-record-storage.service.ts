@@ -15,7 +15,7 @@ export class MaintenanceRecordStorageService {
 
   constructor(private obd: OBDConnectorService) { }
 
-  deleteRecord(record: MaintenanceRecord): void {
+  public deleteRecord(record: MaintenanceRecord): void {
     const index = this.records.indexOf(record);
 
     if (index > -1) {
@@ -24,7 +24,7 @@ export class MaintenanceRecordStorageService {
     }
   }
 
-  addRecord(record: MaintenanceRecord): void {
+  public addRecord(record: MaintenanceRecord): void {
     this.records.push({
       type: record.type,
       date: record.date,
@@ -35,7 +35,7 @@ export class MaintenanceRecordStorageService {
     this.saveRecords();
   }
 
-  saveRecords(): void {
+  private saveRecords(): void {
     this.records.sort((a, b) => {
       const date1 = a.date;
       const date2 = b.date;
@@ -46,7 +46,7 @@ export class MaintenanceRecordStorageService {
   }
 
   // loads records for currently used car profile, initializes records if profile does not have any
-  loadRecords() {
+  public loadRecords() {
     if (this.obd.currentProfile.maintenanceRecords != null) {
       this.records = this.obd.currentProfile.maintenanceRecords;
     } else {
@@ -56,18 +56,18 @@ export class MaintenanceRecordStorageService {
     }
   }
 
-  getRecord(id: string): MaintenanceRecord {
+  public getRecord(id: string): MaintenanceRecord {
     return this.records.find((record) => record.id === id);
   }
 
-  setRecord(updatedRecord: MaintenanceRecord) {
+  public setRecord(updatedRecord: MaintenanceRecord) {
     const index = this.records.indexOf(this.records.find((record) => record.id === updatedRecord.id));
     this.records[index] = updatedRecord;
     this.saveRecords();
   }
 
   // generates a slug to be used for the id of a maintenance record
-  generateSlug(title: string): string {
+  private generateSlug(title: string): string {
     // NOTE: This is a simplistic slug generator and will
     // not handle things like special characters
     let slug = title.toLowerCase().replace(/\s+/g, '-');

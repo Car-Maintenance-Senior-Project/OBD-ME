@@ -32,7 +32,7 @@ export class FuelEconomyService {
   constructor(private obd: OBDConnectorService) { }
 
   // keeps running average of the fuel economy for the current car profile
-  updateAverage(newValue: number) {
+  private updateAverage(newValue: number) {
     this.mpgInfo.count++;
     const diff = (newValue - this.mpgInfo.mpg) / this.mpgInfo.count;
     this.mpgInfo.mpg += diff;
@@ -45,7 +45,7 @@ export class FuelEconomyService {
    * @param lastTime - last time it was called
    * @returns mpg in current duration
    */
-  calcMPG(coords1, coords2, lastTime): Promise<string> {
+  public calcMPG(coords1, coords2, lastTime): Promise<string> {
     return new Promise<string>((resolve, reject) => {
       const distTraveled = this.distance(coords1, coords2); // calculate distance between coordinates (miles)
 
@@ -98,7 +98,7 @@ export class FuelEconomyService {
   }
 
   // determines distance between two coordinates on earth
-  distance(coords1, coords2): number {
+  private distance(coords1, coords2): number {
     const lat1: number = coords1.lat;
     const lat2: number = coords2.lat;
     const lng1: number = coords1.lng;
@@ -114,7 +114,7 @@ export class FuelEconomyService {
   }
 
   // load in the historic information from the current profile; if none is present, initialize it with default values
-  loadHistoricInfo() {
+  public loadHistoricInfo() {
     if (this.obd.currentProfile.pastRoutes != null) {
       this.previousTracks = this.obd.currentProfile.pastRoutes;
     } else {
@@ -134,13 +134,13 @@ export class FuelEconomyService {
     this.obd.saveProfiles();
   }
 
-  deleteHistoricRoutes() {
+  public deleteHistoricRoutes() {
     this.previousTracks = [];
     this.obd.currentProfile.pastRoutes = [];
     this.obd.saveProfiles();
   }
 
-  addRoute(newRoute) {
+  public addRoute(newRoute) {
     this.previousTracks.push(newRoute);
     this.obd.currentProfile.pastRoutes = this.previousTracks;
     this.obd.currentProfile.fuelEconomy = this.mpgInfo;

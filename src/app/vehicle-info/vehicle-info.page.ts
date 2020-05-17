@@ -56,6 +56,7 @@ export class VehicleInfoPage implements OnInit {
    * Changes name of current profile as long as its valid
    */
   changeName() {
+    // Ensure that the name is not only numbers
     const regEx = RegExp(/^[0-9]*$/);
     if (this.obd.currentProfile.nickname !== '-1') {
       if (!regEx.test(this.name)) {
