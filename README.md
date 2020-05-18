@@ -14,7 +14,7 @@ Now that NPM, Ionic, and Android Studio are installed, you can clone the git rep
 
 ## Updating APIs
 
-This app uses 3 APIs. At the time of writing, the app has working API keys, but this may not always be the case. I will quickly walk you through how to remake these API keys if it is needed.
+This app uses 3 APIs. At the time of writing, the app has working API keys, but this may not always be the case. We will quickly walk you through how to remake these API keys if it is needed.
 
 ### Google Maps
 
