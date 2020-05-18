@@ -1,6 +1,6 @@
-/**This page shows data about the current car profile.  It shows the vin, make, year,
- * and model along with name of the cars profile.  It also allows you to input a vin if
- * there isnt one, and change the name of the profile.
+/** This page shows data about the current car profile. It shows the VIN, make, year,
+ * and model along with name of the car's profile. It also allows you to input a VIN if
+ * the OBD doesn't retrive one, and change the nickname of the profile.
  */
 import { Component, OnInit, NgZone } from '@angular/core';
 import { BluetoothSerial } from '@ionic-native/bluetooth-serial/ngx';
@@ -24,8 +24,6 @@ export class VehicleInfoPage implements OnInit {
   private name: string;
 
   constructor(
-    private ngZone: NgZone,
-    private bs: BluetoothSerial,
     private obd: OBDConnectorService,
     private toast: ToastMasterService,
     private http: HTTP

@@ -22,7 +22,7 @@ export class ToastMasterService {
   }
 
   /**
-   * Connects to bluetooth
+   * Connects to Bluetooth
    */
   async notConnectedMessage() {
     const toast = await this.toastController.create({
@@ -33,7 +33,7 @@ export class ToastMasterService {
   }
 
   /**
-   * Disconnects from bluetooth
+   * Disconnects from Bluetooth
    */
   async notDisconnectedMessage() {
     const toast = await this.toastController.create({

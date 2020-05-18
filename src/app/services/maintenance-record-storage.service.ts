@@ -1,4 +1,4 @@
-/** This service manages the maintenance records.  Through this class you can add,
+/** This service manages the maintenance records. Through this class you can add,
  * delete, get, and save records.
  */
 import { Injectable } from '@angular/core';

@@ -6,9 +6,6 @@ import { StatusBar } from '@ionic-native/status-bar/ngx';
 
 import { DarkThemeSwitcherService } from './services/dark-theme-switcher.service';
 import { OBDConnectorService } from './services/obd-connector.service';
-import { Storage } from '@ionic/storage';
-import { StorageKeys } from './classes/storage-keys';
-
 
 @Component({
   selector: 'app-root',
@@ -54,6 +51,7 @@ export class AppComponent {
     if (path !== undefined) {
       this.selectedIndex = this.appPages.findIndex(page => page.url === path);
     }
+    
     // default route is '/', so we default the selected index to the home page in this case
     if (path === '/') {
       this.selectedIndex = 0;
@@ -71,13 +69,6 @@ export class AppComponent {
   initializeApp() {
     this.platform.ready().then(() => {
       this.statusBar.styleDefault();
-      // this.store.get(StorageKeys.CARPROFILES).then(allProfilesTemp2 => {
-      //   if (allProfilesTemp2 === null) {
-      //     console.log('OBDMEDebug: mock startup');
-      //   } else {
-      //     this.OBD.onStartUp();
-      //   }
-      // });
       this.OBD.onStartUp();
       this.splashScreen.hide();
     });

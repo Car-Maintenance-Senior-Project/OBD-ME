@@ -1,8 +1,8 @@
-/** This page handles the home screen along with getting and showing errors, getting and
- * showing a stock photo of the car, and it uses 2 APIs to do this.  It also allows the user to
+/** This page handles the home screen along with getting and showing errors and getting and
+ * showing a stock photo of the car. It uses 2 APIs to do this. It also allows the user to
  * click on an error code and another page will display more info about the error.
  *
- * TODO: Parsing photos and getting error codes should probably be in obd connector service instead
+ * TODO: Parsing photos and getting error codes should probably be in OBD connector service instead
  */
 import { Component } from '@angular/core';
 import { ModalController } from '@ionic/angular';
@@ -35,7 +35,7 @@ export class HomePage {
 
   /**
    * Creates an instance of home page. Runs startup from OBD service
-   * @param OBD - The obd connector service
+   * @param OBD - The OBD connector service
    */
   constructor(
     private OBD: OBDConnectorService,
@@ -47,15 +47,15 @@ export class HomePage {
   ) { }
 
   /**
-   * This function runs whenever the page is viewed.  It either loads in the
-   * last used profile or the current one if available.  It then will load pictures
+   * This function runs whenever the page is viewed. It either loads in the
+   * last used profile or the current one if available. It then will load pictures
    * and error codes for the profile.
    */
   ionViewDidEnter() {
-    // Re init errors to empty
+    // Re-initialize errors to empty
     this.errors = [];
     if (!this.OBD.isLoading) {
-      // If profiles are loaded, then parse photos and update errors if its connected
+      // If profiles are loaded, parse photos and update errors if it's connected
       this.parsePhotos(this.OBD.currentProfile);
       if (this.OBD.isConnected) {
         this.updateErrorCodes();
@@ -81,14 +81,14 @@ export class HomePage {
   }
 
   /**
-   * Try to grab a photo from the api, download and save it.  If its not in the API
-   * then just show a stock photo.  If the photo is already saved, get the photo and display it.
+   * Try to grab a photo from the API, download and save it. If it's not in the API
+   * then just show a stock photo. If the photo is already saved, get the photo and display it.
    * @param activeProfile - The car profile to be used when showing a photo
    *
-   * API used is https://www.carmd.com/api/ and its used to get the photo of the car
+   * API used is https://www.carmd.com/api/ and it's used to get the photo of the car
    */
   parsePhotos(activeProfile: CarProfile) {
-    // If its a valid profile with no photo saved, then try to get one from the API
+    // If it's a valid profile with no photo saved, try to get one from the API
     if (
       activeProfile.pictureSaved === false &&
       activeProfile.nickname !== '-1' &&
@@ -106,7 +106,7 @@ export class HomePage {
         )
         .then(
           (data) => {
-            // If you can get the photo, then download it and change it to Base 64
+            // If you can get the photo, download it and change it to Base 64
             this.httpNative
               .downloadFile(
                 JSON.parse(data.data).data.image,
@@ -119,7 +119,7 @@ export class HomePage {
                   this.base64
                     .encodeFile(this.file.cacheDirectory + '/tempProfilePhoto.jpg')
                     .then((newData) => {
-                      // Then save the image to phone and attach it to the profile.  And display it
+                      // Then save the image to phone and attach it to the profile and display it
                       this.store.set('img:' + activeProfile.vin, newData).then((next) => {
                         activeProfile.pictureSaved = true;
                         this.OBD.saveProfiles();
@@ -149,11 +149,11 @@ export class HomePage {
           this.image = '../../assets/2006-honda-crv.jpg';
         });
 
-      // else if the profile is not valid, set it to the stock img
+      // else if the profile is not valid, set it to the stock image
     } else if (activeProfile.nickname === '-1' || activeProfile.vin.toString().includes('CantGetVin')) {
       this.image = '../../assets/2006-honda-crv.jpg';
 
-      // Else it has to have a saved img, so set it
+      // else it has to have a saved image, so set it
     } else {
       this.displayPhoto(activeProfile);
     }
@@ -171,7 +171,7 @@ export class HomePage {
 
   /**
    * Called when an error code is clicked, and uses the provided error code to
-   * create a pop up page that displays the error code info.
+   * create a pop-up page that displays the error code info.
    * @param code - Error code to show more info about.  Should be from the current profiles errors
    * @returns When the modal is being shown
    */
@@ -190,7 +190,7 @@ export class HomePage {
    * Updates error codes when there is a car connected, and loads the error codes into page.
    *
    * API used is https://cloud.ibm.com/docs/services/HellaVentures?topic=HellaVentures-gettingstarted_HellaVentures.
-   * This api is used to parse error codes
+   * This API is used to parse error codes
    */
   updateErrorCodes() {
     // Set the local errors to match the current profiles errors
@@ -200,13 +200,13 @@ export class HomePage {
     this.OBD.callPID(PIDConstants.errors, PIDType.errors).then(
       (newErrors) => {
         if (newErrors.length === 0) {
-          // If there are not error codes get out
+          // If there are no error codes, exit the function
           return;
         }
         const newErrorsList = newErrors.split(',');
 
-        // For each error gotten back, see if its already saved, and if not parse it and save it
-        // Also a default vin is used due to a bug
+        // For each error gotten back, see if it's already saved; if not, parse it and save it
+        // Also, a default VIN is used due to a bug
         newErrorsList.forEach((newError) => {
           if (this.OBD.currentProfile.errorCodes.find((error) => error.code === newError) === undefined) {
             if (newError !== 'p0000') {
@@ -244,14 +244,14 @@ export class HomePage {
         });
       },
       (rejected) => {
-        // Pid call rejected
+        // PID call rejected
       }
     );
   }
 
   /**
-   * Updates error codes sim.  Used to simulate an error code being given from the car
-   * and then uses the API to parse it.  Mainly used for testing and demo.
+   * Updates error codes sim. Used to simulate an error code being given from the car
+   * and then uses the API to parse it. Mainly used for testing and demo.
    */
   updateErrorCodesSim() {
     // Set the local errors to match the current profiles errors
@@ -262,7 +262,7 @@ export class HomePage {
     const newErrorsList = newErrors.split(',');
 
     // For each error gotten back, see if its already saved, and if not parse it and save it
-    // Also a default vin is used due to a bug
+    // Also a default VIN is used due to a bug
     newErrorsList.forEach((newError) => {
       if (this.OBD.currentProfile.errorCodes.find((error) => error.code === newError) === undefined) {
         if (newError !== 'p0000') {

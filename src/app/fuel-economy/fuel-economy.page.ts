@@ -1,4 +1,4 @@
-/** This page handles getting and displaying the Fuel Economy.  It uses the related
+/** This page handles getting and displaying Fuel Economy data. It uses the related
  * service to do this.
  */
 import { Component, OnInit } from '@angular/core';
