@@ -1,5 +1,5 @@
-/** This service handles the fuel economy page functions.  It is used to calculate the fuel
- * econ during driving, and the saving and retrieving of old routes.
+/** This service handles the fuel economy page functions. It is used to calculate the fuel
+ * economy during driving, and the saving and retrieving of old routes.
  */
 import { Injectable } from '@angular/core';
 
@@ -65,7 +65,7 @@ export class FuelEconomyService {
 
           // Make sure you aren't div by 0
           if (fuelGals === 0) {
-            fuelGals = 0.1;
+            fuelGals = 0.0001;
           }
 
           const currentMPG = distTraveled / fuelGals;

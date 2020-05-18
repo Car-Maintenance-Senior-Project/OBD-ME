@@ -1,7 +1,7 @@
 /**
  * OBD connector service is a service that allows an app to connect, read, and write to and OBD scanner that is using
- * an ELM327 chip device (possibly others but havent tested).  It manages all the bluetooth functions, all parsing
- * for the OBD, and managing the profiles for the app.  Two examples of responses from the OBD are:
+ * an ELM327 chip device (possibly others but haven't tested). It manages all the Bluetooth functions, all parsing
+ * for the OBD, and managing the profiles for the app. Two examples of responses from the OBD are:
  * example of long hex: 09023\r014 \r0: 49 02 01 57 42 41 \r1: 33 4E 35 43 35 35 46 \r2: 4B 34 38 34 35 34 39 \r\r
  * example of short hex: 09001\r49 00 55 40 00 00 \r\r
  * All interactions to the OBD and Profiles should go through this.
@@ -52,8 +52,8 @@ export class OBDConnectorService {
 
   /**
    * To be run when the app is started.
-   * Connects to the bluetooth device if one is connected, and either grabs the last connected
-   * profile, or the profile for the car that is connected, or creates a default profile.
+   * Connects to the Bluetooth device if one is connected and either grabs the last connected
+   * profile, the profile for the car that is connected, or creates a default profile.
    * @returns Nothing, doesn't actually return anything
    */
   public onStartUp(): Promise<boolean> {
@@ -61,7 +61,7 @@ export class OBDConnectorService {
       // Get all the paired BT devices
       this.getPaired();
 
-      // Load in the save profiles and check if any of them are the correct ones
+      // Load in the saved profiles and check if any of them are the correct ones
       this.store
         .get(StorageKeys.CARPROFILES)
         .then((allProfiles) => {
@@ -99,7 +99,7 @@ export class OBDConnectorService {
           }
           this.isLoading = false;
 
-          // After the profile is loaded, try to connect to the bluetooth
+          // After the profile is loaded, try to connect to the Bluetooth scanner
         })
         .then((initConnect) => {
           this.connect().then(
@@ -117,11 +117,11 @@ export class OBDConnectorService {
   }
 
   /**
-   * Attempts to connect via bluetooth to the OBD.  Uses the last connect MAC if none
+   * Attempts to connect via Bluetooth to the OBD scanner. Uses the last connected MAC if none
    * is given when its called.
    * TODO: Run useful AT codes
    * TODO: Get the PIDs that are supported
-   * @param [MacAddress] - Optional mac address of the OBD to connect to, defaults to the last used MAC
+   * @param [MacAddress] - Optional MAC address of the OBD to connect to, defaults to the last used MAC
    * @returns Promise of the connection result of the BT
    */
   public connect(MACAddress?: string): Promise<ConnectResult> {
@@ -131,7 +131,7 @@ export class OBDConnectorService {
           message: 'Connecting to bluetooth',
         })
         .then((overlay) => {
-          // Creates a overlay so the user cant do anything while its connecting
+          // Creates a overlay so the user can't do anything while it's connecting
           this.loading = overlay;
           this.loading.present();
           // initialize conditions to false when a connection is attempted
@@ -225,8 +225,8 @@ export class OBDConnectorService {
   }
 
   /**
-   * Connects to bluetooth and depending on what happens, sets the profile accordingly
-   * @param MACAddress - MAC of the bluetooth to connect to
+   * Connects to Bluetooth and depending on what happens, sets the profile accordingly
+   * @param MACAddress - MAC of the Bluetooth to connect to
    * @returns Promise of the connection result of the BT
    */
   private connectToBT(MACAddress: string): Promise<ConnectResult> {
@@ -238,10 +238,10 @@ export class OBDConnectorService {
             (success) => {
               this.isConnected = true;
 
-              // If connected, attempt to get the vin from the car
+              // If connected, attempt to get the VIN from the car
               this.callPID(PIDConstants.VIN, PIDType.String).then(
                 (vinRaw) => {
-                  // Use the vin to either grab a profile from storage or parse a new profile
+                  // Use the VIN to either grab a profile from storage or parse a new profile
                   this.store.get(StorageKeys.CARPROFILES).then((allProfiles) => {
                     if (allProfiles === null) {
                       allProfiles = [];
@@ -252,7 +252,7 @@ export class OBDConnectorService {
                     });
                     const profileSearch: CarProfile = allProfiles.find((profile) => profile.vin === vinRaw);
                     if (profileSearch !== undefined) {
-                      // If is in storage, set the profile accordingly
+                      // If it is in storage, set the profile accordingly
                       profileSearch.lastProfile = true;
                       this.currentProfile = profileSearch;
                       this.store.set(StorageKeys.LASTMAC, MACAddress);
@@ -291,7 +291,7 @@ export class OBDConnectorService {
                               errorCodes: [],
                             };
 
-                            // Store profiles and last mac to be used when needed
+                            // Store profiles and last MAC to be used when needed
                             allProfiles.push(this.currentProfile);
                             this.store.set(StorageKeys.CARPROFILES, allProfiles);
                             this.store.set(StorageKeys.LASTMAC, MACAddress);
@@ -303,7 +303,7 @@ export class OBDConnectorService {
                             return;
                           },
                           (webError) => {
-                            // TODO: Have this still save the vin, and get the data later in vehicle info
+                            // TODO: Have this still save the VIN, and get the data later in vehicle info
                             this.isConnected = false;
                             this.loading.dismiss();
                             this.toast.notConnectedMessage();
@@ -315,8 +315,8 @@ export class OBDConnectorService {
                   });
                 },
                 (reject3) => {
-                  // If you cant grab the vin from the car, then create a dummy vin
-                  // and tell the user to input the vin manually on the info page
+                  // If you can't grab the VIN from the car, create a dummy VIN
+                  // and tell the user to input the VIN manually on the info page
                   this.store.get(StorageKeys.CARPROFILES).then((allProfiles) => {
                     if (allProfiles === null) {
                       allProfiles = [];
@@ -337,7 +337,7 @@ export class OBDConnectorService {
                     };
                     this.store.set(StorageKeys.LASTMAC, MACAddress);
                     this.loading.dismiss();
-                    this.toast.errorMessage('Please input your vin on the Vehicle info page');
+                    this.toast.errorMessage('Please input your VIN on the Vehicle info page');
                     resolve(ConnectResult.Success);
                     return;
                   });
@@ -423,7 +423,7 @@ export class OBDConnectorService {
           this.blueSerial.write(callData).then(
             (success) => {
 
-              // If the write is successful, then wait for it to return something ending in
+              // If the write is successful, wait for it to return something ending in
               // '\r\r' which is always at the end of the responses.
               this.blueSerial.subscribe('\r\r').subscribe((data) => {
 
@@ -482,15 +482,15 @@ export class OBDConnectorService {
   }
 
   /**
-   * Public function used to call pids via the OBD.  It will call the pid, read the data, and then parse
-   * the data.  To add pids you may also need to add a PIDType and edit parseData to support that type
-   * @param pid - An OBD Pid that will be used to call data from the OBD.  An example is '0902\r'.
+   * Public function used to call PIDs via the OBD. It will call the PID, read the data, and then parse
+   * the data. To add PIDs you may also need to add a PIDType and edit parseData to support that type
+   * @param pid - An OBD PID that will be used to call data from the OBD. An example is '0902\r'.
    * @param type - A PIDType that will be used to parse the data gotten back
-   * @returns The parsed data from the pid if resolved, or an error or no data if a failure
+   * @returns The parsed data from the PID if resolved, or an error or no data if a failure
    */
   public callPID(pid: string, type: PIDType): Promise<string> {
     return new Promise<string>((resolve, reject) => {
-      // TODO: Get the supported pids to work.  Currently parsing seems to work fine, just doesnt check for them correctly
+      // TODO: Get the supported PIDs to work. Currently, parsing seems to work fine, it just doesnt check for them correctly
       // if (this.pidSupported(parseInt(pid.charAt(1), 10), parseInt(pid.slice(2, 4), 10))) {
       this.writeThenRead(pid, type).then(
         (data) => {
@@ -525,7 +525,7 @@ export class OBDConnectorService {
         return;
       }
 
-      // If there are separate messages, then parse them into one
+      // If there are separate messages, parse them into one
       const split = data.split('\r');
       split.forEach((section, index) => {
         if (section.indexOf(':') === 1) {
@@ -538,7 +538,7 @@ export class OBDConnectorService {
       let currentPlace = 0;
       let nextError = '';
 
-      // For each hex pair, based in its type, add something different to the final array
+      // For each hex pair, based on its type, add something different to the final array
       hexArray.forEach((splitData, index) => {
         if (type !== PIDType.errors) {
           switch (type) {
@@ -564,7 +564,7 @@ export class OBDConnectorService {
           }
           finalArray[index] = nextChar;
         } else {
-          // If its an error, parse the first letter into binary and a number, and the rest into strings
+          // If it's an error, parse the first letter into binary and a number, and the rest into strings
           switch (currentPlace) {
             case 0: {
               const binary = parseInt(splitData, 16).toString(2).padStart(8, '0');
@@ -615,8 +615,8 @@ export class OBDConnectorService {
 
   /**
    * TODO: Make this work
-   * In theory how supported pids should work.  Needs testing
-   * @returns supported pids
+   * In theory how supported PIDs should work. Needs testing
+   * @returns supported PIDs
    */
   getSupportedPIDs(): Promise<any> {
     return new Promise<any>((resolve, reject) => {
@@ -690,9 +690,9 @@ export class OBDConnectorService {
   }
 
   /**
-   * Checks to see if the pid is supported
-   * @param group - Group of the pid
-   * @param call - Number in that group that the pid is
+   * Checks to see if the PID is supported
+   * @param group - Group of the PID
+   * @param call - Number in that group that the PID is
    * @returns true if supported
    */
   pidSupported(group: number, call: number): boolean {
@@ -733,8 +733,8 @@ export class OBDConnectorService {
   }
 
   /**
-   * Saves profiles and change the vin on the current profile
-   * @param newVin - New vin to be updated
+   * Saves profiles and change the VIN on the current profile
+   * @param newVin - New VIN to be updated
    * @returns Doesn't actually return anything
    */
   public saveProfilesChangeVin(newVin: string): Promise<boolean> {
@@ -752,9 +752,9 @@ export class OBDConnectorService {
   }
 
   /**
-   * Checks if there is a saved profile with the correct vin and change vin to it if there is
-   * @param vinToCheck - The vin you are looking to check
-   * @returns A boolean if the vin is found and loaded
+   * Checks if there is a saved profile with the correct VIN and change VIN to it if there is
+   * @param vinToCheck - The VIN you are looking to check
+   * @returns A boolean if the VIN is found and loaded
    */
   public checkAndChangeVin(vinToCheck: string): Promise<boolean> {
     return new Promise<boolean>((resolve) => {

@@ -1,4 +1,4 @@
-/** This settings page handles dark made and connecting */
+/** This settings page handles dark mode and Bluetooth connecting */
 import { Component, OnInit } from '@angular/core';
 import { Device } from '../interfaces/device-struct';
 
@@ -32,8 +32,8 @@ export class SettingsPage implements OnInit {
   }
 
   /**
-   * Runs everytime a user choses a new mac to connect to.
-   * Tries to connect to that mac.
+   * Runs everytime a user choses a new MAC to connect to.
+   * Tries to connect to that MAC.
    */
   onChangeOfMac() {
     if (this.chosenMac !== '') {
