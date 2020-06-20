@@ -10,5 +10,5 @@ Ty is a senior CS student at Calvin University.
 ###### Photo taken from Calvin
 # Quentin Barnes
 Quentin is a senior CS student at Calvin ~~College~~ University.  
-  - Email: Qbeast360@gmail.com
+  - Email: QuenMBarn@gmail.com
   
